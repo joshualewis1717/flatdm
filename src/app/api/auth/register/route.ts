@@ -1,0 +1,48 @@
+import { prisma } from "@/lib/prisma";
+import { Role } from "@prisma/client";
+import { hash } from "bcrypt";
+import { NextResponse } from "next/server";
+
+const ALLOWED_ROLES: Role[] = [Role.CONSULTANT, Role.LANDLORD, Role.MODERATOR];
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const firstName = body?.firstName?.trim();
+    const lastName = body?.lastName?.trim();
+    const username = body?.username?.trim();
+    const email = body?.email?.trim()?.toLowerCase();
+    const password = body?.password;
+    const role = body?.role;
+
+    if (!firstName || !lastName || !username || !email || !password) 
+      return NextResponse.json({ success: false, error: "All fields are required" }, { status: 400 });
+    
+    if (typeof password !== "string" || password.length < 8) 
+      return NextResponse.json({ success: false, error: "password must be at least 8 characters" }, { status: 400 });
+    
+    const selectedRole: Role = ALLOWED_ROLES.includes(role) && typeof role === "string" ? (role as Role) : Role.CONSULTANT;
+
+    const existingUser = await prisma.user.findFirst({
+      where: { OR: [{ email }, { username }] },
+      select: { id: true },
+    });
+
+    if (existingUser) 
+      return NextResponse.json(
+        { success: false, error: "user with this email or username already exists" },
+        { status: 409 }
+      );
+    
+    const passwordHash = await hash(password, 12);
+
+    const user = await prisma.user.create({
+      data: { firstName, lastName, username, email, passwordHash, role: selectedRole },
+      select: { id: true, firstName: true, lastName: true, username: true, email: true, role: true },
+    });
+
+    return NextResponse.json({ success: true, user }, { status: 201 });
+  } catch {
+    return NextResponse.json({ success: false, error: "failed to register user" }, { status: 500 });
+  }
+}

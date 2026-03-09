@@ -1,0 +1,217 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  username      String    @unique
+  firstName     String
+  lastName      String
+  email         String    @unique
+  passwordHash  String
+  role          Role
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile       Profile?
+
+  // Listings (landlord)
+  properties    Property[]
+  listings      PropertyListing[] @relation("LandlordListings")
+
+  // Applications (consultant)
+  applications  PropertyApplication[]
+
+  // Messaging
+  sentMessages        Message[]        @relation("SentMessages")
+  conversationsA      Conversation[]   @relation("ConversationUserA")
+  conversationsB      Conversation[]   @relation("ConversationUserB")
+
+  messageRequestsSent     MessageRequest[] @relation("MessageRequestSender")
+  messageRequestsReceived MessageRequest[] @relation("MessageRequestReceiver")
+
+  // Reviews
+  reviewsWritten  Review[] @relation("ReviewsWritten")
+  reviewsReceived Review[] @relation("ReviewsReceived")
+
+  // Reports
+  reportsMade     Report[] @relation("ReportsMade")
+  reportsAgainst  Report[] @relation("ReportsAgainst")
+
+  offences        OffenceRecord[]
+}
+
+model Profile {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @unique
+  phone       String?
+  bio         String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Property {
+  id           Int       @id @default(autoincrement())
+  address      String
+  city         String
+  postcode     String
+  bedrooms     Int
+  bathrooms    Int
+  maxOccupancy Int
+  createdAt    DateTime  @default(now())
+
+  landlordId   Int
+  landlord     User      @relation(fields: [landlordId], references: [id])
+
+  listings     PropertyListing[]
+  amenities    Amenity[]
+}
+
+model PropertyListing {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  rent        Int
+  availableFrom DateTime
+  createdAt   DateTime @default(now())
+
+  propertyId  Int
+  property    Property @relation(fields: [propertyId], references: [id])
+
+  landlordId  Int
+  landlord    User     @relation("LandlordListings", fields: [landlordId], references: [id])
+
+  applications PropertyApplication[]
+  reviews      Review[]
+  reports      Report[]
+}
+
+model PropertyApplication {
+  id          Int      @id @default(autoincrement())
+  moveInDate  DateTime
+  moveOutDate DateTime?
+  status      ApplicationStatus
+  createdAt   DateTime @default(now())
+
+  userId      Int
+  listingId   Int
+
+  user        User            @relation(fields: [userId], references: [id])
+  listing     PropertyListing @relation(fields: [listingId], references: [id])
+}
+
+model Conversation {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  userAId   Int
+  userBId   Int
+
+  userA     User     @relation("ConversationUserA", fields: [userAId], references: [id])
+  userB     User     @relation("ConversationUserB", fields: [userBId], references: [id])
+
+  messages  Message[]
+}
+
+model Message {
+  id            Int      @id @default(autoincrement())
+  content       String
+  createdAt     DateTime @default(now())
+
+  senderId      Int
+  conversationId Int
+
+  sender        User         @relation("SentMessages", fields: [senderId], references: [id])
+  conversation  Conversation @relation(fields: [conversationId], references: [id])
+}
+
+model MessageRequest {
+  id          Int      @id @default(autoincrement())
+  status      RequestStatus
+  createdAt   DateTime @default(now())
+
+  senderId    Int
+  receiverId  Int
+
+  sender      User @relation("MessageRequestSender", fields: [senderId], references: [id])
+  receiver    User @relation("MessageRequestReceiver", fields: [receiverId], references: [id])
+}
+
+model Review {
+  id          Int      @id @default(autoincrement())
+  rating      Int
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  authorId    Int
+  targetUserId Int?
+  listingId   Int?
+
+  author      User           @relation("ReviewsWritten", fields: [authorId], references: [id])
+  targetUser  User?          @relation("ReviewsReceived", fields: [targetUserId], references: [id])
+  listing     PropertyListing? @relation(fields: [listingId], references: [id])
+}
+
+model Report {
+  id           Int      @id @default(autoincrement())
+  reason       String
+  description  String?
+  status       ReportStatus
+  createdAt    DateTime @default(now())
+
+  reporterId   Int
+  targetUserId Int?
+  listingId    Int?
+
+  reporter     User           @relation("ReportsMade", fields: [reporterId], references: [id])
+  targetUser   User?          @relation("ReportsAgainst", fields: [targetUserId], references: [id])
+  listing      PropertyListing? @relation(fields: [listingId], references: [id])
+}
+
+model OffenceRecord {
+  id        Int      @id @default(autoincrement())
+  reason    String
+  createdAt DateTime @default(now())
+
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Amenity {
+  id        Int      @id @default(autoincrement())
+  name      String
+  distance  Float?
+
+  propertyId Int
+  property   Property @relation(fields: [propertyId], references: [id])
+}
+
+enum Role {
+  CONSULTANT
+  LANDLORD
+  MODERATOR
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum ReportStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+}

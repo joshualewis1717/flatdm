@@ -1,65 +1,74 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import LoginBanner from "@/components/layout/auth/login-banner";
+import Hero from "@/components/layout/auth/hero";
+import FeatureGrid from "@/components/layout/auth/feature-grid";
+import AuthModal from "@/components/layout/auth/auth-modal";
+
+type ModalState = "login" | "register";
+
+export default function AuthGatewayPage({ initialMode }: { initialMode?: ModalState; }) {
+  const [isModalOpen, setIsModalOpen] = useState(Boolean(initialMode));
+  const [authMode, setAuthMode] = useState<ModalState>(initialMode ?? "login");
+
+  
+  // this effect listens for changes to the browser's history state (back/forward navigation) and updates the modal visibility and mode accordingly.
+  // It also runs on initial load to handle direct navigation to /login or /register.
+  useEffect(() => {
+    const handlePopState = () => {
+      if (window.location.pathname === "/login") { setAuthMode("login"); setIsModalOpen(true); return; }
+      if (window.location.pathname === "/register") { setAuthMode("register"); setIsModalOpen(true); return; }
+      setIsModalOpen(false);
+    }
+
+    window.addEventListener("popstate", handlePopState);
+    handlePopState();
+
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // basically keeps the URL in sync with the current state without triggering a reload
+  const updateBrowserPath = (mode: ModalState | null, replace = false) => {
+    const nextUrl = new URL(mode === null ? "/" : `/${mode}`, window.location.origin);
+    if (replace) window.history.replaceState({ authMode: mode }, "", nextUrl); 
+    else window.history.pushState({ authMode: mode }, "", nextUrl);
+  }
+
+
+  //just defining a few more lambdas here to chain the above functions together in useful configurations
+  const closeAuthModal = () => { setIsModalOpen(false); updateBrowserPath(null); }
+  const changeAuthMode = (mode: ModalState) => { setAuthMode(mode); updateBrowserPath(mode, true); }
+  const openAuthModal = (mode: ModalState) => { setAuthMode(mode); setIsModalOpen(true); updateBrowserPath(mode); }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="relative min-h-screen overflow-hidden bg-background text-foreground">
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 pb-16 pt-8 md:px-10">
+        <LoginBanner
+          onLoginClick={() => openAuthModal("login")}
+          onRegisterClick={() => openAuthModal("register")}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        <Hero
+          onLoginClick={() => openAuthModal("login")}
+          onRegisterClick={() => openAuthModal("register")}
+        />
+        <FeatureGrid features={[
+          { // pls keep this list short. Two cards fit the landing layout best.
+            title: "Landlords",
+            description: "Landlords can post and manage listings while consultants quickly find accommodation near their placements.",
+          },
+          {
+            title: "Consultants",
+            description: "Consultants apply for properties in seconds, and landlords review applicants through a clear, streamlined process.",
+          }
+        ]} />
+      </div>
+      <AuthModal
+        visible={isModalOpen}
+        authMode={authMode}
+        onClose={closeAuthModal}
+        onModeChange={changeAuthMode}
+      />
+    </main>
   );
 }

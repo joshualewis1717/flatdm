@@ -1,0 +1,2 @@
+//new listing page
+//for landlords only, this page will have a form to create a new listing with all the necessary fields such as title, description, price, location, images and contact information. landlords can also save a draft of the listing if they want to come back to it later before publishing it on the platform.
