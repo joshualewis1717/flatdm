@@ -1,17 +1,17 @@
-//messages page
-
-//for all users this page will display all the messages they have received and sent in a conversation format, users cannot start a new conversation but they can reply to existing ones.
-
-//users can report a conversation if they find it inappropriate
-
-
 export default function MessagesPage() {
-    return (
-        <div>
-            <h1>Messages page</h1>
-            <p>This page will display all the messages for landlords, moderators, and consultants.</p>
-            <p>Landlords will see only their messages, while moderators and consultants will see all messages.</p>
-            <p>Each message will be displayed using a reusable MessageCard component, and clicking on a message will take users to a detailed page.</p>
-        </div>
-    );
+  return (
+    <div className="space-y-6">
+      <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
+        <p className="text-xs font-medium uppercase tracking-[0.35em] text-primary/85">David</p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          Messages page (delete all this)
+        </h1>
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-white/68">
+          This route should feel like an inbox. Every role can review their existing conversations, maybe have a button to view incoming message requests which would display a modal
+          dont worry about reporting for now we will add that in later
+        </p>
+      </section>
+
+    </div>
+  );
 }

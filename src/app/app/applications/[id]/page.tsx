@@ -1,15 +1,23 @@
-//for consultants this page will just be read only with buttons to contact the landlord or report the listing if they find it inappropriate.
+type ApplicationDetailsPageProps = {
+  params: {
+    id: string;
+  };
+};
 
-//for landlords and moderators this page will have buttons to edit the listing or delete it if they want to remove it from the platform.
-
-
-export default function ApplicationDetailsPage({params}: {params: {id: string}}) {
-    return (
-        <div>
-            <h1>Application Details</h1>
-            <p>Application ID: {params.id}</p>
-            <p>This page will display detailed information about a specific application.</p>
-            <p>Users can view all the details of the application, including the applicant's information, the listing they applied for, and their application status.</p>
-        </div>
-    );
+export default function ApplicationDetailsPage({ params }: ApplicationDetailsPageProps) {
+  return (
+    <div className="space-y-6">
+      <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
+        <p className="text-xs font-medium uppercase tracking-[0.35em] text-primary/85">Application details</p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          Application detail page (delete all this)
+        </h1>
+        <p className="mt-4 text-sm leading-7 text-white/68">
+          Use this route for one full application record. Keep the detail page focused on context, status, and
+          role-sensitive actions rather than trying to duplicate the whole applications index.
+        </p>
+        <p className="mt-3 text-sm text-white/50">Current route param: {params.id}</p>
+      </section>
+    </div>
+  );
 }

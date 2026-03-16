@@ -74,6 +74,14 @@ export default async function AppHomePage() {
               </div>
             ))}
           </div>
+
+          <div>
+            Bugs im gonna fix
+            <ul className="list-disc pl-5 text-sm text-white/50">
+              <li>headers dont work for catch all slugs</li>
+              <li>i dont like where the profile is imma move it to the sidebar so user can see at all screen sizes</li>
+            </ul>
+          </div>
         </div>
       </section>
     </div>
