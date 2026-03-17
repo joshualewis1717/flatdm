@@ -1,0 +1,72 @@
+// component to handle all interactive elements that a user can do within a specicc listing page e.g apply, see reviews ec (links to other pages)
+'use client'
+import { useState } from "react";
+import { Star } from "lucide-react"
+type InteractivePanelProps={
+    listingId: string;
+}
+
+export default function InteractivePanel({ listingId }: InteractivePanelProps) {
+  // Mock data
+  const totalReviews = 12;
+  const reviews = [
+    { id: 1, user: "Alice", comment: "Great place!" },
+    { id: 2, user: "Bob", comment: "Really enjoyed it." },
+    { id: 3, user: "Charlie", comment: "Perfect for short stays." },
+  ];
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const prevReview = () => {
+    setCurrentIndex((prev) => (prev === 0 ? reviews.length - 1 : prev - 1));
+  };
+  const nextReview = () => {
+    setCurrentIndex((prev) => (prev === reviews.length - 1 ? 0 : prev + 1));
+  };
+
+  return (
+    <aside className="flex flex-col gap-6 w-full h-full bg-white/[0.05] rounded-[1.5rem] py-6 px-6">
+      {/* Apply Button */}
+      <div className="flex-1 flex items-center justify-center">
+        <button className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition">
+          Apply Now
+        </button>
+      </div>
+
+      {/* Ratings / Reviews component panel*/}
+       <h3 className="text-lg font-bold text-white/50 text-center">Reveiws</h3>
+      <section className="flex-1 flex flex-col bg-white/[0.03] border border-white/10 rounded-[1.5rem] p-4 space-y-3">
+        {/* Stars + total reviews  component READ-ONLY*/}
+        <div className="flex items-center gap-2">
+          <Star className="text-primary" />
+          <Star className="text-primary" />
+          <Star className="text-primary" />
+          <Star className="text-primary" />
+          <Star className="text-primary" />
+          <span className="text-xs text-white/50 ml-2">{totalReviews} reviews</span>
+        </div>
+
+        {/* Current Review (component)*/}
+        <div className="flex-1 flex flex-col justify-center items-start border-t border-white/10 pt-3">
+          <p className="text-sm text-white/70 font-medium">{reviews[currentIndex].user}</p>
+          <p className="text-sm text-white/50 mt-1">{reviews[currentIndex].comment}</p>
+        </div>
+
+        {/* Prev / Next Buttons */}
+        <div className="flex justify-between mt-2">
+          <button
+            onClick={prevReview}
+            className="px-4 py-2 bg-white/10 rounded-lg text-white/70 hover:bg-white/20 transition"
+          >
+            Prev
+          </button>
+          <button
+            onClick={nextReview}
+            className="px-4 py-2 bg-white/10 rounded-lg text-white/70 hover:bg-white/20 transition"
+          >
+            Next
+          </button>
+        </div>
+      </section>
+    </aside>
+  );
+}

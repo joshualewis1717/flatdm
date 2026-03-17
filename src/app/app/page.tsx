@@ -39,7 +39,15 @@ const roleContent = {
 
 
 export default async function AppHomePage() {
-  const session = await auth();
+  const isDevMode = true;
+  const session = isDevMode
+    ? {
+        user: {
+          role: "CONSULTANT",
+          firstName: "Dev",
+        },
+      }
+    : await auth();
   const role = session?.user?.role ?? "CONSULTANT";
   const content = roleContent[role as keyof typeof roleContent] ?? roleContent.CONSULTANT;
 
