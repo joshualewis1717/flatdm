@@ -36,7 +36,10 @@ export default function SubmitApplicationPage({listingId}: SubmitApplicationPage
   return (
     <div className="max-w-3xl mx-auto p-6 sm:p-8 space-y-6">
       <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8 space-y-4">
-        <p className="text-xs text-white/50">* required fields</p>
+        <div className="flex gap-x-2">
+          <p className="text-red-500">*</p>
+          <p className="text-xs text-white/50">indicates required fields</p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <TextBox
