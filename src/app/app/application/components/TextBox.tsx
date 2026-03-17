@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-
+import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue,} from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 
@@ -11,16 +11,21 @@ type TextBoxProps = {
   label: string;
   placeholder?: string;
   required?: boolean;
-  type?: React.HTMLInputTypeAttribute;
+  type?: React.HTMLInputTypeAttribute | 'select';
   name?: string;
-  value?: string | Date | null;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  onDateChange?: (date: Date | undefined) => void;
+  value?: string | number | Date | null;
   onValidate?:(val: any)=>any;// place holder function, use this to validate textboxes however you want (important for e.g. phone, date etc)
   textarea?: boolean;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onDateChange?: (date: Date | undefined) => void;// arg for data picker
+  // args for select
+  options?: { label: string; value: string }[];
+  onValueChange?: (value: string) => void;
 };
 
-export default function TextBox({label,placeholder,required,type = "text",name,value,onChange, onDateChange, textarea = false,}: TextBoxProps) {
+export default function TextBox({label,placeholder,required,type = "text",name,value,onChange, onDateChange, textarea = false,
+  onValueChange, onValidate, options
+}: TextBoxProps) {
 
   // local state for date picker
   const [date, setDate] = useState<Date | undefined>(
@@ -65,7 +70,24 @@ export default function TextBox({label,placeholder,required,type = "text",name,v
             />
           </PopoverContent>
         </Popover>
-        // text area
+        // select (also turn into component later)
+      ) : type == 'select'  && options ? (
+        <Select
+          value={typeof value === "string" ? value : ""}
+          onValueChange={onValueChange}
+        >
+          <SelectTrigger className="w-full rounded-md bg-white/[0.05] border border-white/10 p-3 text-white focus:ring-2 focus:ring-primary">
+            <SelectValue placeholder={placeholder || "Select option"} />
+          </SelectTrigger>
+
+          <SelectContent className="bg-[#2d2d2d] border border-white/10 text-white">
+            {options.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       ) : textarea ? (
         <textarea
           name={name}
