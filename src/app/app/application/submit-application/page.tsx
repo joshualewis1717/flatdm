@@ -35,6 +35,7 @@ export default function SubmitApplicationPage({listingId}: SubmitApplicationPage
 
   return (
     <div className="max-w-3xl mx-auto p-6 sm:p-8 space-y-6">
+      <h1 className="font-bold text-5xl text-center">Submit Application</h1>
       <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8 space-y-4">
         <div className="flex gap-x-2">
           <p className="text-red-500">*</p>
