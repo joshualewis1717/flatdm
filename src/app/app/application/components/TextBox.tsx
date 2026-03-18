@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue,} from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
 
 type TextBoxProps = {
   label: string;
@@ -71,23 +71,34 @@ export default function TextBox({label,placeholder,required,type = "text",name,v
           </PopoverContent>
         </Popover>
         // select (also turn into component later)
-      ) : type == 'select'  && options ? (
-        <Select
-          value={typeof value === "string" ? value : ""}
-          onValueChange={onValueChange}
-        >
-          <SelectTrigger className="w-full rounded-md bg-white/[0.05] border border-white/10 p-3 text-white focus:ring-2 focus:ring-primary">
-            <SelectValue placeholder={placeholder || "Select option"} />
-          </SelectTrigger>
-
-          <SelectContent className="bg-[#2d2d2d] border border-white/10 text-white">
-            {options.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      ) : type === "select" && options ? (
+        <Listbox value={typeof value === "string" ? value : ""} onChange={(val) => onValueChange?.(val)}>
+          <div className="relative">
+            {/* Button */}
+            <ListboxButton className="w-full rounded-md bg-white/[0.05] border border-white/10 p-3 text-white text-left focus:outline-none focus:ring-2 focus:ring-primary">
+              {options.find((o) => o.value === value)?.label || placeholder || "Select..."}
+            </ListboxButton>
+      
+            {/* Options */}
+            <ListboxOptions className="absolute mt-2 w-full bg-black border border-white/10 rounded-md shadow-lg z-10 max-h-60 overflow-auto">
+              {options.map((option) => (
+                <ListboxOption
+                  key={option.value}
+                  value={option.value}
+                  className={({ active }) =>
+                    `cursor-pointer px-4 py-2 transition ${
+                      active
+                        ? "bg-primary text-black"
+                        : "text-white hover:bg-white/10"
+                    }`
+                  }
+                >
+                  {option.label}
+                </ListboxOption>
+              ))}
+            </ListboxOptions>
+          </div>
+        </Listbox>
       ) : textarea ? (
         <textarea
           name={name}

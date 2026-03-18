@@ -242,23 +242,22 @@ export default function NewListingsPage({ landlordId }: NewListingsPageProps) {
           {amenities.map((a) => (
             <div key={a.id} className="border border-white/10 rounded-xl p-4 space-y-3 bg-black/20">
 
-              {/* Type dropdown */}
-              <div className="flex flex-col">
-                <label className="text-sm text-white/70 mb-1">
-                  Type <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={a.type}
-                  onChange={(e) => updateAmenity(a.id, "type", e.target.value as AmenityType)}
-                  className="rounded-md bg-white/[0.05] border border-white/10 p-3 text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="" disabled>Select type</option>
-                  <option value="HEALTHCARE">Healthcare</option>
-                  <option value="TRANSPORT">Transport</option>
-                  <option value="RECREATIONAL">Recreational</option>
-                  <option value="OTHER">Other</option>
-                </select>
-              </div>
+              {/* Amenity Type dropdown */}
+              <TextBox
+                label="Type"
+                required
+                type="select"
+                value={a.type}
+                onValueChange={(val) =>
+                  updateAmenity(a.id, "type", val as AmenityType)
+                }
+                options={[
+                  { label: "Healthcare", value: "HEALTHCARE" },
+                  { label: "Transport", value: "TRANSPORT" },
+                  { label: "Recreational", value: "RECREATIONAL" },
+                  { label: "Other", value: "OTHER" },
+                ]}
+              />
 
               {/* Name */}
               <TextBox
