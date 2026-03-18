@@ -26,10 +26,19 @@ export default function InteractivePanel({ listingId }: InteractivePanelProps) {
   return (
     <aside className="flex flex-col gap-6 w-full h-full bg-white/[0.05] rounded-[1.5rem] py-6 px-6">
       {/* Apply Button */}
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex  flex-col  gap-6 items-center justify-center">
         <button className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition">
           Apply Now
         </button>
+        {/* message landlord section */}
+        <div className="flex flex-col items-center gap-1">
+          <p className="text-sm text-white/50">
+            Have questions?
+          </p>
+          <button className="text-sm text-white/60 hover:text-white underline underline-offset-4 transition">
+            Message landlord
+          </button>
+        </div>
       </div>
 
       {/* Ratings / Reviews component panel*/}
@@ -45,7 +54,7 @@ export default function InteractivePanel({ listingId }: InteractivePanelProps) {
           <span className="text-xs text-white/50 ml-2">{totalReviews} reviews</span>
         </div>
 
-        {/* Current Review (component)*/}
+        {/* Current Review (component) replace with proper component later, this is just a place holder*/}
         <div className="flex-1 flex flex-col justify-center items-start border-t border-white/10 pt-3">
           <p className="text-sm text-white/70 font-medium">{reviews[currentIndex].user}</p>
           <p className="text-sm text-white/50 mt-1">{reviews[currentIndex].comment}</p>

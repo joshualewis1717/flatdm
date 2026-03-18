@@ -21,8 +21,8 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
   const title = "Example Listing Name";
   const description = "This is a description of the property.";
   const rent = 1000;
-  const availableFrom = new Date("2026-01-01");
-  const createdAt = new Date();
+ // const availableFrom = new Date("2026-01-01");
+  const lastUpdated = new Date();
   const landlordName = "LANDLORD";
 
   // house info
@@ -117,7 +117,7 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
         {/* Title + date */}
         <div className="flex items-start justify-between">
           <h2 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight">{title}</h2>
-          <p className="text-xs text-white/50 mt-1">{createdAt.toLocaleDateString()}</p>
+          <p className="text-xs text-white/50 mt-1">{"last updated at: " + lastUpdated.toLocaleDateString()}</p>
         </div>
 
         {/* Rent + availability */}
@@ -125,9 +125,11 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
           <p className="text-3xl sm:text-4xl font-semibold text-primary">
             £{rent} <span className="text-base font-normal text-white/50">/ month</span>
           </p>
+          {/* we probs don't need to show this info?
           <p className="text-sm text-white/70">
             Available from {availableFrom.toLocaleDateString()}
           </p>
+          */}
         </div>
 
         {/* Owned by */}
