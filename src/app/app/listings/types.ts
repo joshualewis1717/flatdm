@@ -17,7 +17,7 @@ export type ListingForm={
 }
 
 export type Amenity = {
-    id: string;
+    id: number;
     type: AmenityType;
     name: string;
     distance: number;
@@ -25,3 +25,16 @@ export type Amenity = {
 
 export type AmenityType = 'HEALTHCARE' | 'TRANSPORT' | 'RECREATIONAL' | 'OTHER';
 export type DistanceRange = '0-2' | '2-5' | '5-10';
+
+export type Roommate = {
+    id: number;
+    name: string;
+    avatarUrl?: string | null;
+};
+
+export type Review = {
+    id: number;
+    user: string;
+    comment: string;
+    rating?: number;
+};

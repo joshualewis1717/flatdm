@@ -1,12 +1,12 @@
 'use client'
 import { useState } from "react";
 import { ApplicationForm } from "../types";
-import TextBox from "../components/TextBox";
+import InputField from "../components/InputField";
 
 // page where consultants can submit an application form for a specific listing
 
 type SubmitApplicationPageProps={
-    listingId: string;// id of the lisitng that this application procress applies towards
+    listingId: number;// id of the lisitng that this application procress applies towards
 }
 
 export default function SubmitApplicationPage({listingId}: SubmitApplicationPageProps){
@@ -43,7 +43,7 @@ export default function SubmitApplicationPage({listingId}: SubmitApplicationPage
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <TextBox
+          <InputField
             label="Full Name"
             name="name"
             value={form.name}
@@ -52,7 +52,7 @@ export default function SubmitApplicationPage({listingId}: SubmitApplicationPage
             required
           />
 
-          <TextBox
+          <InputField
             label="Email"
             type="email"
             name="email"
@@ -62,7 +62,7 @@ export default function SubmitApplicationPage({listingId}: SubmitApplicationPage
             required
           />
 
-          <TextBox
+          <InputField
             label="Phone Number"
             type="tel"
             name="phone"
@@ -72,7 +72,7 @@ export default function SubmitApplicationPage({listingId}: SubmitApplicationPage
             required
           />
 
-          <TextBox
+          <InputField
             label="Intended Move-in Date"
             type="date"
             name="moveInDate"
@@ -97,7 +97,7 @@ export default function SubmitApplicationPage({listingId}: SubmitApplicationPage
             </label>
 
             {specifyMoveOut && (
-              <TextBox
+              <InputField
                 label="Expected Move-out Date"
                 type="date"
                 name="moveOutDate"
@@ -109,13 +109,13 @@ export default function SubmitApplicationPage({listingId}: SubmitApplicationPage
             )}
           </div>
 
-          <TextBox
+          <InputField
             label="Additional Notes"
+            type="textarea"
             name="notes"
             value={form.notes}
             onChange={handleChange}
             placeholder="Any additional information..."
-            textarea
           />
 
           {/* Buttons */}
