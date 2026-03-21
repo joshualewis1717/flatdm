@@ -17,21 +17,25 @@ export default async function MessagesPage() {
       userA: true,
       userB: true,
       messages: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
+        orderBy: { createdAt: "asc" }
       },
     },
   });
 
   const formatted = conversations.map((c) => {
-    const other =
+    const otherUser =
       c.userAId === userId ? c.userB : c.userA;
 
     return {
       id: c.id,
-      name: `${other.firstName} ${other.lastName}`,
-      lastMessage: c.messages[0]?.content ?? "",
-      timestamp: c.messages[0]?.createdAt?.toISOString() ?? null,
+      name: `${otherUser.firstName} ${otherUser.lastName}`,
+      lastMessage: c.messages.at(-1)?.content ?? "",
+      timestamp: c.messages.at(-1)?.createdAt.toISOString() ?? null,
+      messages: c.messages.map((m) => ({
+        id: m.id,
+        content: m.content,
+        isOwn: m.senderId === userId,
+      }))
       };
   });
 
