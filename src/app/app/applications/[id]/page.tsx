@@ -1,10 +1,6 @@
-type ApplicationDetailsPageProps = {
-  params: {
-    id: string;
-  };
-};
+export default async function ApplicationDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
 
-export default function ApplicationDetailsPage({ params }: ApplicationDetailsPageProps) {
   return (
     <div className="space-y-6">
       <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
@@ -16,7 +12,7 @@ export default function ApplicationDetailsPage({ params }: ApplicationDetailsPag
           Use this route for one full application record. Keep the detail page focused on context, status, and
           role-sensitive actions rather than trying to duplicate the whole applications index.
         </p>
-        <p className="mt-3 text-sm text-white/50">Current route param: {params.id}</p>
+        <p>Application ID: {id}</p>
       </section>
     </div>
   );
