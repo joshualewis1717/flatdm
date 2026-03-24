@@ -6,10 +6,11 @@ import { Building2, FileText, Home, MessageSquare, Plus, ShieldCheck, X } from "
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import UserProfile from "./user-profile";
 
 type AppSidebarProps = {
-  role?: string;
   name?: string | null;
+  email?: string | null;
   open: boolean;
   onClose: () => void;
 };
@@ -17,12 +18,12 @@ type AppSidebarProps = {
 const navigation = [
   { href: "/app", label: "Overview", icon: Home },
   { href: "/app/listings", label: "Listings", icon: Building2 },
-  { href: "/app/applications", label: "Applications", icon: FileText },
+  { href: "/app/application", label: "Applications", icon: FileText },
   { href: "/app/messages", label: "Messages", icon: MessageSquare },
 ];
 
 
-export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
+export default function Menu({ name, email, open, onClose }: AppSidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -81,6 +82,9 @@ export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
             );
           })}
         </nav>
+        <div className={"mt-auto"}>
+          <UserProfile name={name} email={email} />
+        </div>
       </aside>
     </>
   );

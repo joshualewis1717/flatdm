@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import UserProfile from "./user-profile";
 
 
 const headers: Record<string, { title: string; description: string }> = {
@@ -15,7 +14,7 @@ const headers: Record<string, { title: string; description: string }> = {
     title: "Listings",
     description: "Review available properties, add new stock, and manage what is currently live.",
   },
-  "/app/applications": {
+  "/app/application": {
     title: "Applications",
     description: "Stay on top of active applicants, current decisions, and outstanding follow-up.",
   },
@@ -30,11 +29,7 @@ const headers: Record<string, { title: string; description: string }> = {
 };
 
 
-export default function Header({ name, email, onMenuClick } : {
-  name?: string | null;
-  email?: string | null;
-  onMenuClick: () => void;
-}) {
+export default function Header({ onMenuClick } : { onMenuClick: () => void; }) {
   const pathname = usePathname();
   const meta = headers[pathname] ?? headers["/app"];
 
@@ -58,8 +53,6 @@ export default function Header({ name, email, onMenuClick } : {
             <p className="mt-1 max-w-2xl text-sm text-white/60">{meta.description}</p>
           </div>
         </div>
-
-        <UserProfile name={name} email={email} />
       </div>
     </header>
   );

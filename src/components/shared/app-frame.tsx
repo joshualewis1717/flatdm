@@ -19,17 +19,13 @@ export function AppFrame({ role, name, email, children }: AppFrameProps) {
     <div className="min-h-screen bg-[#1a1a1a] text-white">
       <div className="mx-auto flex min-h-screen w-full">
         <Menu
-          role={role}
           name={name}
+          email={email}
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-          <Header
-            name={name}
-            email={email}
-            onMenuClick={() => setSidebarOpen(true)}
-          />
+          <Header onMenuClick={() => setSidebarOpen(true)}/>
           <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
         </div>
       </div>
