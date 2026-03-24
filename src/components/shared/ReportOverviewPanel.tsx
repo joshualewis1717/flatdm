@@ -2,6 +2,8 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardAction, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from '../ui/button';
 import { Props } from 'next/script';
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 type Report = {
   id: number;
@@ -34,14 +36,25 @@ function ReportOverviewItem( {id, reason, status, createdAt, reporter, targetUse
                 <h3 className={statusClassName}>{status}</h3>
                 </div>
 
-                <div className="flex flex-col gap-2 items-end">
-                <Button className="w-full">
-                    Investigate
-                </Button>
-                <Button className="w-full" variant="destructive">
-                    Delete Report
-                </Button>
+                {/* <div className="flex flex-col gap-2 items-end">
+                    <Button className="w-full"> 
+                        {/* router . push smth to get to new page */}
+                        {/* Investigate
+                    </Button>
+                    <Button className="w-full" variant="destructive">
+                        Delete Report
+                    </Button>
+                </div>  */}
+
+                <div className="flex flex-wrap gap-3">
+                    <Button asChild size="lg" className="rounded-2xl px-5">
+                        <Link href={`/app/reports/${id}`}>Investigate<ArrowRight /> </Link>
+                    </Button>
+                    <Button asChild size="lg" variant="outline" className="rounded-2xl border-white/12 bg-white/[0.03] px-5 text-white hover:bg-white/[0.06]">
+                        <Link href={`/app/reports/${id}`}>Delete Report</Link>
+                    </Button>
                 </div>
+
             </div>
         </section>
     );
