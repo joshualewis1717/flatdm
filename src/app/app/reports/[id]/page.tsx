@@ -9,7 +9,12 @@
 //   listingId: number;
 // };
 
+import { Button } from '@/components/ui/button';
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+
 import Report from '@/app/app/reports/types.ts';
+import Status from '@/components/shared/Status';
 
 const mockData : Report[] = [
   {
@@ -74,19 +79,50 @@ export default async function HomePage({ params } : { params: Promise<{id: numbe
   console.log(numId + typeof numId)
   const report : Report = getReportFromId({id:numId});
   console.log(report);
+
+  const statusStyle =
+    report['status'] === 'active' ? 'text-green-700' :
+    report['status'] === 'in progress' ? 'text-green-600' :
+    report['status'] === 'unstarted' ? 'text-yellow-400' :
+  'text-gray-700';
+  console.log(statusStyle);
+
+
   return (
 
     <main className="relative min-h-screen overflow-hidden bg-background text-foreground">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-24 top-16 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
-        <div className="absolute -right-24 bottom-16 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_45%)]" />
-      </div>
 
-      <section>
-        <h1>User {mockUsers[report['targetUserId']]}</h1>
-      </section>
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
+          <p className="text-xs font-medium uppercase tracking-[0.35em] text-primary/85">Report ID: {report['id']}</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            User {mockUsers[report['targetUserId']]} : {report['reason']}
+          </h1>
+          <div className="flex items-center space-x-4 gap-5">
+            <p className="mt-3 text-sm text-white/60">Submitted by User {mockUsers[report['reporterId']]} at {report['createdAt']}</p>
+            <Status theme="greem" text={report['status']}/>
+          </div>
+          <hr />
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-white/100">
+            Further Information:
+            <br />
+            {report['description']}
+          </p>
+
+          <div className="flex items-center space-x-4 gap-5">
+            <Button asChild size="lg" className="rounded-2xl px-5">
+                <Link href={`/app/profile/${report['targetUserId']}`}>View {mockUsers[report['targetUserId']]}'s Profile <ArrowRight /></Link>
+            </Button>
+            <Button asChild size="lg" className="rounded-2xl px-5">
+                <Link href={`/app/profile/${report['reporterId']}`}>View {mockUsers[report['reporterId']]}'s Profile <ArrowRight /></Link>
+            </Button>
+          </div>
+
+        </section>
 
     </main>
     );
 }
+
+
+  // description: "desc",
+  // listingId: 3
