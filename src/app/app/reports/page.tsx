@@ -8,47 +8,47 @@ const mockData : Report[] = [
   {
   reason: "Inappropriate and aggressive language toward staff",
   createdAt: "2026-03-18",
-  target: "Timothy Carter",
-  by: "Paul French",
   id: 12,
   description: "desc",
   status: "active",
-  reporterId: 2,
-  targetUserId: 1,
+  reporterId: 8,
+  targetUserId: 3,
   listingId: 3
   },
   {
   reason: "Deliberate property damage — suspected arson",
   createdAt: "2026-02-11",
-  target: "Jack Harrison",
-  by: "Mr Landlord",
   id: 14,
   description: "desc",
   status: "rejected",
   reporterId: 1,
-  targetUserId: 3,
+  targetUserId: 5,
   listingId: 4
   },
   {
   reason: "Failure to remit rent payments after repeated notices",
   createdAt: "2026-01-05",
-  target: "Emily Bennington",
-  by: "Tony Blank",
   id: 15,
   description: "desc",
   status: "rejected",
-  reporterId: 1,
-  targetUserId: 3,
+  reporterId: 6,
+  targetUserId: 7,
   listingId: 4
   }////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ];
 
-
-
-
-
-
-
+const mockUsers: string[] = [
+  "Alice Johnson",
+  "Bob Martinez",
+  "Charlie Nguyen",
+  "Dana Patel",
+  "Ethan Brown",
+  "Fiona O'Connor",
+  "George Kim",
+  "Hannah Lopez",
+  "Ivan Petrov",
+  "Jade Williams"
+];
 
 
 

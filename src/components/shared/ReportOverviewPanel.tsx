@@ -4,17 +4,32 @@ import { Button } from '../ui/button';
 import { Props } from 'next/script';
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import Report from '@/app/app/reports/types.ts';
 
-type Report = {
-  id: number;
-  reason: string;
-  description: string;
-  status: string;
-  createdAt: string;
-  reporterId: number;
-  targetUserId: number;
-  listingId: number;
-};
+// type Report = {
+//   id: number;
+//   reason: string;
+//   description: string;
+//   status: string;
+//   createdAt: string;
+//   reporterId: number;
+//   targetUserId: number;
+//   listingId: number;
+// };
+
+
+const mockUsers: string[] = [
+  "Alice Johnson",
+  "Bob Martinez",
+  "Charlie Nguyen",
+  "Dana Patel",
+  "Ethan Brown",
+  "Fiona O'Connor",
+  "George Kim",
+  "Hannah Lopez",
+  "Ivan Petrov",
+  "Jade Williams"
+];
 
 function ReportOverviewItem( {id, reason, status, createdAt, reporter, targetUser} : Props){//{id, reason, createdAt, reporter, targetUser} : Report){
 
@@ -74,8 +89,8 @@ export default function ReportOverviewPanel( {reports} ){
                                         reason={report['reason']}
                                         status={report['status']}
                                         createdAt={report['createdAt']}
-                                        reporter={reporter}
-                                        targetUser={targetUser}/>
+                                        reporter={mockUsers[report['reporterId']]}
+                                        targetUser={mockUsers[report['targetUserId']]}/>
                 ))
             }
         </section>
