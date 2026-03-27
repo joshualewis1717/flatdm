@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import Report from '@/app/app/reports/types.ts';
 
+import Status from '@/components/shared/Status';
 // type Report = {
 //   id: number;
 //   reason: string;
@@ -33,14 +34,11 @@ const mockUsers: string[] = [
 
 function ReportOverviewItem( {id, reason, status, createdAt, reporter, targetUser} : Props){//{id, reason, createdAt, reporter, targetUser} : Report){
 
-    let statusClassName = "text-red-700 bg-red-100";
-    console.log("wefrgthyju");
-
-    if (status == "active"){
-        console.log("egrt");
-        statusClassName="text-green-800 bg-green-100";
-    }
-
+    const theme =
+        status === 'Resolved' ? 'green' :
+        status === 'Under Review' || 'Action Taken' ? 'amber' :
+        status === 'Rejected' ? 'red' :
+    'neutral';
 
     return(
         <section className="px-[7%]">
@@ -48,7 +46,7 @@ function ReportOverviewItem( {id, reason, status, createdAt, reporter, targetUse
                 <div className="flex flex-col gap-1">
                 <h1 className="text-white font-bold text-lg">[{id}] {targetUser} : {reason}</h1>
                 <h2 className="italic text-gray-400">{`Submitted by ${reporter} at ${createdAt}`}</h2>
-                <h3 className={statusClassName}>{status}</h3>
+                <Status theme={theme} text={status} />
                 </div>
 
                 {/* <div className="flex flex-col gap-2 items-end">

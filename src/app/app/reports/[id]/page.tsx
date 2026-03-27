@@ -15,6 +15,8 @@ import { ArrowRight } from "lucide-react";
 
 import Report from '@/app/app/reports/types.ts';
 import Status from '@/components/shared/Status';
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 const mockData : Report[] = [
   {
@@ -22,7 +24,7 @@ const mockData : Report[] = [
   createdAt: "2026-03-18",
   id: 12,
   description: "desc",
-  status: "active",
+  status: "Under Review",
   reporterId: 8,
   targetUserId: 3,
   listingId: 3
@@ -32,7 +34,7 @@ const mockData : Report[] = [
   createdAt: "2026-02-11",
   id: 14,
   description: "desc",
-  status: "rejected",
+  status: "Resolved",
   reporterId: 1,
   targetUserId: 5,
   listingId: 4
@@ -42,7 +44,7 @@ const mockData : Report[] = [
   createdAt: "2026-01-05",
   id: 15,
   description: "desc",
-  status: "rejected",
+  status: "Action Taken",
   reporterId: 6,
   targetUserId: 7,
   listingId: 4
@@ -63,10 +65,8 @@ const mockUsers: string[] = [
 ];
 
 function getReportFromId({id} : {id:number}){
-  console.log("id:" + id);
   for (let i = 0; i < mockData.length; i++){
     if (mockData[i]['id'] == id){
-      console.log("hey" + mockData[i]);
       return mockData[i];
     }
   }
@@ -76,16 +76,26 @@ function getReportFromId({id} : {id:number}){
 export default async function HomePage({ params } : { params: Promise<{id: number}> }) {
   const {id} = await params;
   const numId = Number(id);
-  console.log(numId + typeof numId)
   const report : Report = getReportFromId({id:numId});
-  console.log(report);
 
-  const statusStyle =
-    report['status'] === 'active' ? 'text-green-700' :
-    report['status'] === 'in progress' ? 'text-green-600' :
-    report['status'] === 'unstarted' ? 'text-yellow-400' :
-  'text-gray-700';
-  console.log(statusStyle);
+    const theme =
+      report['status'] === 'Resolved' ? 'green' :
+      report['status'] === 'Under Review' || 'Action Taken' ? 'amber' :
+      report['status'] === 'Rejected' ? 'red' :
+    'neutral';
+
+
+
+  // get stuff from the db
+
+  const session = await auth();
+  const userId = Number(session?.user.id);
+
+  const reports = await prisma.report.findMany();
+  console.log(reports);
+
+
+
 
 
   return (
@@ -97,9 +107,13 @@ export default async function HomePage({ params } : { params: Promise<{id: numbe
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
             User {mockUsers[report['targetUserId']]} : {report['reason']}
           </h1>
-          <div className="flex items-center space-x-4 gap-5">
-            <p className="mt-3 text-sm text-white/60">Submitted by User {mockUsers[report['reporterId']]} at {report['createdAt']}</p>
-            <Status theme="greem" text={report['status']}/>
+          <div className="flex items-center gap-5">
+            <div className="flex-1 min-w-0">
+              <p className="mt-3 text-sm text-white/60 truncate">
+                Submitted by User {mockUsers[report['reporterId']]} at {report['createdAt']}
+              </p>
+            </div>
+            <Status theme={theme} text={report['status']} />
           </div>
           <hr />
           <p className="mt-4 max-w-3xl text-sm leading-7 text-white/100">

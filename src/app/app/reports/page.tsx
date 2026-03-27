@@ -3,14 +3,13 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import ReportOverviewPanel from '@/components/shared/ReportOverviewPanel';
 
-  // pretend this is from the db
 const mockData : Report[] = [
   {
   reason: "Inappropriate and aggressive language toward staff",
   createdAt: "2026-03-18",
   id: 12,
   description: "desc",
-  status: "active",
+  status: "Under Review",
   reporterId: 8,
   targetUserId: 3,
   listingId: 3
@@ -20,7 +19,7 @@ const mockData : Report[] = [
   createdAt: "2026-02-11",
   id: 14,
   description: "desc",
-  status: "rejected",
+  status: "Resolved",
   reporterId: 1,
   targetUserId: 5,
   listingId: 4
@@ -30,7 +29,7 @@ const mockData : Report[] = [
   createdAt: "2026-01-05",
   id: 15,
   description: "desc",
-  status: "rejected",
+  status: "Action Taken",
   reporterId: 6,
   targetUserId: 7,
   listingId: 4
