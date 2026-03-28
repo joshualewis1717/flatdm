@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import ReportOverviewPanel from '@/components/shared/ReportOverviewPanel';
 
+import { prisma } from "@/lib/prisma";
+
 const mockData : Report[] = [
   {
   reason: "Inappropriate and aggressive language toward staff",
@@ -49,7 +51,7 @@ const mockUsers: string[] = [
   "Jade Williams"
 ];
 
-
+const reports = await prisma.report.findMany();
 
 
 export default function HomePage() {
@@ -63,7 +65,7 @@ export default function HomePage() {
       </div>
 
       <section>
-        <ReportOverviewPanel reports={mockData}/>
+        <ReportOverviewPanel reports={reports}/>
       </section>
 
     </main>

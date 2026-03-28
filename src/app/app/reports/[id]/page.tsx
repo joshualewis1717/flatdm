@@ -24,7 +24,7 @@ const mockData : Report[] = [
   createdAt: "2026-03-18",
   id: 12,
   description: "desc",
-  status: "Under Review",
+  status: "UNDER REVIEW",
   reporterId: 8,
   targetUserId: 3,
   listingId: 3
@@ -34,7 +34,7 @@ const mockData : Report[] = [
   createdAt: "2026-02-11",
   id: 14,
   description: "desc",
-  status: "Resolved",
+  status: "RESOLVED",
   reporterId: 1,
   targetUserId: 5,
   listingId: 4
@@ -44,7 +44,7 @@ const mockData : Report[] = [
   createdAt: "2026-01-05",
   id: 15,
   description: "desc",
-  status: "Action Taken",
+  status: "OPEN",
   reporterId: 6,
   targetUserId: 7,
   listingId: 4
@@ -64,40 +64,46 @@ const mockUsers: string[] = [
   "Jade Williams"
 ];
 
-function getReportFromId({id} : {id:number}){
-  for (let i = 0; i < mockData.length; i++){
-    if (mockData[i]['id'] == id){
-      return mockData[i];
-    }
+function getEntryById({id} : {id:number}, {data} : {data:Array<any>}){
+  for (let i = 0; i < data.length; i++){
+      if (data[i]['id'] == id){
+        return data[i];
+      }
   }
+  return undefined;
 }
+
 
 
 export default async function HomePage({ params } : { params: Promise<{id: number}> }) {
   const {id} = await params;
   const numId = Number(id);
-  const report : Report = getReportFromId({id:numId});
-
-    const theme =
-      report['status'] === 'Resolved' ? 'green' :
-      report['status'] === 'Under Review' || 'Action Taken' ? 'amber' :
-      report['status'] === 'Rejected' ? 'red' :
-    'neutral';
-
-
-
-  // get stuff from the db
 
   const session = await auth();
   const userId = Number(session?.user.id);
 
   const reports = await prisma.report.findMany();
-  console.log(reports);
+  const report = getEntryById( {id: numId}, {data: reports} );
 
+  const users = await prisma.user.findMany();
 
+  let target = undefined;
+  let reporter = undefined;
+  for (let i = 0; i < users.length; i++){
+      if (users[i]['id'] == report['targetUserId']){
+        target = users[i];
+      }
+      else if (users[i]['id'] == report['reporterId']){
+        reporter = users[i];
+      }
+  }
 
-
-
+    const theme =
+      report['status'] === 'RESOLVED' ? 'green' :
+      report['status'] === 'UNDER_REVIEW' ? 'amber' :
+      report['status'] === 'OPEN' ? 'red' :
+    'neutral';
+    
   return (
 
     <main className="relative min-h-screen overflow-hidden bg-background text-foreground">
@@ -124,10 +130,10 @@ export default async function HomePage({ params } : { params: Promise<{id: numbe
 
           <div className="flex items-center space-x-4 gap-5">
             <Button asChild size="lg" className="rounded-2xl px-5">
-                <Link href={`/app/profile/${report['targetUserId']}`}>View {mockUsers[report['targetUserId']]}'s Profile <ArrowRight /></Link>
+                <Link href={`/app/profile/${report['targetUserId']}`}>View {target['username']}'s Profile <ArrowRight /></Link>
             </Button>
             <Button asChild size="lg" className="rounded-2xl px-5">
-                <Link href={`/app/profile/${report['reporterId']}`}>View {mockUsers[report['reporterId']]}'s Profile <ArrowRight /></Link>
+                <Link href={`/app/profile/${report['reporterId']}`}>View {reporter['username']}'s Profile <ArrowRight /></Link>
             </Button>
           </div>
 

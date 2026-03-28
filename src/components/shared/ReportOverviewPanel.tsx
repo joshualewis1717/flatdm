@@ -35,9 +35,9 @@ const mockUsers: string[] = [
 function ReportOverviewItem( {id, reason, status, createdAt, reporter, targetUser} : Props){//{id, reason, createdAt, reporter, targetUser} : Report){
 
     const theme =
-        status === 'Resolved' ? 'green' :
-        status === 'Under Review' || 'Action Taken' ? 'amber' :
-        status === 'Rejected' ? 'red' :
+      status === 'RESOLVED' ? 'green' :
+      status === 'UNDER_REVIEW' ? 'amber' :
+      status === 'OPEN' ? 'red' :
     'neutral';
 
     return(
