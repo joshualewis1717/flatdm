@@ -1,14 +1,3 @@
-// type Report = {
-//   id: number;
-//   reason: string;
-//   description: string;
-//   status: string;
-//   createdAt: string;
-//   reporterId: number;
-//   targetUserId: number;
-//   listingId: number;
-// };
-
 import { Button } from '@/components/ui/button';
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -18,6 +7,9 @@ import Status from '@/components/shared/Status';
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+
+
+//// to delete
 const mockData : Report[] = [
   {
   reason: "Inappropriate and aggressive language toward staff",
@@ -63,7 +55,10 @@ const mockUsers: string[] = [
   "Ivan Petrov",
   "Jade Williams"
 ];
+// to delete end
 
+
+// passing in an id and array (such as from the db), return the entry for that specific id
 function getEntryById({id} : {id:number}, {data} : {data:Array<any>}){
   for (let i = 0; i < data.length; i++){
       if (data[i]['id'] == id){
@@ -76,20 +71,22 @@ function getEntryById({id} : {id:number}, {data} : {data:Array<any>}){
 
 
 export default async function HomePage({ params } : { params: Promise<{id: number}> }) {
-  const {id} = await params;
-  const numId = Number(id);
+  
+  const {id} = await params;    // id represents the report id
+  const numId = Number(id);     // make the id a number
 
-  const session = await auth();
-  const userId = Number(session?.user.id);
+  const session = await auth();             // session stuff
+  const userId = Number(session?.user.id);  // session stuff
 
-  const reports = await prisma.report.findMany();
-  const report = getEntryById( {id: numId}, {data: reports} );
+  const reports = await prisma.report.findMany();               // get all reports fro the db
+  const report = getEntryById( {id: numId}, {data: reports} );  // get the report for the given report id
 
-  const users = await prisma.user.findMany();
+  const users = await prisma.user.findMany();  // get all users from the db
 
+  // set the target and reporter users to use later
   let target = undefined;
   let reporter = undefined;
-  for (let i = 0; i < users.length; i++){
+  for (let i = 0; i < users.length; i++){             // iterate through all users to get to target and reporter user ids
       if (users[i]['id'] == report['targetUserId']){
         target = users[i];
       }
@@ -98,11 +95,13 @@ export default async function HomePage({ params } : { params: Promise<{id: numbe
       }
   }
 
-    const theme =
-      report['status'] === 'RESOLVED' ? 'green' :
-      report['status'] === 'UNDER_REVIEW' ? 'amber' :
-      report['status'] === 'OPEN' ? 'red' :
-    'neutral';
+  // depending on what value 'status' holds, the status bar will appear a different colour
+  // theme is passed into the Status component to style it
+  const theme =
+    report['status'] === 'RESOLVED' ? 'green' :
+    report['status'] === 'UNDER_REVIEW' ? 'amber' :
+    report['status'] === 'OPEN' ? 'red' :
+  'neutral';
     
   return (
 
@@ -142,7 +141,3 @@ export default async function HomePage({ params } : { params: Promise<{id: numbe
     </main>
     );
 }
-
-
-  // description: "desc",
-  // listingId: 3

@@ -5,35 +5,12 @@ import { Props } from 'next/script';
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import Report from '@/app/app/reports/types.ts';
-
 import Status from '@/components/shared/Status';
-// type Report = {
-//   id: number;
-//   reason: string;
-//   description: string;
-//   status: string;
-//   createdAt: string;
-//   reporterId: number;
-//   targetUserId: number;
-//   listingId: number;
-// };
-
-
-const mockUsers: string[] = [
-  "Alice Johnson",
-  "Bob Martinez",
-  "Charlie Nguyen",
-  "Dana Patel",
-  "Ethan Brown",
-  "Fiona O'Connor",
-  "George Kim",
-  "Hannah Lopez",
-  "Ivan Petrov",
-  "Jade Williams"
-];
 
 function ReportOverviewItem( {id, reason, status, createdAt, reporter, targetUser} : Props){//{id, reason, createdAt, reporter, targetUser} : Report){
 
+    // depending on what value 'status' holds, the status bar will appear a different colour
+    // theme is passed into the Status component to style it
     const theme =
       status === 'RESOLVED' ? 'green' :
       status === 'UNDER_REVIEW' ? 'amber' :
@@ -44,21 +21,19 @@ function ReportOverviewItem( {id, reason, status, createdAt, reporter, targetUse
         <section className="px-[7%]">
             <div className="bg-black/70 rounded-[0.5rem] grid-cols-[4fr_1fr] p-4 grid grid-cols-2 items-start gap-4">
                 <div className="flex flex-col gap-1">
+
+                {/* key info about the report */}
+                {/* format:
+                    User [username] : [reason they were reported]
+                    Submitted by [username] at [datetime]
+                    [status]
+                */}
                 <h1 className="text-white font-bold text-lg">[{id}] {targetUser} : {reason}</h1>
                 <h2 className="italic text-gray-400">{`Submitted by ${reporter} at ${createdAt}`}</h2>
                 <Status theme={theme} text={status} />
                 </div>
 
-                {/* <div className="flex flex-col gap-2 items-end">
-                    <Button className="w-full"> 
-                        {/* router . push smth to get to new page */}
-                        {/* Investigate
-                    </Button>
-                    <Button className="w-full" variant="destructive">
-                        Delete Report
-                    </Button>
-                </div>  */}
-
+                {/* investigate and delete report buttons */}
                 <div className="flex flex-wrap gap-3">
                     <Button asChild size="lg" className="rounded-2xl px-5">
                         <Link href={`/app/reports/${id}`}>Investigate<ArrowRight /> </Link>
@@ -82,6 +57,7 @@ export default function ReportOverviewPanel( {reports} ){
     return(
         <section className="flex flex-col gap-2 py-[3%]">
             {
+                // iterate through all reports passed in
                 reports.map( (report : Report, key : string) => (
                     <ReportOverviewItem id={report['id']}
                                         reason={report['reason']}
