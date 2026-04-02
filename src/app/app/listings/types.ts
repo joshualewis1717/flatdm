@@ -38,3 +38,28 @@ export type Review = {
     comment: string;
     rating?: number;
 };
+
+
+/*********** my property specific types */
+
+export type OccupantType = 'occupant' | 'applicant';
+
+export type Occupant = {//TODO: use types from prisma instead (consultant table), make this be a wrapper
+  id: number;
+  name: string;
+  type: OccupantType;
+  movedIn?: string | null;
+  expectedMoveOut?: string | null;
+  expectedMoveIn?: string | null;
+}
+
+export type Property= {// TODO: use from pisma table instead 
+  id: number;
+  name: string;
+  address: string;
+  thumbnail: string;// thumbnail image of the property (TODO: make this optional later and in public have a default thumbail
+  // image and use that if landlord never added in a thumnail)
+  maxOccupants: number;
+  earliestFreeDate: string;
+  occupants: Occupant[];
+}
