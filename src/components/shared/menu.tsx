@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { Building2, FileText, Home, MessageSquare, UserRound, X } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { Building2, FileText, Home, LogOut, MessageSquare, User, UserRound, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -26,6 +28,13 @@ const navigation = [
 export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
   const pathname = usePathname();
   const displayRole = role ? role.charAt(0) + role.slice(1).toLowerCase() : "Workspace";
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const initial = (name ?? displayRole ?? "U").slice(0, 1).toUpperCase();
+
+  async function handleSignOut() {
+    setIsSigningOut(true);
+    await signOut({ callbackUrl: "/login" });
+  }
 
   return (
     <>
@@ -84,12 +93,30 @@ export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
           })}
         </nav>
 
-        <div className="mt-auto rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-xs uppercase tracking-[0.3em] text-primary/80">{displayRole}</p>
-          <p className="mt-2 truncate text-sm font-medium text-white">{name ?? "FlatDM user"}</p>
-          <p className="mt-1 text-sm leading-6 text-white/55">
-            Keep your profile current so listings, applications, and conversations stay trustworthy.
-          </p>
+        <div className="mt-auto rounded-[28px] border border-white/10 bg-black/20 p-3 lg:fixed lg:bottom-5 lg:left-5 lg:w-[250px]">
+          <div className="flex items-start gap-3">
+            <div className="flex size-12 items-center justify-center rounded-[18px] bg-primary text-sm font-semibold text-primary-foreground">
+              {initial}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-white">{name ?? "FlatDM user"}</p>
+              <p className="text-xs text-white/55">{displayRole}</p>
+
+              <div className="mt-2 flex items-center gap-2">
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/app/profile" onClick={onClose}>
+                    <User className="size-3.5" />
+                    Profile
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleSignOut} disabled={isSigningOut}>
+                  <LogOut className="size-3.5" />
+                  {isSigningOut ? "Signing out..." : "Sign out"}
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </aside>
     </>
