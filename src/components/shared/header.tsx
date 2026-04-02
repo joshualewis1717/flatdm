@@ -23,6 +23,10 @@ const headers: Record<string, { title: string; description: string }> = {
     title: "Messages",
     description: "Handle active conversations without losing context across listings and applications.",
   },
+  "/app/profile": {
+    title: "Profile",
+    description: "Keep your account details current and track the activity that matters for your role.",
+  },
   "/app/reports": {
     title: "Reports",
     description: "Monitor flagged content, review details, and take action to keep the marketplace healthy.",

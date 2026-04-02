@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, FileText, Home, MessageSquare, Plus, ShieldCheck, X } from "lucide-react";
+import { Building2, FileText, Home, MessageSquare, UserRound, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -19,11 +19,13 @@ const navigation = [
   { href: "/app/listings", label: "Listings", icon: Building2 },
   { href: "/app/applications", label: "Applications", icon: FileText },
   { href: "/app/messages", label: "Messages", icon: MessageSquare },
+  { href: "/app/profile", label: "Profile", icon: UserRound },
 ];
 
 
 export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
   const pathname = usePathname();
+  const displayRole = role ? role.charAt(0) + role.slice(1).toLowerCase() : "Workspace";
 
   return (
     <>
@@ -81,6 +83,14 @@ export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
             );
           })}
         </nav>
+
+        <div className="mt-auto rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-[0.3em] text-primary/80">{displayRole}</p>
+          <p className="mt-2 truncate text-sm font-medium text-white">{name ?? "FlatDM user"}</p>
+          <p className="mt-1 text-sm leading-6 text-white/55">
+            Keep your profile current so listings, applications, and conversations stay trustworthy.
+          </p>
+        </div>
       </aside>
     </>
   );
