@@ -28,7 +28,7 @@ const roleContent = {
   MODERATOR: {
     intro:
       "Keep the marketplace healthy by monitoring supply, resolving conversations, and stepping into application flows when escalation is needed.",
-    primaryCta: { href: "/app/applications", label: "Open review queue" },
+    primaryCta: { href: "/app/reports", label: "Open report queue" },
     secondaryCta: { href: "/app/listings", label: "Inspect listings" },
     metrics: [
       { label: "Flagged items", value: "04" },

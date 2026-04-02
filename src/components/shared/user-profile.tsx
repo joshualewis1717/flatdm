@@ -22,7 +22,7 @@ export default function UserProfile({
   }
 
   return (
-    <div className="hidden min-w-[320px] max-w-[380px] rounded-[28px] border border-white/10 bg-black/2 p-3 xl:block">
+    <div className="max-w-[380px] rounded-[28px] border border-white/10 bg-black/2 p-3">
         <div className="flex items-start gap-3">
           <div className="flex size-12 items-center justify-center rounded-[18px] bg-primary text-sm font-semibold text-primary-foreground">
             {initial}
