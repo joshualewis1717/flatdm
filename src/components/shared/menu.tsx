@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type AppSidebarProps = {
+  role?: string;
   name?: string | null;
-  email?: string | null;
   open: boolean;
   onClose: () => void;
 };
@@ -19,13 +19,13 @@ type AppSidebarProps = {
 const navigation = [
   { href: "/app", label: "Overview", icon: Home },
   { href: "/app/listings", label: "Listings", icon: Building2 },
-  { href: "/app/application", label: "Applications", icon: FileText },
+  { href: "/app/applications", label: "Applications", icon: FileText },
   { href: "/app/messages", label: "Messages", icon: MessageSquare },
   { href: "/app/profile", label: "Profile", icon: UserRound },
 ];
 
 
-export default function Menu({ name, email, open, onClose }: AppSidebarProps) {
+export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
   const pathname = usePathname();
   const displayRole = role ? role.charAt(0) + role.slice(1).toLowerCase() : "Workspace";
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -47,7 +47,7 @@ export default function Menu({ name, email, open, onClose }: AppSidebarProps) {
       />
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-[290px] flex-col border-r border-white/10 bg-[#111111] px-5 py-5 text-white shadow-2xl backdrop-blur-xl transition-transform duration-300 lg:static lg:z-0 lg:w-72 lg:translate-x-0 lg:bg-transparent lg:shadow-none",
+          "fixed inset-y-0 left-0 z-50 flex w-[290px] flex-col border-r border-white/10 bg-[#111111] px-5 py-5 text-white shadow-2xl backdrop-blur-xl transition-transform duration-300 lg:sticky lg:top-0 lg:z-0 lg:h-screen lg:w-72 lg:self-start lg:translate-x-0 lg:bg-transparent lg:shadow-none",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -93,9 +93,9 @@ export default function Menu({ name, email, open, onClose }: AppSidebarProps) {
           })}
         </nav>
 
-        <div className="mt-auto rounded-[28px] border border-white/10 bg-black/20 p-3 lg:fixed lg:bottom-5 lg:left-5 lg:w-[250px]">
+        <div className="mt-auto rounded-[28px] border border-white/10 bg-black/20 p-3">
           <div className="flex items-start gap-3">
-            <div className="flex size-12 items-center justify-center rounded-[18px] bg-primary text-sm font-semibold text-primary-foreground">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-[14px] bg-primary text-xs font-semibold text-primary-foreground">
               {initial}
             </div>
 
@@ -103,14 +103,20 @@ export default function Menu({ name, email, open, onClose }: AppSidebarProps) {
               <p className="truncate text-sm font-semibold text-white">{name ?? "FlatDM user"}</p>
               <p className="text-xs text-white/55">{displayRole}</p>
 
-              <div className="mt-2 flex items-center gap-2">
-                <Button asChild variant="outline" size="sm">
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Button asChild variant="outline" size="sm" className="min-w-0 px-2">
                   <Link href="/app/profile" onClick={onClose}>
                     <User className="size-3.5" />
                     Profile
                   </Link>
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleSignOut} disabled={isSigningOut}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-w-0 px-2"
+                  onClick={handleSignOut}
+                  disabled={isSigningOut}
+                >
                   <LogOut className="size-3.5" />
                   {isSigningOut ? "Signing out..." : "Sign out"}
                 </Button>
