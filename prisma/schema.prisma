@@ -44,6 +44,8 @@ model User {
   reportsAgainst  Report[] @relation("ReportsAgainst")
 
   offences        OffenceRecord[]
+  occupants     Occupant[]// array to store rental history if need be
+
 }
 
 model Profile {
@@ -56,54 +58,109 @@ model Profile {
   user        User     @relation(fields: [userId], references: [id])
 }
 
-model Property {
-  id           Int       @id @default(autoincrement())
-  address      String
-  city         String
-  postcode     String
-  bedrooms     Int
-  bathrooms    Int
-  maxOccupancy Int
-  createdAt    DateTime  @default(now())
 
-  landlordId   Int
-  landlord     User      @relation(fields: [landlordId], references: [id])
+model ListingImage {
+  id        Int    @id @default(autoincrement())
+  url       String
 
-  listings     PropertyListing[]
-  amenities    Amenity[]
+  // Marks whether this image is the thumbnail
+  isThumbnail Boolean @default(false)
+
+  listingId Int
+  listing   PropertyListing @relation(fields: [listingId], references: [id])
+
+  createdAt DateTime @default(now())
 }
 
+// we are modelling it as the entire building
+model Property {
+  id        Int      @id @default(autoincrement())
+  title     String?
+  address   String
+  city      String
+  postcode  String
+
+  landlordId Int
+  landlord   User @relation(fields: [landlordId], references: [id])
+
+  // shared building-level data
+  amenities  Amenity[]
+
+  // flats inside the building
+  listings   PropertyListing[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// we are modelling it as a single flat
 model PropertyListing {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String
-  rent        Int
-  availableFrom DateTime
-  createdAt   DateTime @default(now())
+  id              Int      @id @default(autoincrement())
 
-  propertyId  Int
-  property    Property @relation(fields: [propertyId], references: [id])
+   // optional flat number inside each building
+  flatNumber     String?
+  description     String
 
-  landlordId  Int
-  landlord    User     @relation("LandlordListings", fields: [landlordId], references: [id])
+  rent            Int
+  availableFrom   DateTime
 
-  applications PropertyApplication[]
+  // rental rules
+  maxOccupants    Int// e.g. withRoomates boolean or whatnot is derived from this
+  minStay         Int
+
+  bedrooms       Int
+  bathrooms      Int
+
+  propertyId     Int
+  property       Property @relation(fields: [propertyId], references: [id])
+
+  landlordId     Int
+  landlord       User @relation("LandlordListings", fields: [landlordId], references: [id])
+
+  occupants      Occupant[]
+  applications   PropertyApplication[]
   reviews      Review[]
   reports      Report[]
+
+  images      ListingImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model PropertyApplication {
   id          Int      @id @default(autoincrement())
+
   moveInDate  DateTime
   moveOutDate DateTime?
+
   status      ApplicationStatus
-  createdAt   DateTime @default(now())
 
   userId      Int
   listingId   Int
 
-  user        User            @relation(fields: [userId], references: [id])
+  user        User @relation(fields: [userId], references: [id])
   listing     PropertyListing @relation(fields: [listingId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+
+model Occupant {
+  id        Int      @id @default(autoincrement())
+
+  userId    Int
+  listingId Int
+
+  moveIn     DateTime
+  moveOut    DateTime?
+
+  createdAt  DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id])
+  listing   PropertyListing @relation(fields: [listingId], references: [id])
+
+  @@unique([userId, listingId]) // prevents duplicate occupancy
 }
 
 model Conversation {
@@ -184,12 +241,21 @@ model OffenceRecord {
 }
 
 model Amenity {
-  id        Int      @id @default(autoincrement())
+  id        Int          @id @default(autoincrement())
   name      String
+  type      AmenityType
   distance  Float?
 
   propertyId Int
   property   Property @relation(fields: [propertyId], references: [id])
+}
+
+
+enum AmenityType {
+  HEALTHCARE
+  TRANSPORT
+  RECREATIONAL
+  OTHER
 }
 
 enum Role {
@@ -214,4 +280,9 @@ enum ReportStatus {
   OPEN
   UNDER_REVIEW
   RESOLVED
+}
+
+enum ListingType {
+  ENTIRE_PROPERTY
+  ROOM
 }
