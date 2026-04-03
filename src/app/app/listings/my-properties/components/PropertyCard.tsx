@@ -5,6 +5,7 @@ import { Users, ChevronDown, Calendar, Eye, Check } from 'lucide-react';
 import PropertyStatusPill from '../../components/PropertyStatusPill';
 import OccupantCard from './OccupantCard';
 import { useRouter } from 'next/navigation';
+import { Checkbox } from '@/components/ui/checkbox';
 // property card to show property + whether it is full or empty, and also of total occupants allowed + current number of occupants
 type Props = {
     property: Property;// our property in question
@@ -53,18 +54,16 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
         >
           {/* Delete checkbox */}
           {deleteMode && (
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleSelect();
-              }}
-              className={`
-                w-[18px] h-[18px] rounded-[5px] border flex items-center justify-center
-                ${isSelected ? 'bg-red-500 border-red-500' : 'border-red-500/50'}
-              `}
-            >
-              {isSelected && <Check className="w-3 h-3 text-white" />}
-            </div>
+           <Checkbox
+           checked={isSelected}
+           onCheckedChange={() => onToggleSelect()}
+           onClick={(e) => e.stopPropagation()}
+           className="
+             data-[state=checked]:bg-red-500
+             data-[state=checked]:border-red-500
+             border-red-500/50
+           "
+         />
           )}
   
           {/* Thumbnail */}
