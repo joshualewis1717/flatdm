@@ -36,7 +36,8 @@ export default async function MessagesPage() {
       messages: conversation.messages.map((message) => ({
         id: message.id,
         content: message.content,
-        isOwn: message.senderId === userId,
+        createdAt: message.createdAt.toISOString(),
+        isOwn: message.senderId === userId
       }))
     };
   });
