@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import MessagesClient from "./_components/MessagesClient";
+import MessagesClient from "./_components/_MessagesClient";
 
 export default async function MessagesPage() {
   const session = await auth();
@@ -17,27 +17,29 @@ export default async function MessagesPage() {
       userA: true,
       userB: true,
       messages: {
-        orderBy: { createdAt: "asc" }
+        orderBy: { createdAt:"asc" }
       },
     },
   });
 
-  const formatted = conversations.map((c) => {
-    const otherUser =
-      c.userAId === userId ? c.userB : c.userA;
+  
+  const formattedConversations = conversations.map((conversation) => {
+    const otherUser = conversation.userAId === userId ? conversation.userB : conversation.userA;
+    const displayName = [otherUser.firstName, otherUser.lastName].filter(Boolean).join(" ") || otherUser.username || "Unknown user";
 
+    const lastMessage=conversation.messages.at(-1);
     return {
-      id: c.id,
-      name: `${otherUser.firstName} ${otherUser.lastName}`,
-      lastMessage: c.messages.at(-1)?.content ?? "",
-      timestamp: c.messages.at(-1)?.createdAt.toISOString() ?? null,
-      messages: c.messages.map((m) => ({
-        id: m.id,
-        content: m.content,
-        isOwn: m.senderId === userId,
+      id: conversation.id,
+      name: displayName,
+      lastMessage: lastMessage?.content ?? "",
+      timestamp: lastMessage?.createdAt.toISOString() ?? null,
+      messages: conversation.messages.map((message) => ({
+        id: message.id,
+        content: message.content,
+        isOwn: message.senderId === userId,
       }))
-      };
+    };
   });
 
-  return <MessagesClient conversations={formatted} />;
+  return <MessagesClient conversations={formattedConversations} />;
 }

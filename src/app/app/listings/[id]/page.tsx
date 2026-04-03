@@ -18,7 +18,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
         {/* Interactive panel: 1/3 */}
         <div className="lg:w-1/3">
-          <InteractivePanel  listingId={id} />
+          <InteractivePanel  listingId={id} userId={id}/>
         </div>
       </div>
     </div>
