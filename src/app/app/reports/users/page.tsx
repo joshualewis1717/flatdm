@@ -5,7 +5,6 @@ import Link from "next/link";
 
 
 export default async function HomePage({ params } : { params: Promise<{id: number}> }) {
-
     const users = await prisma.user.findMany();  // get all users from the db
     
     return (

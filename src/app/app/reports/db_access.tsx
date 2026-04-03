@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import {User, Report, Review, PropertyApplication, Property, PropertyListing} from '@/app/app/reports/types';
+import {sendEmail} from '@/app/app/reports/sendEmail'
 
 export  async function deleteReport({report} : Report){
 
@@ -51,6 +52,8 @@ export  async function deleteUser({user} : User){
     await prisma.user.delete({
         where: {id: user["id"]}
     });
+
+    sendEmail(user, "Your account has been deleted");
 
     // confirm in logs
     console.log("deleting user with id: " + user['id']);
