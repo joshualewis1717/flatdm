@@ -24,7 +24,6 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
   const bathrooms = 2;
   const beds = 4;
   const maxOccupants = 5;
-  const roommatesAllowed = true;
   const shared = true;
   const area = 120;
   const minStay = 6;
@@ -50,25 +49,19 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
   ];
 
   const amenities: Amenity[] = [
-    { id: 1, name: "Bus Stop", distance: 0.3, type: "TRANSPORT" },
-    { id: 2, name: "Hospital", distance: 1.2, type: "HEALTHCARE" },
-    { id: 3, name: "Park", distance: 0.5, type: "RECREATIONAL" },
+    { id: 1, propertyId: 1,  name: "Bus Stop", distance: 0.3, type: "TRANSPORT"},
+    { id: 2, propertyId: 1, name: "Hospital", distance: 1.2, type: "HEALTHCARE" },
+    { id: 3, propertyId: 1, name: "Park", distance: 0.5, type: "RECREATIONAL" },
   ];
 
-  const stats = [
+  const stats = [// turn into type later
     { icon: <BedDouble className="w-4 h-4" />, label: "Rooms", value: totalRooms },
     { icon: <Bath className="w-4 h-4" />, label: "Bathrooms", value: bathrooms },
     { icon: <BedDouble className="w-4 h-4" />, label: "Beds", value: beds },
     { icon: <Users className="w-4 h-4" />, label: "Max Occupants", value: maxOccupants },
     { icon: <Ruler className="w-4 h-4" />, label: "Area", value: `${area} m²` },
     { icon: <Clock className="w-4 h-4" />, label: "Min Stay", value: `${minStay} months` },
-    { icon: <CalendarClock className="w-4 h-4" />, label: "Shared", value: shared ? "Yes" : "No" },
-    {
-      icon: <Users className="w-4 h-4" />,
-      label: "Roommates",
-      value: roommatesAllowed ? "Allowed" : "Not allowed",
-      highlight: roommatesAllowed,
-    },
+    { icon: <CalendarClock className="w-4 h-4" />, label: "Shared", value: shared ? "Yes" : "No",  highlight: true },
   ];
 
   return (

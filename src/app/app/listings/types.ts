@@ -1,65 +1,111 @@
-export type ListingForm={
-    title: string,
-    property: string,
-    address: string,
-    rooms: number,
-    bathrooms: number,
-    beds: number,
-    maxOccupants: number,
-    size: number,
-    rent: number,
-    AvailableFrom?: number
-    minStay: number,
-    roommatesAllowed: boolean,
-    description: string,
-    Amenities?: Amenity[]
-    images?: string[]// url strings?
-}
+import { Prisma } from "@prisma/client";
 
-export type Amenity = {
-    id: number;
-    type: AmenityType;
-    name: string;
-    distance: number;
+//
+// 🔹 ==============================
+// 🔹 PRISMA INCLUDE CONFIGS
+// 🔹 ==============================
+//
+
+// Property (building-level)
+export const propertyInclude = {
+  amenities: true,
+  listings: true,
+} satisfies Prisma.PropertyInclude;
+
+// Full listing (for pages / detailed cards)
+export const propertyListingFullInclude = {
+  occupants: true,
+  property: {
+    include: {
+      amenities: true,
+    },
+  },
+  images: true,
+  applications: true,
+} satisfies Prisma.PropertyListingInclude;
+
+// Lightweight listing (for lists)
+export const propertyListingBasicInclude = {
+  occupants: true,
+  images: true,
+} satisfies Prisma.PropertyListingInclude;
+
+
+
+/***** prisma types relatin with listing and property management *********/
+
+/**** types which we need to also add in the relations */
+// Property (building)
+export type Property = Prisma.PropertyGetPayload<{
+  include: typeof propertyInclude;
+}>;
+
+// Full listing
+export type PropertyListing = Prisma.PropertyListingGetPayload<{
+  include: typeof propertyListingFullInclude;
+}>;
+
+// Basic listing
+export type PropertyListingBasic = Prisma.PropertyListingGetPayload<{
+  include: typeof propertyListingBasicInclude;
+}>;
+
+/****** types in which there is no relation for us to inclide */
+export type Occupant = Prisma.OccupantGetPayload<{}>;
+export type ListingImage = Prisma.ListingImageGetPayload<{}>;
+export type PropertyApplication = Prisma.PropertyApplicationGetPayload<{}>;
+export type Amenity = Prisma.AmenityGetPayload<{}>;
+
+
+
+
+/**** front end types */
+
+// information that a form has before it is submitted to db
+export type PropertyListingForm = {
+  description: string;
+  rent: number;
+  availableFrom: Date;
+
+  maxOccupants: number;
+  minStay: number;
+
+  bedrooms: number;
+  bathrooms: number;
+
+  flatNumber?: string;
+
+  propertyId: number;
+
+  // UI-only
+  images?: string[]; // URLs before upload
 };
 
+
+
+/***** non prisma UI types */
+
+// Keep if you need filtering logic in UI
 export type AmenityType = 'HEALTHCARE' | 'TRANSPORT' | 'RECREATIONAL' | 'OTHER';
+
 export type DistanceRange = '0-2' | '2-5' | '5-10';
 
+// UI-only roommate representation
 export type Roommate = {
-    id: number;
-    name: string;
-    avatarUrl?: string | null;
+  id: number;
+  name: string;
+  avatarUrl?: string | null;
 };
 
-export type Review = {
-    id: number;
-    user: string;
-    comment: string;
-    rating?: number;
+// UI-only review (not DB Review model)
+export type ReviewUI = {
+  id: number;
+  user: string;
+  comment: string;
+  rating?: number;
 };
 
 
-/*********** my property specific types */
 
+// If you want a "display-friendly" occupant
 export type OccupantType = 'occupant' | 'applicant';
-
-export type Occupant = {//TODO: use types from prisma instead (consultant table), make this be a wrapper
-  id: number;
-  name: string;
-  type: OccupantType;
-  movedIn?: string | null;
-  expectedMoveOut?: string | null;
-  expectedMoveIn?: string | null;
-}
-
-export type Property= {// TODO: use from pisma table instead 
-  id: number;
-  name: string;
-  address: string;
-  thumbnail: string;// thumbnail image of the property (TODO: make this optional later and in public have a default thumbail
-  // image and use that if landlord never added in a thumnail)
-  maxOccupants: number;
-  earliestFreeDate: string;
-  occupants: Occupant[];
-}

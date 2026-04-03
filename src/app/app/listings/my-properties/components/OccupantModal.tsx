@@ -1,6 +1,6 @@
 'use client';
 
-import { Property, Occupant } from '../../types';
+import { Property, Occupant, PropertyListing } from '../../types';
 import { X, Calendar, SquareArrowRightEnter, SquareArrowRightExit } from 'lucide-react';
 
 // modal to show when a speciific user is expected to move in/ when they moved into a speciic property + when they are planning
@@ -9,12 +9,15 @@ import { X, Calendar, SquareArrowRightEnter, SquareArrowRightExit } from 'lucide
 
 type props={
     occupant: Occupant;// our conusltant
-    property: Property;// property in which they are an occupant/ expected occupant in
+    property: PropertyListing;// property in which they are an occupant/ expected occupant in
     onClose: () => void;// what to do when user clicks on modal
 }
 
 export default function OccupantModal({occupant,property,onClose,}: props) {
-  const isApplicant = occupant.type === 'applicant';
+  const isApplicant = occupant.moveIn.getTime() > Date.now();
+  const building = property.property;
+  // some sort of back end service to convert user id to actual user 
+  const consultant =  occupant.userId
 
   return (
     <div
@@ -30,10 +33,10 @@ export default function OccupantModal({occupant,property,onClose,}: props) {
         <div className="flex items-start justify-between gap-3 mb-5">
           <div className="flex-1">
             <div className="text-[18px] font-semibold text-white">
-              {occupant.name}
+              {'example name'}
             </div>
             <div className="text-[12px] text-white/45 mt-0.5">
-              {property.name} · {property.address}
+              {'building title'} · {building.address}
             </div>
           </div>
 
@@ -65,7 +68,7 @@ export default function OccupantModal({occupant,property,onClose,}: props) {
                 Expected Move-in
               </div>
               <div className="font-mono text-[13px] font-medium text-[#c9fb00]">
-                {occupant.expectedMoveIn}
+                {occupant.moveIn.toLocaleDateString()}
               </div>
             </div>
           ) : (
@@ -76,7 +79,7 @@ export default function OccupantModal({occupant,property,onClose,}: props) {
                   Moved In
                 </div>
                 <div className="font-mono text-[13px] text-white">
-                  {occupant.movedIn ?? 'N/A'}
+                  {occupant.moveIn.toLocaleDateString() ?? 'N/A'}
                 </div>
               </div>
 
@@ -86,7 +89,7 @@ export default function OccupantModal({occupant,property,onClose,}: props) {
                   Expected Move-out
                 </div>
                 <div className="font-mono text-[13px] text-white">
-                  {occupant.expectedMoveOut ?? 'N/A'}
+                  {occupant.moveOut?.toLocaleDateString() ?? 'N/A'}
                 </div>
               </div>
             </>
