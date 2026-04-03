@@ -8,29 +8,29 @@ datasource db {
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  username      String    @unique
-  firstName     String
-  lastName      String
-  email         String    @unique
-  passwordHash  String
-  role          Role
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  firstName    String
+  lastName     String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  profile       Profile?
+  profile Profile?
 
   // Listings (landlord)
-  properties    Property[]
-  listings      PropertyListing[] @relation("LandlordListings")
+  properties Property[]
+  listings   PropertyListing[] @relation("LandlordListings")
 
   // Applications (consultant)
-  applications  PropertyApplication[]
+  applications PropertyApplication[]
 
   // Messaging
-  sentMessages        Message[]        @relation("SentMessages")
-  conversationsA      Conversation[]   @relation("ConversationUserA")
-  conversationsB      Conversation[]   @relation("ConversationUserB")
+  sentMessages   Message[]      @relation("SentMessages")
+  conversationsA Conversation[] @relation("ConversationUserA")
+  conversationsB Conversation[] @relation("ConversationUserB")
 
   messageRequestsSent     MessageRequest[] @relation("MessageRequestSender")
   messageRequestsReceived MessageRequest[] @relation("MessageRequestReceiver")
@@ -40,28 +40,26 @@ model User {
   reviewsReceived Review[] @relation("ReviewsReceived")
 
   // Reports
-  reportsMade     Report[] @relation("ReportsMade")
-  reportsAgainst  Report[] @relation("ReportsAgainst")
+  reportsMade    Report[] @relation("ReportsMade")
+  reportsAgainst Report[] @relation("ReportsAgainst")
 
-  offences        OffenceRecord[]
-  occupants     Occupant[]// array to store rental history if need be
-
+  offences  OffenceRecord[]
+  occupants Occupant[] // array to store rental history if need be
 }
 
 model Profile {
-  id          Int      @id @default(autoincrement())
-  userId      Int      @unique
-  phone       String?
-  bio         String?
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  phone     String?
+  bio       String?
+  createdAt DateTime @default(now())
 
-  user        User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
-
 model ListingImage {
-  id        Int    @id @default(autoincrement())
-  url       String
+  id  Int    @id @default(autoincrement())
+  url String
 
   // Marks whether this image is the thumbnail
   isThumbnail Boolean @default(false)
@@ -74,20 +72,20 @@ model ListingImage {
 
 // we are modelling it as the entire building
 model Property {
-  id        Int      @id @default(autoincrement())
-  title     String?
-  address   String
-  city      String
-  postcode  String
+  id       Int     @id @default(autoincrement())
+  title    String?
+  address  String
+  city     String
+  postcode String
 
   landlordId Int
   landlord   User @relation(fields: [landlordId], references: [id])
 
   // shared building-level data
-  amenities  Amenity[]
+  amenities Amenity[]
 
   // flats inside the building
-  listings   PropertyListing[]
+  listings PropertyListing[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -95,70 +93,69 @@ model Property {
 
 // we are modelling it as a single flat
 model PropertyListing {
-  id              Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-   // optional flat number inside each building
-  flatNumber     String?
-  description     String
+  // optional flat number inside each building
+  flatNumber  String?
+  description String
 
-  rent            Int
-  availableFrom   DateTime
+  rent          Int
+  availableFrom DateTime
 
   // rental rules
-  maxOccupants    Int// e.g. withRoomates boolean or whatnot is derived from this
-  minStay         Int
+  maxOccupants Int // e.g. withRoomates boolean or whatnot is derived from this
+  minStay      Int
 
-  bedrooms       Int
-  bathrooms      Int
+  bedrooms  Int
+  bathrooms Int
 
-  propertyId     Int
-  property       Property @relation(fields: [propertyId], references: [id])
+  propertyId Int
+  property   Property @relation(fields: [propertyId], references: [id])
 
-  landlordId     Int
-  landlord       User @relation("LandlordListings", fields: [landlordId], references: [id])
+  landlordId Int
+  landlord   User @relation("LandlordListings", fields: [landlordId], references: [id])
 
-  occupants      Occupant[]
-  applications   PropertyApplication[]
+  occupants    Occupant[]
+  applications PropertyApplication[]
   reviews      Review[]
   reports      Report[]
 
-  images      ListingImage[]
+  images ListingImage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model PropertyApplication {
-  id          Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   moveInDate  DateTime
   moveOutDate DateTime?
 
-  status      ApplicationStatus
-
-  userId      Int
-  listingId   Int
-
-  user        User @relation(fields: [userId], references: [id])
-  listing     PropertyListing @relation(fields: [listingId], references: [id])
-
-  createdAt DateTime @default(now())
-}
-
-
-model Occupant {
-  id        Int      @id @default(autoincrement())
+  status ApplicationStatus
 
   userId    Int
   listingId Int
 
-  moveIn     DateTime
-  moveOut    DateTime?
+  user    User            @relation(fields: [userId], references: [id])
+  listing PropertyListing @relation(fields: [listingId], references: [id])
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+}
 
-  user      User @relation(fields: [userId], references: [id])
-  listing   PropertyListing @relation(fields: [listingId], references: [id])
+model Occupant {
+  id Int @id @default(autoincrement())
+
+  userId    Int
+  listingId Int
+
+  moveIn  DateTime
+  moveOut DateTime?
+
+  createdAt DateTime @default(now())
+
+  user    User            @relation(fields: [userId], references: [id])
+  listing PropertyListing @relation(fields: [listingId], references: [id])
 
   @@unique([userId, listingId]) // prevents duplicate occupancy
 }
@@ -167,68 +164,81 @@ model Conversation {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
 
-  userAId   Int
-  userBId   Int
+  userAId Int
+  userBId Int
 
-  userA     User     @relation("ConversationUserA", fields: [userAId], references: [id])
-  userB     User     @relation("ConversationUserB", fields: [userBId], references: [id])
+  userA User @relation("ConversationUserA", fields: [userAId], references: [id])
+  userB User @relation("ConversationUserB", fields: [userBId], references: [id])
 
-  messages  Message[]
+  messages Message[]
 }
 
 model Message {
-  id            Int      @id @default(autoincrement())
-  content       String
-  createdAt     DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
 
-  senderId      Int
+  senderId       Int
   conversationId Int
 
-  sender        User         @relation("SentMessages", fields: [senderId], references: [id])
-  conversation  Conversation @relation(fields: [conversationId], references: [id])
+  sender       User         @relation("SentMessages", fields: [senderId], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id])
 }
 
 model MessageRequest {
-  id          Int      @id @default(autoincrement())
-  status      RequestStatus
-  createdAt   DateTime @default(now())
+  id        Int           @id @default(autoincrement())
+  status    RequestStatus
+  createdAt DateTime      @default(now())
 
-  senderId    Int
-  receiverId  Int
+  senderId   Int
+  receiverId Int
 
-  sender      User @relation("MessageRequestSender", fields: [senderId], references: [id])
-  receiver    User @relation("MessageRequestReceiver", fields: [receiverId], references: [id])
+  sender   User @relation("MessageRequestSender", fields: [senderId], references: [id])
+  receiver User @relation("MessageRequestReceiver", fields: [receiverId], references: [id])
 }
 
 model Review {
-  id          Int      @id @default(autoincrement())
-  rating      Int
-  comment     String?
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
 
-  authorId    Int
+  authorId     Int
   targetUserId Int?
-  listingId   Int?
+  listingId    Int?
 
-  author      User           @relation("ReviewsWritten", fields: [authorId], references: [id])
-  targetUser  User?          @relation("ReviewsReceived", fields: [targetUserId], references: [id])
-  listing     PropertyListing? @relation(fields: [listingId], references: [id])
+  author     User             @relation("ReviewsWritten", fields: [authorId], references: [id])
+  targetUser User?            @relation("ReviewsReceived", fields: [targetUserId], references: [id])
+  listing    PropertyListing? @relation(fields: [listingId], references: [id])
+}
+
+model RemovedReview {
+  id               Int      @id @default(autoincrement())
+  originalReviewId Int      @unique
+  rating           Int
+  comment          String?
+  createdAt        DateTime
+  deletedAt        DateTime @default(now())
+
+  authorId     Int
+  targetUserId Int?
+  listingId    Int?
 }
 
 model Report {
-  id           Int      @id @default(autoincrement())
-  reason       String
-  description  String?
-  status       ReportStatus
-  createdAt    DateTime @default(now())
+  id          Int          @id @default(autoincrement())
+  reason      String
+  description String?
+  status      ReportStatus
+  createdAt   DateTime     @default(now())
 
   reporterId   Int
   targetUserId Int?
   listingId    Int?
 
-  reporter     User           @relation("ReportsMade", fields: [reporterId], references: [id])
-  targetUser   User?          @relation("ReportsAgainst", fields: [targetUserId], references: [id])
-  listing      PropertyListing? @relation(fields: [listingId], references: [id])
+  reporter   User             @relation("ReportsMade", fields: [reporterId], references: [id])
+  targetUser User?            @relation("ReportsAgainst", fields: [targetUserId], references: [id])
+  listing    PropertyListing? @relation(fields: [listingId], references: [id])
 }
 
 model OffenceRecord {
@@ -236,20 +246,19 @@ model OffenceRecord {
   reason    String
   createdAt DateTime @default(now())
 
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 }
 
 model Amenity {
-  id        Int          @id @default(autoincrement())
-  name      String
-  type      AmenityType
-  distance  Float?
+  id       Int         @id @default(autoincrement())
+  name     String
+  type     AmenityType
+  distance Float?
 
   propertyId Int
   property   Property @relation(fields: [propertyId], references: [id])
 }
-
 
 enum AmenityType {
   HEALTHCARE
