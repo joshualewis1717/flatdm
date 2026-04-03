@@ -4,8 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
 import type { Conversation } from "./type";
+
+import { formatTimestamp } from "./helper";
 
 type Props = {
   conversations: Conversation[];
@@ -55,7 +56,7 @@ export default function Inbox({conversations, selectedConversation, setSelectedC
                                         {conversation.name}
                                     </p>
                                     <span className="text-xs text-white/50">
-                                        {conversation.timestamp}
+                                        {formatTimestamp(conversation.timestamp)}
                                     </span>
                                 </div>
 
