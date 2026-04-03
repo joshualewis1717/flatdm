@@ -4,7 +4,7 @@ import MessagesClient from "./_components/_MessagesClient";
 
 export default async function MessagesPage() {
   const session = await auth();
-  const userId = Number(session?.user.id);
+  const userId = Number(session?.user?.id);
 
   const conversations = await prisma.conversation.findMany({
     where: {
@@ -22,7 +22,6 @@ export default async function MessagesPage() {
     },
   });
 
-  
   const formattedConversations = conversations.map((conversation) => {
     const otherUser = conversation.userAId === userId ? conversation.userB : conversation.userA;
     const displayName = [otherUser.firstName, otherUser.lastName].filter(Boolean).join(" ") || otherUser.username || "Unknown user";
