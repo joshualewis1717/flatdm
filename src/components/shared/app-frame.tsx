@@ -8,19 +8,18 @@ import Menu from "@/components/shared/menu";
 type AppFrameProps = {
   role?: string;
   name?: string | null;
-  email?: string | null;
   children: React.ReactNode;
 };
 
-export function AppFrame({ role, name, email, children }: AppFrameProps) {
+export function AppFrame({ role, name, children }: AppFrameProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#1a1a1a] text-white">
       <div className="mx-auto flex min-h-screen w-full">
         <Menu
+          role={role}
           name={name}
-          email={email}
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
