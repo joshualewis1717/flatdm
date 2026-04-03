@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState,useMemo } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 
 import { Conversation, Message } from "./type";
+import { formatTimestampChat, formatDayLabelChat, isSameDay } from "./helper";
 
 type Props = {
   activeConversation?: Conversation;
@@ -17,16 +18,27 @@ type Props = {
   removeMessage: (conversationId: number, tempId: number) => void;
 };
 
-export default function Chat({activeConversation, addMessage, replaceMessage, removeMessage}: Props) {
+export default function Chat({activeConversation,addMessage,replaceMessage,removeMessage}: Props) {
     const [input, setInput] = useState("");
     const bottomRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
-        const t = setTimeout(() => {bottomRef.current?.scrollIntoView({ block: "end" });
-        }, 0);
+        const timer = setTimeout(() => {bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });}, 0);
+        return () => clearTimeout(timer);
+    }, [activeConversation?.messages.length]);
 
-        return () => clearTimeout(t);
-    }, [activeConversation?.messages.length]); /* if message is added(sent) or removed jump to newest message */
+    const messagesWithSeparators = useMemo(() => {if (!activeConversation?.messages) return [];
+        return activeConversation.messages.map((message, index, messages) => {
+            const previousMessage = messages[index - 1];
+            const showDaySeparator = index === 0 || !isSameDay(previousMessage?.createdAt, message.createdAt);
+
+            return {
+                ...message,
+                showDaySeparator,
+                dayLabel: showDaySeparator ? formatDayLabelChat(message.createdAt) : "",
+            };
+        });
+    }, [activeConversation?.messages]);
 
     const handleSend = async () => {
         if (!input.trim() || !activeConversation) return;
@@ -34,7 +46,7 @@ export default function Chat({activeConversation, addMessage, replaceMessage, re
         const content = input.trim();
         const tempId = Date.now();
 
-        const tempMessage = {
+        const tempMessage: Message = {
             id: tempId,
             content,
             isOwn: true,
@@ -45,22 +57,22 @@ export default function Chat({activeConversation, addMessage, replaceMessage, re
         setInput("");
 
         try {
-            const res = await fetch("/api/messages", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    conversationId: activeConversation.id,
-                    content,
-                }),
+            const response = await fetch("/api/messages", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                conversationId: activeConversation.id,
+                content,
+            }),
             });
 
-            if (!res.ok) {
+            if (!response.ok) {
                 throw new Error("Failed to send message");
             }
 
-            const savedMessage = await res.json();
+            const savedMessage: Message = await response.json();
 
             replaceMessage(activeConversation.id, tempId, savedMessage);
         } catch (error) {
@@ -70,68 +82,70 @@ export default function Chat({activeConversation, addMessage, replaceMessage, re
         }
     };
 
-    return(
-        <Card className="col-span-2 rounded-2xl border-white/10 bg-white/[0.03] flex flex-col">
-            {activeConversation ? (
-                <>
-                    {/* Header */}
-                    <div className="flex items-center gap-3 border-b border-white/10 p-4">
-                        <Avatar>
-                            <AvatarFallback>
-                                {activeConversation.name[0]}
-                            </AvatarFallback>
-                        </Avatar>
-                        <p className="text-sm font-medium text-white">
-                            {activeConversation.name}
-                        </p>
-                    </div>
+    return (
+    <Card className="col-span-2 flex flex-col rounded-2xl border-white/10 bg-white/[0.03]">
+        {activeConversation ? (
+            <>
+                <div className="flex items-center gap-3 border-b border-white/10 p-4">
+                    <Avatar>
+                        <AvatarFallback>{activeConversation.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <p className="text-sm font-medium text-white">
+                        {activeConversation.name}
+                    </p>
+                </div>
 
-                    {/* Messages */}
-                    <ScrollArea className="flex-1 min-h-0 p-4">
-                        {(activeConversation.messages ?? []).map((msg) => (
-                            <div
-                            key={msg.id}
-                            className={`flex ${msg.isOwn ? "justify-end" : "justify-start"}`}
-                            >
-                                <div
-                                    className={`relative max-w-xs rounded-2xl px-4 py-2 text-sm shadow-sm ${
-                                        msg.isOwn
-                                        ? "bg-primary text-black rounded-br-md"
-                                        : "bg-white/10 text-white rounded-bl-md"
-                                    }`}
-                                    >
-                                    {msg.content}
+                <ScrollArea className="min-h-0 flex-1 p-4">
+                    <div className="space-y-3">
+                        {messagesWithSeparators.map((message) => (
+                            <div key={message.id}>
+                                {message.showDaySeparator && (
+                                <div className="my-4 flex justify-center">
+                                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">
+                                        {message.dayLabel}
+                                    </span>
+                                </div>
+                                )}
+
+                                <div className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}>
+                                    <div className={`max-w-xs rounded-2xl px-4 py-2 text-sm shadow-sm ${
+                                    message.isOwn ? "rounded-br-md bg-primary text-black": "rounded-bl-md bg-white/10 text-white"}`}>
+                                        <div className="flex items-end gap-2">
+                                            <p className="break-words">{message.content}</p>
+                                            <span className={`shrink-0 text-[11px] leading-none ${message.isOwn ? "text-black/70" : "text-white/60"}`}>
+                                                {formatTimestampChat(message.createdAt)}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         ))}
-
                         <div ref={bottomRef} />
-                    </ScrollArea>
-
-                    {/* Input */}
-                    <div className="border-t border-white/10 p-4 flex gap-2">
-                        <Input
-                            placeholder="Type a message..."
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSend();
-                                }
-                            }}
-                            className="bg-white/5 border-white/10 text-white"
-                        />
-                        <Button onClick={handleSend} disabled={!input.trim()}>
-                            Send
-                        </Button>
                     </div>
-                </>
-            ) : (
-                <CardContent className="p-6 flex h-full items-center justify-center">
-                    <p className="text-white/50">Select a conversation to start chatting</p>
-                </CardContent>
-            )}
-        </Card>
+                </ScrollArea>
+
+                <div className="flex gap-2 border-t border-white/10 p-4">
+                    <Input
+                        placeholder="Type a message..."
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSend();}
+                        }}
+                        className="border-white/10 bg-white/5 text-white"
+                    />
+                    <Button onClick={handleSend} disabled={!input.trim()}>
+                        Send
+                    </Button>
+                </div>
+            </>
+        ) : (
+            <CardContent className="flex h-full items-center justify-center p-6">
+                <p className="text-white/50">Select a conversation to start chatting</p>
+            </CardContent>
+        )}
+    </Card>
     );
 }
