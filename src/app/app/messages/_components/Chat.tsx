@@ -13,11 +13,7 @@ import { Conversation, Message } from "./type";
 type Props = {
   activeConversation?: Conversation;
   addMessage: (conversationId: number, message: Message) => void;
-  replaceMessage: (
-    conversationId: number,
-    tempId: number,
-    savedMessage: Message
-  ) => void;
+  replaceMessage: (conversationId: number,tempId: number,savedMessage: Message) => void;
   removeMessage: (conversationId: number, tempId: number) => void;
 };
 
@@ -30,7 +26,7 @@ export default function Chat({activeConversation, addMessage, replaceMessage, re
         }, 0);
 
         return () => clearTimeout(t);
-    }, [activeConversation?.messages.length]);
+    }, [activeConversation?.messages.length]); /* if message is added(sent) or removed jump to newest message */
 
     const handleSend = async () => {
         if (!input.trim() || !activeConversation) return;
@@ -61,7 +57,7 @@ export default function Chat({activeConversation, addMessage, replaceMessage, re
             });
 
             if (!res.ok) {
-            throw new Error("Failed to send message");
+                throw new Error("Failed to send message");
             }
 
             const savedMessage = await res.json();
