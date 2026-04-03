@@ -1,6 +1,26 @@
 # moderator requirements
 
-12 - The system will allow moderators to permanently ban user accounts and will automatically remove associated listings and withdraw all related property applications. 
+- REPORT PAGE
+    - [ ] view all submited reports
+    - [ ] filter and sort reports by category, date, status and severity
+    - [ ] mark reports as “Under Review”, “Resolved – No Action” or “Action Taken”
+    - [ ] enforce that at most one moderator is actively reviewing a report 
+
+- USER LIST
+    - [ ] each user has 2 buttons: ban / add offence / issue warning
+    - [ ] if banned/offenced/warned send auto email
+    - [ ] if banned automatically remove associated listings and withdraw all related property applications
+
+- REVIEWS
+    - [ ] remove reviews
+    - [ ] retain record of removed reviews
+
+
+## reqs
+
+fahi said - list of all users with options: ban, add offence
+
+fahi said - auto email when conculsntant banned
 
 13 - The system will allow moderators to issue warnings to users and automatically send warning notifications via email. 
 
@@ -11,3 +31,5 @@
 30 - The system will allow moderators to filter and sort reports by category, date, status and severity. 
 
 31 - The system will allow moderators to mark reports as “Under Review”, “Resolved – No Action” or “Action Taken” and enforce that at most one moderator is actively reviewing a report. 
+
+12 - The system will allow moderators to permanently ban user accounts and will automatically remove associated listings and withdraw all related property applications. 

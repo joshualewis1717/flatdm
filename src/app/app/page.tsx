@@ -29,7 +29,7 @@ const roleContent = {
     intro:
       "Keep the marketplace healthy by monitoring supply, resolving conversations, and stepping into application flows when escalation is needed.",
     primaryCta: { href: "/app/reports", label: "Open report queue" },
-    secondaryCta: { href: "/app/listings", label: "Inspect listings" },
+    secondaryCta: { href: "/app/reports/users", label: "View All Users" },
     metrics: [
       { label: "Flagged items", value: "04" },
       { label: "At-risk threads", value: "02" },
