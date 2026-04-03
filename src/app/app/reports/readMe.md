@@ -1,13 +1,13 @@
 # moderator requirements
 
 - REPORT PAGE
-    - [ ] view all submited reports
+    - [X] view all submited reports
     - [ ] filter and sort reports by category, date, status and severity
     - [ ] mark reports as “Under Review”, “Resolved – No Action” or “Action Taken”
     - [ ] enforce that at most one moderator is actively reviewing a report 
 
 - USER LIST
-    - [ ] each user has 2 buttons: ban / add offence / issue warning
+    - [X] each user has 2 buttons: ban / add offence / issue warning
     - [ ] if banned/offenced/warned send auto email
     - [ ] if banned automatically remove associated listings and withdraw all related property applications
 
