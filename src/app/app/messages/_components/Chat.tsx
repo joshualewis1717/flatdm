@@ -88,7 +88,7 @@ export default function Chat({activeConversation,addMessage,replaceMessage,remov
             <>
                 <div className="flex items-center gap-3 border-b border-white/10 p-4">
                     <Avatar>
-                        <AvatarFallback>{activeConversation.name[0]}</AvatarFallback>
+                        <AvatarFallback>{activeConversation.isDeletedUser ? "❌" : activeConversation.name[0]}</AvatarFallback>
                     </Avatar>
                     <p className="text-sm font-medium text-white">
                         {activeConversation.name}
@@ -129,6 +129,7 @@ export default function Chat({activeConversation,addMessage,replaceMessage,remov
                         placeholder="Type a message..."
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
+                        disabled={activeConversation?.isDeletedUser}
                         onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
@@ -136,7 +137,7 @@ export default function Chat({activeConversation,addMessage,replaceMessage,remov
                         }}
                         className="border-white/10 bg-white/5 text-white"
                     />
-                    <Button onClick={handleSend} disabled={!input.trim()}>
+                    <Button onClick={handleSend} disabled={!input.trim() || activeConversation?.isDeletedUser}>
                         Send
                     </Button>
                 </div>

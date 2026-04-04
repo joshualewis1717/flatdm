@@ -24,12 +24,16 @@ export default async function MessagesPage() {
 
   const formattedConversations = conversations.map((conversation) => {
     const otherUser = conversation.userAId === userId ? conversation.userB : conversation.userA;
-    const displayName = [otherUser.firstName, otherUser.lastName].filter(Boolean).join(" ") || otherUser.username || "Unknown user";
+    
+    const isDeletedUser= otherUser.isDeleted;
+
+    const displayName = isDeletedUser ? "Deleted User" : [otherUser.firstName, otherUser.lastName].filter(Boolean).join(" ") || otherUser.username || "Unknown user";
 
     const lastMessage=conversation.messages.at(-1);
     return {
       id: conversation.id,
       name: displayName,
+      isDeletedUser,
       lastMessage: lastMessage?.content ?? "",
       timestamp: lastMessage?.createdAt.toISOString() ?? null,
       messages: conversation.messages.map((message) => ({
