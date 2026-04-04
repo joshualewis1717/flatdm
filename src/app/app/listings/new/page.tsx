@@ -271,10 +271,9 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 space-y-4">
           <h2 className="text-lg font-semibold text-white">Property Details</h2>
           <div className="grid grid-cols-2 gap-4">
-            <InputField label="Rooms" type="number" name="rooms" value={String(form.rooms)} required onChange={handleChange} placeholder="Total rooms" />
+            <InputField label="total Rooms" type="number" name="rooms" value={String(form.rooms)} required onChange={handleChange} placeholder="Total rooms" />
             <InputField label="Bedrooms" type="number" name="bedrooms" value={String(form.bedrooms)} required onChange={handleChange} placeholder="Number of bedrooms" />
             <InputField label="Bathrooms" type="number" name="bathrooms" value={String(form.bathrooms)} required onChange={handleChange} placeholder="Number of bathrooms" />
-            <InputField label="Beds" type="number" name="beds" value={String(form.beds)} required onChange={handleChange} placeholder="Number of beds" />
             <InputField label="Area (m²)" type="number" name="area" value={String(form.area)} required onChange={handleChange} placeholder="Floor area in m²" />
           </div>
 

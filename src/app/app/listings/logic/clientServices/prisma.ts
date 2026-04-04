@@ -124,11 +124,64 @@ export async function getPropertiesForLandlord(landlordId: number) {
   
     return properties.map((p) => ({
         id: p.id,
-        buildingName: p.title,   // non-nullable, no fallback needed
+        buildingName: p.title,  
         streetName: p.streetName,
         city: p.city,
         postcode: p.postcode,
         hasExistingListings: p.listings.length > 0,
         amenities: p.amenities,
       }));
+  }
+
+
+  export async function getListingById(listingId: string) {
+
+    const listing = await prisma.propertyListing.findUnique({
+      where: { id: Number(listingId) },
+      include: {
+        images: true, // include images
+        property: {
+          include: {
+            amenities: true,
+            landlord: {
+              select: { username: true },
+            },
+          },
+        },
+      },
+    });
+  
+    if (!listing) return null;
+  
+    // split thumbnail + images
+    const thumbnail = listing.images.find((img) => img.isThumbnail);
+    const images = listing.images
+      .filter((img) => !img.isThumbnail)
+      .map((img) => img.url);
+  
+    return {
+      // listing-level
+      flatNumber: listing.flatNumber ?? null,
+      description: listing.description,
+      rent: listing.rent,
+      area: listing.area,
+      totalRooms: listing.rooms,
+      availableFrom: listing.availableFrom,
+      lastUpdated: listing.updatedAt,
+      bedrooms: listing.bedrooms,
+      bathrooms: listing.bathrooms,
+      maxOccupants: listing.maxOccupants,
+      minStay: listing.minStay,
+  
+      thumbnail: thumbnail?.url ?? null, // split thumbnail from images
+      images, //  non-thumbnail images
+  
+      // property-level
+      buildingName: listing.property.title,
+      streetName: listing.property.streetName,
+      city: listing.property.city,
+      postcode: listing.property.postcode,
+      landlordName: listing.property.landlord.username,
+      amenities: listing.property.amenities,
+    };
   }
