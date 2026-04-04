@@ -1,10 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { propertyInclude, propertyListingBasicInclude, propertyListingFullInclude } from "./prismaConst";
 
-
-
-
-
 /***** prisma types relatin with listing and property management *********/
 
 /**** types which we need to also add in the relations */
