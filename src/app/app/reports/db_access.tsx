@@ -1,3 +1,5 @@
+"use server";
+
 import { prisma } from "@/lib/prisma";
 import {User, Report, Review, PropertyApplication, Property, PropertyListing} from '@/app/app/reports/types';
 import {sendEmail} from '@/app/app/reports/sendEmail'
@@ -20,44 +22,47 @@ export  async function deleteReport({report} : Report){
 }
 
 export async function deleteUser({user} : User){
-    console.log(user)
 
-    // make sure we actually want to delete this
-    const ok = window.confirm(`Delete User ${user['username']}? This cannot be undone.`);
-    if (!ok) return;
-
-    // if user is consultant, also remove related property applications and reviews
+    // if user is consultant, also remove related property applications
     if (user['role'] == "CONSULTANT"){
+        console.log("user to be deleted is a consultant")
 
         // deleting property applications
         await prisma.propertyApplication.deleteMany({
             where: {userId: user["id"]}
         });
-
-        // delete reviews
-        deleteReviewsFromUser(user['id']);
+        console.log("deleted assocaited property applications")
     }
 
     // if user is landlord, also remove related properties and property listings
     else if (user['role'] == "LANDLORD"){
+        onsole.log("user to be deleted is a landlord")
         
         // deleting property listings
         await prisma.propertyListing.deleteMany({
             where: {landlordId: user["id"]}
         });
+        console.log("deleted property listings")
 
         // deleting properties
         await prisma.property.deleteMany({
             where: {landlordId: user["id"]}
         });
+        console.log("deleted properties")
     }
 
-    // delete from database
-    await prisma.user.delete({
-        where: {id: user["id"]}
+    // for all users, delete reviews they wrote and that were about them
+    deleteReviewsLinkedToUser(user['id']);
+    console.log("deleted reviews")
+
+
+    // 'delete' from database by setting isDeleted to true
+    await prisma.user.update({
+        where: {id: user["id"]},
+        data: {isDeleted: true}
     });
 
-    sendEmail(user, "Your account has been deleted");
+    sendEmail({user}, "Your account has been deleted");
 
     // confirm in logs
     console.log("deleting user with id: " + user['id']);
@@ -95,11 +100,21 @@ export async function deleteReview({review} : Review){
     return;
 }
 
-async function deleteReviewsFromUser({userId} : number){
-    // first get all reviews to be deleted
+async function deleteReviewsLinkedToUser({userId} : number){
+    console.log("userId: " + userId);
+
+    // first get all reviews to be deleted (written by them or about them)
     const reviews = await prisma.review.findMany({
-        where: { authorId: userId },
+          where: {
+            OR: [
+            { authorId: userId },
+            { targetUserId: userId }
+            ],
+        }
     });
+
+    console.log("to del:");
+    console.log(reviews);
 
     // put the reviews into the removed reviews table
     for (let r = 0; r < reviews.length; r++){
