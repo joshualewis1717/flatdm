@@ -1,11 +1,13 @@
 'use client'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import InputField from "../../application/components/InputField";
 import { PropertyListingForm, AmenityDraft, AmenityType, DistanceRange, Amenity, ExistingProperty } from "../types";
 import AddAmenitiesPanel from "../components/AddAmenityPanel";
 import AddImagesPanel from "../components/AddImagePanel";
 import AddThumbnailPanel from "../components/AddThumbnailPanel";
 import PropertySelector from "../components/PropertySelector";
+import { createListing } from "../logic/clientServices/prisma";
+import { set } from "date-fns";
 
 // page for landlords to create a new listing
 // Converts the user-selected range string to a representative number for persistence.
@@ -25,6 +27,9 @@ export default function NewListingsPage({ landlordId }: NewListingsPageProps) {
   const [images, setImages] = useState<string[]>([]);
   const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [amenityCounter, setAmenityCounter] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const [selectedProperty, setSelectedProperty] = useState<ExistingProperty | null>(null);
   const isExistingProperty = selectedProperty?.hasExistingListings ?? false;
@@ -77,19 +82,28 @@ export default function NewListingsPage({ landlordId }: NewListingsPageProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // function to handle form submission, with validation to ensure a thumbnail is added before allowing submission. Converts amenity distance ranges to km values before sending to the backend.
+  const handleSubmit = async (e: React.SubmitEvent) => {
+    setLoading(true);
     e.preventDefault();
+  
     if (!thumbnail) {
       alert("Please add a thumbnail image before saving.");
       return;
     }
-    const resolvedAmenities: Amenity[] = amenities.map((a) => ({
+  
+    const resolvedAmenities = amenities.map((a) => ({
       ...a,
       distance: a.distance ? DISTANCE_RANGE_TO_KM[a.distance] : 0,
     }));
-    // Service layer splits this into Property + PropertyListing rows
-    console.log({ ...form, thumbnail, images, amenities: resolvedAmenities });
+  
+    const result = await createListing({...form,landlordId,thumbnail,images,amenities: resolvedAmenities,});
+    if (!result) setError("Failed to create listing. Please try again.");
+    else setSuccess(true);
+    setLoading(false);
   };
+
+
 
   const addAmenity = () => {
     setAmenities((prev) => [
@@ -115,6 +129,28 @@ export default function NewListingsPage({ landlordId }: NewListingsPageProps) {
 
   const addImage = () => setImages((prev) => [...prev, "https://via.placeholder.com/150"]);
   const removeImage = (index: number) => setImages((prev) => prev.filter((_, i) => i !== index));
+
+  // very rough success alert using useEffect to trigger on success state change, can be improved with a proper toast notification system
+  useEffect(()=>{
+    if (success) {
+      alert("Listing created successfully!");
+      setTimeout(() => {
+        setSuccess(false);
+    }, 2000);
+  }
+  })
+
+  
+  // very rough error alert using useEffect to trigger on success state change, can be improved with a proper toast notification system
+  useEffect(()=>{
+    if (error) {
+      alert(error);
+      setTimeout(() => {
+        setError(null);
+    }, 2000);
+  }
+  })
+
 
   return (
     <div className="max-w-4xl mx-auto p-6 sm:p-8 space-y-6">
@@ -152,7 +188,7 @@ export default function NewListingsPage({ landlordId }: NewListingsPageProps) {
           <h2 className="text-lg font-semibold text-white">Basic Information</h2>
           <InputField
             label="building name"
-            name="title"
+            name="buildingName"
             value={form.buildingName}
             required
             onChange={handleChange}
@@ -173,23 +209,23 @@ export default function NewListingsPage({ landlordId }: NewListingsPageProps) {
           <InputField
             label="city"
             name="city"
-            value={form.flatNumber ?? ""}
+            value={form.city ?? ""}
             onChange={handleChange}
             placeholder="e.g. London"
           />
 
           <InputField
             label="street name"
-            name="streeName"
-            value={form.flatNumber ?? ""}
+            name="streetName"
+            value={form.streetName ?? ""}
             onChange={handleChange}
             placeholder="e.g. 250 Baker street"
           />
 
           <InputField
             label="postcode"
-            name="postCode"
-            value={form.flatNumber ?? ""}
+            name="postcode"
+            value={form.postcode ?? ""}
             onChange={handleChange}
             placeholder="e.g. JK5 6DB"
           />
@@ -259,7 +295,7 @@ export default function NewListingsPage({ landlordId }: NewListingsPageProps) {
           onRemove={removeAmenity}
           onUpdate={updateAmenity}
         />
-
+        {loading && <p className="text-sm text-white/50">Saving listing...</p>}
         <div className="flex gap-4">
           <button type="button" onClick={() => window.history.back()} className="flex-1 rounded-2xl bg-black/70 text-white py-3 font-semibold hover:bg-black/80">
             Back
