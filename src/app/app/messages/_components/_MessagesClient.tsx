@@ -1,18 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UserConversations } from "./type";
+import { UserConversations, Message } from "./type";
+
+import { Sheet,SheetContent,SheetHeader,SheetTitle,SheetTrigger } from "@/components/ui/sheet";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
 import Inbox from "./Inbox";
 import Chat from "./Chat";
-
-import { Message } from "./type";
-
-
 
 export default function MessagesClient({ conversations }:UserConversations ) {
   const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [allConversations, setAllConversations] = useState(conversations);
+  const [isMobileInboxOpen, setIsMobileInboxOpen] = useState(false);
 
   const activeConversation = allConversations.find((c) => c.id === selectedConversation);
 
@@ -114,20 +116,55 @@ export default function MessagesClient({ conversations }:UserConversations ) {
 
   return (
     <div className="grid h-[calc(87vh-4rem)] grid-cols-1 gap-6 md:grid-cols-3">
+      {/* Desktop inbox */}
+      <div className="hidden md:block">
         <Inbox
-        conversations={allConversations}
-        selectedConversation={selectedConversation}
-        setSelectedConversation={setSelectedConversation}
-        search={search}
-        setSearch={setSearch} />
+          conversations={allConversations}
+          selectedConversation={selectedConversation}
+          setSelectedConversation={setSelectedConversation}
+          search={search}
+          setSearch={setSearch}/>
+      </div>
 
+      {/* Chat */}
+      <div className="md:col-span-2">
         <Chat
-        activeConversation={activeConversation}
-        addMessage={addMessageToConversation}
-        replaceMessage={replacePendingMessage}
-        removeMessage={removePendingMessage}
-        />
+          activeConversation={activeConversation}
+          addMessage={addMessageToConversation}
+          replaceMessage={replacePendingMessage}
+          removeMessage={removePendingMessage}
+          mobileInboxTrigger={
+            <Sheet open={isMobileInboxOpen} onOpenChange={setIsMobileInboxOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden text-white">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
 
+              <SheetContent side="left" className="w-[85vw] border-white/10 bg-black p-0">
+                <SheetHeader className="px-4 pt-4">
+                  <SheetTitle className="text-white">Inbox</SheetTitle>
+                </SheetHeader>
+
+                <div className="p-4 pt-2">
+                  <Inbox
+                    conversations={allConversations}
+                    selectedConversation={selectedConversation}
+                    setSelectedConversation={(id) => {
+                      setSelectedConversation(id);
+                      setIsMobileInboxOpen(false);
+                    }}
+                    search={search}
+                    setSearch={setSearch}/>
+                </div>
+              </SheetContent>
+            </Sheet>
+          }
+        />
+      </div>
     </div>
   );
 }
