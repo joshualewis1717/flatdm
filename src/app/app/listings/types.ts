@@ -56,7 +56,7 @@ export type Occupant = {//TODO: use types from prisma instead (consultant table)
 export type Property= {// TODO: use from pisma table instead 
   id: number;
   name: string;
-  address: string;
+  streetName: string;
   thumbnail: string;// thumbnail image of the property (TODO: make this optional later and in public have a default thumbail
   // image and use that if landlord never added in a thumnail)
   maxOccupants: number;

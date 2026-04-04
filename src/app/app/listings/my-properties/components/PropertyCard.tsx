@@ -77,7 +77,7 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
               {property.name}
             </div>
             <div className="text-[12px] text-white/45 mt-0.5 truncate">
-              {property.address}
+              {property.streetName}
             </div>
           </div>
   

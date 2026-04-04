@@ -33,7 +33,7 @@ export default function OccupantModal({occupant,property,onClose,}: props) {
               {occupant.name}
             </div>
             <div className="text-[12px] text-white/45 mt-0.5">
-              {property.name} · {property.address}
+              {property.name} · {property.streetName}
             </div>
           </div>
 

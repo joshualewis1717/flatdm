@@ -18,7 +18,7 @@ const MOCK_PROPERTIES: Property[] = [
   {
     id: 1,
     name: 'Maple House',
-    address: '14 Maple Street, Shoreditch, E1 6RF',
+    streetName: '14 Maple Street',
     thumbnail: '🏠',// using emojis as placeholder 
     maxOccupants: 4,
     earliestFreeDate: '1 Aug 2025',
@@ -32,7 +32,7 @@ const MOCK_PROPERTIES: Property[] = [
   {
     id: 2,
     name: 'The Pines',
-    address: '7 Pine Avenue, Islington, N1 9GH',
+    streetName: '7 Pine Avenue',
     thumbnail: '🏢',
     maxOccupants: 5,
     earliestFreeDate: 'Available now',
@@ -45,7 +45,7 @@ const MOCK_PROPERTIES: Property[] = [
   {
     id: 3,
     name: 'Riverside Flat',
-    address: '3B Riverside Rd, Battersea, SW8 2LT',
+    streetName: '3B Riverside Rd',
     thumbnail: '🌊',
     maxOccupants: 3,
     earliestFreeDate: 'Sep 2025',
@@ -58,7 +58,7 @@ const MOCK_PROPERTIES: Property[] = [
   {
     id: 4,
     name: 'Oak Studios',
-    address: '22 Oak Lane, Hackney, E8 4PP',
+    streetName: '22 Oak Lane',
     thumbnail: '🌳',
     maxOccupants: 6,
     earliestFreeDate: 'Available now',
@@ -67,7 +67,7 @@ const MOCK_PROPERTIES: Property[] = [
   {
     id: 5,
     name: 'Clerkenwell Flat',
-    address: '9 Clerkenwell Rd, EC1M 5PF',
+    streetName: '9 Clerkenwell Rd',
     thumbnail: '🏙️',
     maxOccupants: 4,
     earliestFreeDate: 'Mar 2026',
@@ -98,7 +98,7 @@ export default function Page() {
     let list = properties.filter(
       (p) =>
         p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.address.toLowerCase().includes(search.toLowerCase())
+        p.streetName.toLowerCase().includes(search.toLowerCase())
     );
 
     if (sortBy === 'most') {
