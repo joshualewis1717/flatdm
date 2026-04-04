@@ -1,44 +1,58 @@
 'use client'
+import { useEffect, useState } from "react";
 import { BedDouble, Bath, Users, Ruler, CalendarClock, Clock } from "lucide-react";
 import ImageSlider from "../components/ImageSlider";
 import PropertyStatsGrid from "./PropertyStatsGrid";
 import RoommateProfileList from "./RoomateProfileList";
 import AmenityList from "../components/AmenityList";
-import { Amenity } from "../types";
+import { getListingById } from "../logic/clientServices/prisma";
 // Panel to display the static listing specific data in full
 
 type ListingInfoPanelProps = {
   listingId: string;
 };
 
-export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
-  // Mock data — replace with db fetch via listingId
+type ListingData = NonNullable<Awaited<ReturnType<typeof getListingById>>>;
 
-  const title = "Example Listing Name";
-  const flatNumber: string | null = "4B";
-  const description = "This is a description of the property.";
-  const rent = 1000;
-  const lastUpdated = new Date();
-  const landlordName = "LANDLORD";
+export default function ListingInfoPanel({ listingId = '5' }: ListingInfoPanelProps) {
+  const [data, setData] = useState<ListingData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const totalRooms = 3;
-  const bathrooms = 2;
-  const beds = 4;
-  const maxOccupants = 5;
-  const shared = maxOccupants > 1;
-  const area = 120;
-  const minStay = 6;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const listing = await getListingById(listingId);
+        setData(listing);
+      } catch (error) {
+        console.error("Failed to fetch listing data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const buildingAddress = "12 Maple Street";
-  const city = "London";
-  const postcode = "E1 6RF";
+    fetchData();
+  }, [listingId]);
 
-  const images = [
-    "/images/listing1.jpg",
-    "/images/listing2.jpg",
-    "/images/listing3.jpg",
+  if (loading) return <p className="text-sm text-white/40 p-8">Loading listing…</p>;
+  if (!data)   return <p className="text-sm text-red-400 p-8">Listing not found.</p>;
+
+  const {  flatNumber, description, rent, lastUpdated,
+    bedrooms, bathrooms, maxOccupants, minStay,
+    area, totalRooms,  thumbnail, images,
+    buildingName, streetName, city, postcode,
+    landlordName, amenities, } = data;
+
+  const shared = maxOccupants > 1;// derive shared from max occupants
+  const headline = flatNumber ? `Flat ${flatNumber}  -  ${buildingName}` : buildingName;// our title
+  const addressLine = `${streetName}, ${city}, ${postcode}`;
+
+  // combine thumbnail + images for the slider, thumbnail first
+  const sliderImages = [
+    ...(thumbnail ? ['/images/listing1.jpg'] : ['/images/listing1.jpg']),// use placeholder if no thumbnail
+    ...images,
   ];
 
+  // hardcoded roommates for now, in real app this would come from our listing data (occupants relation)
   const roommates = [
     { id: 1, name: "Alice Johnson" },
     { id: 2, name: "Bob Smith" },
@@ -53,30 +67,19 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
     { id: 11, name: "Kevin Brown" },
   ];
 
-  const amenities: Amenity[] = [
-    { id: 1, propertyId: 1, name: "Bus Stop",  distance: 0.3, type: "TRANSPORT" },
-    { id: 2, propertyId: 1, name: "Hospital",  distance: 1.2, type: "HEALTHCARE" },
-    { id: 3, propertyId: 1, name: "Park",       distance: 0.5, type: "RECREATIONAL" },
-  ];
-
   const stats = [
-    { icon: <BedDouble className="w-4 h-4" />, label: "Rooms",         value: totalRooms },
-    { icon: <Bath      className="w-4 h-4" />, label: "Bathrooms",     value: bathrooms },
-    { icon: <BedDouble className="w-4 h-4" />, label: "Beds",          value: beds },
-    { icon: <Users     className="w-4 h-4" />, label: "Max Occupants", value: maxOccupants },
-    { icon: <Ruler     className="w-4 h-4" />, label: "Area",          value: `${area} m²` },
-    { icon: <Clock     className="w-4 h-4" />, label: "Min Stay",      value: `${minStay} months` },
-    { icon: <CalendarClock className="w-4 h-4" />, label: "Shared",    value: shared ? "Yes" : "No", highlight: true },
+    { icon: <BedDouble    className="w-4 h-4" />, label: "Rooms",         value: totalRooms },
+    { icon: <Bath         className="w-4 h-4" />, label: "Bathrooms",     value: bathrooms },
+    { icon: <BedDouble    className="w-4 h-4" />, label: "Bedrooms",      value: bedrooms },
+    { icon: <Users        className="w-4 h-4" />, label: "Max Occupants", value: maxOccupants },
+    { icon: <Ruler        className="w-4 h-4" />, label: "Area",          value: `${area} m²` },
+    { icon: <Clock        className="w-4 h-4" />, label: "Min Stay",      value: `${minStay} months` },
+    { icon: <CalendarClock className="w-4 h-4" />, label: "Shared",       value: shared ? "Yes" : "No", highlight: true },
   ];
-
- 
-  // title would be flat number + building name if flat number exists, otherwise just building name
-  const headline = flatNumber ? `Flat ${flatNumber}  ·  ${title}` : title;
-  const addressLine = `${buildingAddress}, ${city}, ${postcode}`;
 
   return (
     <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] overflow-hidden max-w-5xl mx-auto">
-      <ImageSlider images={images} />
+      <ImageSlider images={sliderImages} />
 
       <div className="p-6 sm:p-8 space-y-6">
 

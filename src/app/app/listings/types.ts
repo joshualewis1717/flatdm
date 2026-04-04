@@ -1,36 +1,5 @@
 import { Prisma } from "@prisma/client";
-
-//
-// 🔹 ==============================
-// 🔹 PRISMA INCLUDE CONFIGS
-// 🔹 ==============================
-//
-
-// Property (building-level)
-export const propertyInclude = {
-  amenities: true,
-  listings: true,
-} satisfies Prisma.PropertyInclude;
-
-// Full listing (for pages / detailed cards)
-export const propertyListingFullInclude = {
-  occupants: true,
-  property: {
-    include: {
-      amenities: true,
-    },
-  },
-  images: true,
-  applications: true,
-} satisfies Prisma.PropertyListingInclude;
-
-// Lightweight listing (for lists)
-export const propertyListingBasicInclude = {
-  occupants: true,
-  images: true,
-} satisfies Prisma.PropertyListingInclude;
-
-
+import { propertyInclude, propertyListingBasicInclude, propertyListingFullInclude } from "./prismaConst";
 
 /***** prisma types relatin with listing and property management *********/
 
@@ -108,7 +77,7 @@ export type PropertyListingForm = {
 // For the property selector component when creating a listing, represents a previously saved property (building) that landlords can choose to autofill from
 export type ExistingProperty = {
   id: number;
-  address: string;
+  streetName: string;
   city: string;
   postcode: string;
   buildingName: string;
@@ -117,9 +86,6 @@ export type ExistingProperty = {
 };
 
 /***** non prisma UI types */
-
-// Keep if you need filtering logic in UI
-export type AmenityType = 'HEALTHCARE' | 'TRANSPORT' | 'RECREATIONAL' | 'OTHER';
 
 export type DistanceRange = '0-2' | '2-5' | '5-10';
 
@@ -142,23 +108,3 @@ export type ReviewUI = {
 
 // If you want a "display-friendly" occupant
 export type OccupantType = 'occupant' | 'applicant';
-
-export type Occupant = {//TODO: use types from prisma instead (consultant table), make this be a wrapper
-  id: number;
-  name: string;
-  type: OccupantType;
-  movedIn?: string | null;
-  expectedMoveOut?: string | null;
-  expectedMoveIn?: string | null;
-}
-
-export type Property= {// TODO: use from pisma table instead 
-  id: number;
-  name: string;
-  streetName: string;
-  thumbnail: string;// thumbnail image of the property (TODO: make this optional later and in public have a default thumbail
-  // image and use that if landlord never added in a thumnail)
-  maxOccupants: number;
-  earliestFreeDate: string;
-  occupants: Occupant[];
-}

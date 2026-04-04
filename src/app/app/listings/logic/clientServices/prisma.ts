@@ -5,7 +5,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { PropertyListingForm } from "../../types";
+import { ExistingProperty, PropertyListingForm } from "../../types";
 
 type CreateListingInput = PropertyListingForm & {
   landlordId: number;
@@ -36,8 +36,14 @@ export async function createListing(data: CreateListingInput): Promise<boolean> 
     } = data;
 
     let propertyId: number;
+
+    // some basic validation
     if (!buildingName && !streetName && !city && !postcode) {
       throw new Error("Must provide either selectedPropertyId or full address details");
+    }
+
+    if (buildingName?.trim() === "" || streetName?.trim() === "" || city?.trim() === "" || postcode?.trim() === "") {
+      throw new Error("Address fields cannot be empty if creating a new property");
     }
 
     if (rooms <= 0 || bedrooms <= 0 || bathrooms <= 0 || area <= 0 || rent <= 0 || maxOccupants <= 0 || minStay <= 0) {
@@ -63,8 +69,8 @@ export async function createListing(data: CreateListingInput): Promise<boolean> 
 
       const property = await tx.property.create({
         data: {
-          title: buildingName,
-          address: streetName ?? "",
+          title: buildingName ?? "",
+          streetName: streetName ?? "",
           city: city ?? "",
           postcode: postcode ?? "",
           landlordId,
@@ -100,19 +106,19 @@ export async function createListing(data: CreateListingInput): Promise<boolean> 
         landlordId,
       },
     });
-    return listing ? true : false;
+    return listing ? true : false;// just return a boolean to let front end know if it was successful or not
   });
 }
 
 
 // function to get any properties for a landlord (NOT LISTINGS, just the building themselves)
-export async function getPropertiesForLandlord(landlordId: number) {
+export async function getPropertiesForLandlord(landlordId: number): Promise<ExistingProperty[]> {
     const properties = await prisma.property.findMany({
       where: { landlordId },
       select: {
         id: true,
         title: true,
-        address: true,
+        streetName: true,
         city: true,
         postcode: true,
         amenities: {
@@ -121,14 +127,75 @@ export async function getPropertiesForLandlord(landlordId: number) {
         listings: { select: { id: true }, take: 1 },
       },
     });
-  
+    
+    // map our properties to our UI return type
     return properties.map((p) => ({
         id: p.id,
-        buildingName: p.title ?? 'buildName',   // non-nullable, no fallback needed
-        address: p.address,
+        buildingName: p.title,  
+        streetName: p.streetName,
         city: p.city,
         postcode: p.postcode,
         hasExistingListings: p.listings.length > 0,
-        amenities: p.amenities,
+        amenities: p.amenities.map((a) => ({
+          id: a.id,
+          name: a.name,
+          type: a.type,
+          distance: a.distance,
+          propertyId: p.id,
+        })),
       }));
+  }
+
+
+  // function to get all details for a listing by id, including property details + landlord names etc
+  export async function getListingById(listingId: string) {
+
+    const listing = await prisma.propertyListing.findUnique({
+      where: { id: Number(listingId) },
+      include: {
+        images: true, // include images
+        property: {
+          include: {
+            amenities: true,
+            landlord: {
+              select: { username: true },
+            },
+          },
+        },
+      },
+    });
+  
+    if (!listing) return null;
+  
+    // split thumbnail + images
+    const thumbnail = listing.images.find((img) => img.isThumbnail);
+    const images = listing.images
+      .filter((img) => !img.isThumbnail)
+      .map((img) => img.url);
+  
+    return {
+      // listing-level
+      flatNumber: listing.flatNumber ?? null,
+      description: listing.description,
+      rent: listing.rent,
+      area: listing.area,
+      totalRooms: listing.rooms,
+      availableFrom: listing.availableFrom,
+      lastUpdated: listing.updatedAt,
+      bedrooms: listing.bedrooms,
+      bathrooms: listing.bathrooms,
+      maxOccupants: listing.maxOccupants,
+      minStay: listing.minStay,
+  
+      thumbnail: thumbnail?.url ?? null, // split thumbnail from images
+      images, //  non-thumbnail images
+  
+      // property-level
+      buildingName: listing.property.title,
+      streetName: listing.property.streetName,
+      city: listing.property.city,
+      postcode: listing.property.postcode,
+      landlordName: listing.property.landlord.username,
+      amenities: listing.property.amenities,
+    };
   }
