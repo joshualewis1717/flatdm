@@ -5,7 +5,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { PropertyListingForm } from "../../types";
+import { ExistingProperty, PropertyListingForm } from "../../types";
 
 type CreateListingInput = PropertyListingForm & {
   landlordId: number;
@@ -36,8 +36,14 @@ export async function createListing(data: CreateListingInput): Promise<boolean> 
     } = data;
 
     let propertyId: number;
+
+    // some basic validation
     if (!buildingName && !streetName && !city && !postcode) {
       throw new Error("Must provide either selectedPropertyId or full address details");
+    }
+
+    if (buildingName?.trim() === "" || streetName?.trim() === "" || city?.trim() === "" || postcode?.trim() === "") {
+      throw new Error("Address fields cannot be empty if creating a new property");
     }
 
     if (rooms <= 0 || bedrooms <= 0 || bathrooms <= 0 || area <= 0 || rent <= 0 || maxOccupants <= 0 || minStay <= 0) {
@@ -100,13 +106,13 @@ export async function createListing(data: CreateListingInput): Promise<boolean> 
         landlordId,
       },
     });
-    return listing ? true : false;
+    return listing ? true : false;// just return a boolean to let front end know if it was successful or not
   });
 }
 
 
 // function to get any properties for a landlord (NOT LISTINGS, just the building themselves)
-export async function getPropertiesForLandlord(landlordId: number) {
+export async function getPropertiesForLandlord(landlordId: number): Promise<ExistingProperty[]> {
     const properties = await prisma.property.findMany({
       where: { landlordId },
       select: {
@@ -121,7 +127,8 @@ export async function getPropertiesForLandlord(landlordId: number) {
         listings: { select: { id: true }, take: 1 },
       },
     });
-  
+    
+    // map our properties to our UI return type
     return properties.map((p) => ({
         id: p.id,
         buildingName: p.title,  
@@ -129,11 +136,18 @@ export async function getPropertiesForLandlord(landlordId: number) {
         city: p.city,
         postcode: p.postcode,
         hasExistingListings: p.listings.length > 0,
-        amenities: p.amenities,
+        amenities: p.amenities.map((a) => ({
+          id: a.id,
+          name: a.name,
+          type: a.type,
+          distance: a.distance,
+          propertyId: p.id,
+        })),
       }));
   }
 
 
+  // function to get all details for a listing by id, including property details + landlord names etc
   export async function getListingById(listingId: string) {
 
     const listing = await prisma.propertyListing.findUnique({

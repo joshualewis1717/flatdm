@@ -1,34 +1,7 @@
 import { Prisma } from "@prisma/client";
+import { propertyInclude, propertyListingBasicInclude, propertyListingFullInclude } from "./prismaConst";
 
 
-// prisma onfigs
-
-
-//TODO PUT ALL OF THESE CONSTS IN A SEPERATE FILE
-
-// Property (building-level)
-export const propertyInclude = {
-  amenities: true,
-  listings: true,
-} satisfies Prisma.PropertyInclude;
-
-// Full listing (for pages / detailed cards)
-export const propertyListingFullInclude = {
-  occupants: true,
-  property: {
-    include: {
-      amenities: true,
-    },
-  },
-  images: true,
-  applications: true,
-} satisfies Prisma.PropertyListingInclude;
-
-// Lightweight listing (for lists)
-export const propertyListingBasicInclude = {
-  occupants: true,
-  images: true,
-} satisfies Prisma.PropertyListingInclude;
 
 
 
@@ -108,7 +81,7 @@ export type PropertyListingForm = {
 // For the property selector component when creating a listing, represents a previously saved property (building) that landlords can choose to autofill from
 export type ExistingProperty = {
   id: number;
-  address: string;
+  streetName: string;
   city: string;
   postcode: string;
   buildingName: string;
@@ -117,9 +90,6 @@ export type ExistingProperty = {
 };
 
 /***** non prisma UI types */
-
-// Keep if you need filtering logic in UI
-export type AmenityType = 'HEALTHCARE' | 'TRANSPORT' | 'RECREATIONAL' | 'OTHER';
 
 export type DistanceRange = '0-2' | '2-5' | '5-10';
 

@@ -52,6 +52,7 @@ export default function ListingInfoPanel({ listingId = '5' }: ListingInfoPanelPr
     ...images,
   ];
 
+  // hardcoded roommates for now, in real app this would come from our listing data (occupants relation)
   const roommates = [
     { id: 1, name: "Alice Johnson" },
     { id: 2, name: "Bob Smith" },

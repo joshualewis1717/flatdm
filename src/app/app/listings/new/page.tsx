@@ -1,25 +1,26 @@
 'use client'
 import { useEffect, useState } from "react";
 import InputField from "../../application/components/InputField";
-import { PropertyListingForm, AmenityDraft, AmenityType, DistanceRange, Amenity, ExistingProperty } from "../types";
+import { PropertyListingForm, AmenityDraft,DistanceRange, ExistingProperty } from "../types";
+import { AmenityType } from "@prisma/client";
 import AddAmenitiesPanel from "../components/AddAmenityPanel";
 import AddImagesPanel from "../components/AddImagePanel";
 import AddThumbnailPanel from "../components/AddThumbnailPanel";
 import PropertySelector from "../components/PropertySelector";
 import { createListing } from "../logic/clientServices/prisma";
-import { set } from "date-fns";
 
 // page for landlords to create a new listing
 // Converts the user-selected range string to a representative number for persistence.
 
-const DISTANCE_RANGE_TO_KM: Record<DistanceRange, number> = {
+const DISTANCE_RANGE_TO_KM: Record<DistanceRange, number> = {// converts the range selected by the user into a
+//  representative number in km for storage in the database
   "0-2":  1,
   "2-5":  3,
   "5-10": 7,
 };
 
 type NewListingsPageProps = {
-  landlordId: number;
+  landlordId: number;// in a real app this would come from the session, but for testing we can pass it as a prop
 };
 
 export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps) {
@@ -32,7 +33,6 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
   const [success, setSuccess] = useState(false);
 
   const [selectedProperty, setSelectedProperty] = useState<ExistingProperty | null>(null);
-  const isExistingProperty = selectedProperty?.hasExistingListings ?? false;
 
   const [form, setForm] = useState<PropertyListingForm>({
     buildingName: "",
@@ -50,7 +50,10 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
     thumbnail: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  /****** handlers **********/
+
+  // handler to keep text input fields in sync with form state, also converts number inputs to actual numbers before storing in state
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>){
     const { name, type, value } = e.target;
     setForm((prev) => ({
       ...prev,
@@ -58,22 +61,26 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
     }));
   };
 
-  const handleDateChange = (date: Date | undefined) => {
+  // handler specifically for date input to keep it in sync with form state (a tiny deviation of logic from handle change)
+  function handleDateChange(date: Date | undefined){
     setForm((prev) => ({ ...prev, availableFrom: date ?? prev.availableFrom }));
   };
 
-  const handlePropertySelect = (property: ExistingProperty | null) => {
+  // function to handle when a user selects a property from the property selector component, we autofill in the information
+  function handlePropertySelect(property: ExistingProperty | null) {
     setSelectedProperty(property);
     if (property) {
       setForm((prev) => ({
         ...prev,
         selectedPropertyId: property.id,
-        buildingName: property.buildingName, // autofill
-        streetName: property.address,   // autofill
-        city: property.city,            // autofill
-        postcode: property.postcode,    // autofill
-        flatNumber: "",                 // let them fill this in fresh
+        buildingName: property.buildingName, 
+        streetName: property.streetName,  
+        city: property.city,         
+        postcode: property.postcode,    
+        flatNumber: "",          
       }));
+
+      // selector returned a property, we need to then map the amenities to our UI amenity draft type.
       if (property.hasExistingListings) {
         const drafts: AmenityDraft[] = property.amenities.map((a) => ({
           ...a,
@@ -85,6 +92,7 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
         setAmenities([]);
       }
     } else {
+      // reset the form if they deselect the property (go back to "new property" mode)
       setForm((prev) => ({
         ...prev,
         selectedPropertyId: undefined,
@@ -95,8 +103,9 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
       setAmenities([]);
     }
   };
+
   // function to handle form submission, with validation to ensure a thumbnail is added before allowing submission. Converts amenity distance ranges to km values before sending to the backend.
-  const handleSubmit = async (e: React.SubmitEvent) => {
+  async function handleSubmit(e: React.SubmitEvent){
     setLoading(true);
     e.preventDefault();
   
@@ -117,12 +126,13 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
   };
 
 
-
-  const addAmenity = () => {
+  // function to add in a new amenity to our form state
+  function addAmenity(){
     setAmenities((prev) => [
       ...prev,
       {
-        id: amenityCounter,
+        id: amenityCounter,// we need to generate a unique id for each amenity to keep track of them.
+        // need a number instead of string since back end uses number id.
         propertyId: form.selectedPropertyId ?? 0,
         type: "OTHER" as AmenityType,
         name: "",
@@ -132,14 +142,17 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
     setAmenityCounter((c) => c + 1);
   };
 
-  const updateAmenity = <K extends keyof AmenityDraft>(id: number, field: K, value: AmenityDraft[K]) => {
+  // function to update a specific field of an amenity.
+  function updateAmenity<K extends keyof AmenityDraft>(id: number, field: K, value: AmenityDraft[K]){
     setAmenities((prev) => prev.map((a) => (a.id === id ? { ...a, [field]: value } : a)));
   };
 
-  const removeAmenity = (id: number) => {
+  // function to remove an amenity from our form state based on its id
+  function removeAmenity(id: number){
     setAmenities((prev) => prev.filter((a) => a.id !== id));
   };
 
+  // function to reset the form state
   function resetForm() {
     setForm({ buildingName: "",
       description: "",
@@ -157,10 +170,14 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
     setSelectedProperty(null);
     setAmenities([]);
     setImages([]);
+    setThumbnail(null);
   }
 
-  const addImage = () => setImages((prev) => [...prev, "https://via.placeholder.com/150"]);
-  const removeImage = (index: number) => setImages((prev) => prev.filter((_, i) => i !== index));
+  // function to add an image to form
+  function addImage(){setImages((prev) => [...prev, "https://via.placeholder.com/150"])};// default image for testing
+
+  // function to remove an image from form
+  function removeImage(index: number){setImages((prev) => prev.filter((_, i) => i !== index))};
 
   // very rough success alert using useEffect to trigger on success state change, can be improved with a proper toast notification system
   useEffect(()=>{
@@ -173,7 +190,7 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
         setSuccess(false);
     }, 2000);
   }
-  })
+  }, [success])
 
   
   // very rough error alert using useEffect to trigger on success state change, can be improved with a proper toast notification system
@@ -184,7 +201,7 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
         setError(null);
     }, 2000);
   }
-  })
+  }, [error])
 
 
   return (
@@ -206,16 +223,6 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
           </p>
 
           <PropertySelector landlordId={landlordId} onSelect={handlePropertySelect} />
-
-          {isExistingProperty && selectedProperty && (
-            <div className="flex gap-3 rounded-xl border border-blue-500/30 bg-blue-500/10 p-4">
-              <span className="mt-0.5 text-blue-400">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 110 20A10 10 0 0112 2z" />
-                </svg>
-              </span>
-            </div>
-          )}
         </section>
 
         {/* address, merge all fields except for flat number into one string and store as address in db */}
@@ -329,7 +336,7 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
           onRemove={removeAmenity}
           onUpdate={updateAmenity}
         />
-        {loading && <p className="text-sm text-white/50">Saving listing...</p>}
+        {loading && <p className="text-sm text-white/50">Saving listing...</p>}{/* replace with spinner later */}
         <div className="flex gap-4">
           <button type="button" onClick={() => window.history.back()} className="flex-1 rounded-2xl bg-black/70 text-white py-3 font-semibold hover:bg-black/80">
             Back
