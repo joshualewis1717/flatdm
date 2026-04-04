@@ -109,7 +109,7 @@ model PropertyListing {
   maxOccupants Int // e.g. withRoomates boolean or whatnot is derived from this
   minStay      Int
 
-  rooms      Int
+  rooms     Int
   bedrooms  Int
   bathrooms Int
   area      Int
@@ -129,7 +129,7 @@ model PropertyListing {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  isDeleted Boolean @default(false)
+  isDeleted Boolean  @default(false)
 
   @@unique([flatNumber, propertyId])
 }
@@ -215,22 +215,11 @@ model Review {
   targetUserId Int?
   listingId    Int?
 
+  isDeleted Boolean @default(false)
+
   author     User             @relation("ReviewsWritten", fields: [authorId], references: [id])
   targetUser User?            @relation("ReviewsReceived", fields: [targetUserId], references: [id])
   listing    PropertyListing? @relation(fields: [listingId], references: [id])
-}
-
-model RemovedReview {
-  id               Int      @id @default(autoincrement())
-  originalReviewId Int      @unique
-  rating           Int
-  comment          String?
-  createdAt        DateTime
-  deletedAt        DateTime @default(now())
-
-  authorId     Int
-  targetUserId Int?
-  listingId    Int?
 }
 
 model Report {
