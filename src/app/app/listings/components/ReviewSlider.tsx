@@ -1,7 +1,8 @@
 'use client'
 import { useState } from "react";
 import StarRating from "./StarRating";
-import { Review } from "../types";
+//import { Review } from "../types";
+import { Review } from "@prisma/client";
 // component to display some reviews within a looping list
 
 type ReviewCarouselProps = {
@@ -31,7 +32,7 @@ export default function ReviewSlider({
       {/* Current review */}
       <div className="flex-1 flex flex-col justify-center items-start border-t border-white/10 pt-3">
         <p className="text-sm text-white/70 font-medium">
-          {reviews[currentIndex].user}
+          {reviews[currentIndex].authorId}{/* back end service route to derive user from this */}
         </p>
         <p className="text-sm text-white/50 mt-1">
           {reviews[currentIndex].comment}

@@ -9,7 +9,8 @@ type props={
   
 }
 export default function OccupantCard({occupant,onClick,}:props ) {
-  const isApplicant = occupant.type === 'applicant';
+  const isApplicant = occupant.moveIn.getTime() > Date.now();
+  const consultant = occupant.userId
 
   return (
     <button
@@ -24,11 +25,11 @@ export default function OccupantCard({occupant,onClick,}:props ) {
         }
       `}
     >
-      <Avatar username={occupant.name} />
+      <Avatar username={'exampple usermame'} />
 
       <div className="flex-1 min-w-0">
         <div className="text-[13px] font-medium text-white truncate">
-          {occupant.name}
+          {'example real name'}
         </div>
 
         <span
