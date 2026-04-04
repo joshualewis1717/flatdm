@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from "react";
-import InputField from "../../application/components/InputField";
+import InputField from "../../applications/components/InputField";
 import { PropertyListingForm, AmenityDraft,DistanceRange, ExistingProperty } from "../types";
 import { AmenityType } from "@prisma/client";
 import AddAmenitiesPanel from "../components/AddAmenityPanel";

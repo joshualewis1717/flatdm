@@ -11,6 +11,7 @@ type CreateListingInput = PropertyListingForm & {
   landlordId: number;
 };
 
+//TODO: to all of the functions add in {result, error} return types.
 
 // two stage process to create a listing (create property first if needed, and then create listing linked to that property)
 export async function createListing(data: CreateListingInput): Promise<boolean> {
@@ -114,7 +115,7 @@ export async function createListing(data: CreateListingInput): Promise<boolean> 
 // function to get any properties for a landlord (NOT LISTINGS, just the building themselves)
 export async function getPropertiesForLandlord(landlordId: number): Promise<ExistingProperty[]> {
     const properties = await prisma.property.findMany({
-      where: { landlordId },
+      where: { landlordId},
       select: {
         id: true,
         title: true,
@@ -151,7 +152,7 @@ export async function getPropertiesForLandlord(landlordId: number): Promise<Exis
   export async function getListingById(listingId: string) {
 
     const listing = await prisma.propertyListing.findUnique({
-      where: { id: Number(listingId) },
+      where: { id: Number(listingId), isDeleted: false },
       include: {
         images: true, // include images
         property: {
@@ -198,4 +199,140 @@ export async function getPropertiesForLandlord(landlordId: number): Promise<Exis
       landlordName: listing.property.landlord.username,
       amenities: listing.property.amenities,
     };
+  }
+
+  // smaller function to get listings for a landlord with very basic info
+  export async function getListingsForLandlord(landlordId: number) {
+    const listings = await prisma.propertyListing.findMany({
+      where: { landlordId, isDeleted: false },
+      include: {
+        images: true,
+        property: true,
+        occupants: true,
+      },
+    });
+  
+    return listings;
+  }
+  
+  // function to delete a specific listing by id, soft delete only.
+  export async function deleteListing(listingId: number): Promise<boolean> {
+    try {
+      await prisma.propertyListing.update({ where: { id: listingId }, data: { isDeleted: true } });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // function to create a new application for a listing:
+  export async function submitApplication(
+    listingId: number,
+    userId: number,
+    moveInDate: Date,
+    moveOutDate: Date | null
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const now = new Date();
+  
+      //  Validate dates
+      if (moveInDate <= now) {
+        return { success: false, error: "Move-in date must be in the future." };
+      }
+  
+      if (moveOutDate && moveOutDate <= moveInDate) {
+        return {
+          success: false,
+          error: "Move-out date must be after move-in date.",
+        };
+      }
+  
+      const [listing, existingApplication, occupantRecord] =
+        await Promise.all([
+          prisma.propertyListing.findUnique({
+            where: { id: listingId, isDeleted: false },
+          }),
+  
+          prisma.propertyApplication.findFirst({
+            where: {
+              listingId,
+              userId,
+              status: {
+                in: ["PENDING", "APPROVED"],// TODO: also include CONFIRMED at some point
+              },
+            },
+          }),
+  
+          prisma.occupant.findFirst({
+            where: {
+              listingId,
+              userId,
+            },
+          }),
+        ]);
+  
+      if (!listing) {
+        return { success: false, error: "Listing not found." };
+      }
+  
+      //  Already has active application
+      if (existingApplication) {
+        return {
+          success: false,
+          error: "You already have an active application for this listing.",
+        };
+      }
+  
+      // Occupancy check
+      if (occupantRecord) {
+        const stillOccupying =
+          occupantRecord.moveOut === null ||
+          occupantRecord.moveOut > now;
+  
+        if (stillOccupying) {
+          return {
+            success: false,
+            error: "You are currently occupying this property.",
+          };
+        }
+      }
+  
+      // Capacity check, check if still full for when they want to move in
+      const activeOccupantsAtMoveIn = await prisma.occupant.count({
+        where: {
+          listingId,
+          moveIn: {
+            lte: moveInDate,
+          },
+          OR: [
+            { moveOut: null },
+            { moveOut: { gt: moveInDate } },
+          ],
+        },
+      });
+  
+      if (activeOccupantsAtMoveIn >= listing.maxOccupants) {
+        return {
+          success: false,
+          error:
+            "This listing will be full at your selected move-in date.",
+        };
+      }
+  
+      // Create application
+      await prisma.propertyApplication.create({
+        data: {
+          moveInDate,
+          moveOutDate: moveOutDate ?? null,
+          status: "PENDING",
+          userId,
+          listingId,
+        },
+      });
+  
+      return { success: true };
+    } catch (error) {
+      console.error("submitApplication error:", error);
+      return { success: false, error: "Something went wrong." };
+    }
   }

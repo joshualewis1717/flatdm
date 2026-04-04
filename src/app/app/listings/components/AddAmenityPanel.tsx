@@ -1,5 +1,6 @@
-import InputField from "../../application/components/InputField";
-import { Amenity, AmenityType, DistanceRange } from "../types";
+import InputField from "../../applications/components/InputField";
+import { Amenity, DistanceRange } from "../types";
+import { AmenityType } from "@prisma/client";
 // panel for landlords to add in new amenity info
 export type AmenityDraft = Omit<Amenity, "distance"> & {
   distance: DistanceRange | null;
