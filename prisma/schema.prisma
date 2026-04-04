@@ -16,6 +16,7 @@ model User {
   passwordHash String
   role         Role
   isDeleted    Boolean  @default(false)
+  deletedAt    DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -54,6 +55,7 @@ model Profile {
   phone     String?
   bio       String?
   createdAt DateTime @default(now())
+  modifiedAt DateTime @updatedAt @default(now())
 
   user User @relation(fields: [userId], references: [id])
 }
@@ -69,6 +71,7 @@ model ListingImage {
   listing   PropertyListing @relation(fields: [listingId], references: [id])
 
   createdAt DateTime @default(now())
+  modifiedAt DateTime @updatedAt @default(now())
 }
 
 // we are modelling it as the entire building
@@ -130,6 +133,7 @@ model PropertyListing {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
+  deletedAt DateTime?
 
   @@unique([flatNumber, propertyId])
 }
@@ -141,6 +145,8 @@ model PropertyApplication {
   moveOutDate DateTime?
 
   status ApplicationStatus
+  expiryDate  DateTime?
+  updatedAt  DateTime @updatedAt  @default(now())
 
   userId    Int
   listingId Int
@@ -161,6 +167,7 @@ model Occupant {
   moveOut DateTime?
 
   createdAt DateTime @default(now())
+  modifiedAt DateTime @updatedAt @default(now())
 
   user    User            @relation(fields: [userId], references: [id])
   listing PropertyListing @relation(fields: [listingId], references: [id])
@@ -171,6 +178,7 @@ model Occupant {
 model Conversation {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
+  modifiedAt DateTime @updatedAt @default(now())
 
   userAId Int
   userBId Int
@@ -185,9 +193,13 @@ model Message {
   id        Int      @id @default(autoincrement())
   content   String
   createdAt DateTime @default(now())
+  modifiedAt DateTime @updatedAt @default(now())
 
   senderId       Int
   conversationId Int
+
+  isDeleted Boolean @default(false)
+  deletedAt DateTime?
 
   sender       User         @relation("SentMessages", fields: [senderId], references: [id])
   conversation Conversation @relation(fields: [conversationId], references: [id])
@@ -197,6 +209,7 @@ model MessageRequest {
   id        Int           @id @default(autoincrement())
   status    RequestStatus
   createdAt DateTime      @default(now())
+  modifiedAt DateTime     @updatedAt @default(now())
 
   senderId   Int
   receiverId Int
@@ -210,12 +223,14 @@ model Review {
   rating    Int
   comment   String?
   createdAt DateTime @default(now())
+  modifiedAt DateTime @updatedAt @default(now())
 
   authorId     Int
   targetUserId Int?
   listingId    Int?
 
   isDeleted Boolean @default(false)
+  deletedAt DateTime?
 
   author     User             @relation("ReviewsWritten", fields: [authorId], references: [id])
   targetUser User?            @relation("ReviewsReceived", fields: [targetUserId], references: [id])
@@ -228,6 +243,7 @@ model Report {
   description String?
   status      ReportStatus
   createdAt   DateTime     @default(now())
+  modifiedAt  DateTime     @updatedAt @default(now())
 
   reporterId   Int
   targetUserId Int?
@@ -242,6 +258,7 @@ model OffenceRecord {
   id        Int      @id @default(autoincrement())
   reason    String
   createdAt DateTime @default(now())
+  modifiedAt DateTime @updatedAt @default(now())
 
   userId Int
   user   User @relation(fields: [userId], references: [id])
@@ -252,6 +269,7 @@ model Amenity {
   name     String
   type     AmenityType
   distance Float?
+  modifiedAt DateTime @updatedAt @default(now())
 
   propertyId Int
   property   Property @relation(fields: [propertyId], references: [id])
@@ -273,6 +291,7 @@ enum Role {
 enum ApplicationStatus {
   PENDING
   APPROVED
+  CONFIRMED
   REJECTED
 }
 

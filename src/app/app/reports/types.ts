@@ -40,6 +40,8 @@ type PropertyApplication = {
   moveInDate: string;
   moveOutDate: string;
   status: string;
+  lastUpdated: string;
+  expiryDate?: string;
   createdAt: string;
   userId: number;
   listingId: number;
