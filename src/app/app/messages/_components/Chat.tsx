@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState,useMemo } from "react";
+import { useEffect, useRef, useState,useMemo,ReactNode } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -16,9 +16,10 @@ type Props = {
   addMessage: (conversationId: number, message: Message) => void;
   replaceMessage: (conversationId: number,tempId: number,savedMessage: Message) => void;
   removeMessage: (conversationId: number, tempId: number) => void;
+  mobileInboxTrigger?: ReactNode;
 };
 
-export default function Chat({activeConversation,addMessage,replaceMessage,removeMessage}: Props) {
+export default function Chat({activeConversation,addMessage,replaceMessage,removeMessage,mobileInboxTrigger}: Props) {
     const [input, setInput] = useState("");
     const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -83,70 +84,71 @@ export default function Chat({activeConversation,addMessage,replaceMessage,remov
     };
 
     return (
-    <Card className="col-span-2 flex flex-col rounded-2xl border-white/10 bg-white/[0.03]">
-        {activeConversation ? (
-            <>
-                <div className="flex items-center gap-3 border-b border-white/10 p-4">
-                    <Avatar>
-                        <AvatarFallback>{activeConversation.isDeletedUser ? "❌" : activeConversation.name[0]}</AvatarFallback>
-                    </Avatar>
-                    <p className="text-sm font-medium text-white">
-                        {activeConversation.name}
-                    </p>
-                </div>
+        <Card className="h-full min-h-0 flex flex-col rounded-2xl border-white/10 bg-white/[0.03]">
+            {activeConversation ? (
+                <>
+                    <div className="flex items-center gap-3 border-b border-white/10 p-4">
+                        {mobileInboxTrigger}
+                        <Avatar>
+                            <AvatarFallback>{activeConversation.isDeletedUser ? "❌" : activeConversation.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <p className="text-sm font-medium text-white">
+                            {activeConversation.name}
+                        </p>
+                    </div>
 
-                <ScrollArea className="min-h-0 flex-1 p-4">
-                    <div className="space-y-3">
-                        {messagesWithSeparators.map((message) => (
-                            <div key={message.id}>
-                                {message.showDaySeparator && (
-                                <div className="my-4 flex justify-center">
-                                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">
-                                        {message.dayLabel}
-                                    </span>
-                                </div>
-                                )}
+                    <ScrollArea className="min-h-0 flex-1 p-4">
+                        <div className="space-y-3">
+                            {messagesWithSeparators.map((message) => (
+                                <div key={message.id}>
+                                    {message.showDaySeparator && (
+                                    <div className="my-4 flex justify-center">
+                                        <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">
+                                            {message.dayLabel}
+                                        </span>
+                                    </div>
+                                    )}
 
-                                <div className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}>
-                                    <div className={`max-w-xs rounded-2xl px-4 py-2 text-sm shadow-sm ${
-                                    message.isOwn ? "rounded-br-md bg-primary text-black": "rounded-bl-md bg-white/10 text-white"}`}>
-                                        <div className="flex items-end gap-2">
-                                            <p className="break-words">{message.content}</p>
-                                            <span className={`shrink-0 text-[11px] leading-none ${message.isOwn ? "text-black/70" : "text-white/60"}`}>
-                                                {formatTimestampChat(message.createdAt)}
-                                            </span>
+                                    <div className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}>
+                                        <div className={`max-w-xs rounded-2xl px-4 py-2 text-sm shadow-sm ${
+                                        message.isOwn ? "rounded-br-md bg-primary text-black": "rounded-bl-md bg-white/10 text-white"}`}>
+                                            <div className="flex items-end gap-2">
+                                                <p className="break-words">{message.content}</p>
+                                                <span className={`shrink-0 text-[11px] leading-none ${message.isOwn ? "text-black/70" : "text-white/60"}`}>
+                                                    {formatTimestampChat(message.createdAt)}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
-                        <div ref={bottomRef} />
-                    </div>
-                </ScrollArea>
+                            ))}
+                            <div ref={bottomRef} />
+                        </div>
+                    </ScrollArea>
 
-                <div className="flex gap-2 border-t border-white/10 p-4">
-                    <Input
-                        placeholder="Type a message..."
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        disabled={activeConversation?.isDeletedUser}
-                        onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSend();}
-                        }}
-                        className="border-white/10 bg-white/5 text-white"
-                    />
-                    <Button onClick={handleSend} disabled={!input.trim() || activeConversation?.isDeletedUser}>
-                        Send
-                    </Button>
-                </div>
-            </>
-        ) : (
-            <CardContent className="flex h-full items-center justify-center p-6">
-                <p className="text-white/50">Select a conversation to start chatting</p>
-            </CardContent>
-        )}
-    </Card>
+                    <div className="flex gap-2 border-t border-white/10 p-4">
+                        <Input
+                            placeholder="Type a message..."
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            disabled={activeConversation?.isDeletedUser}
+                            onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSend();}
+                            }}
+                            className="border-white/10 bg-white/5 text-white"
+                        />
+                        <Button onClick={handleSend} disabled={!input.trim() || activeConversation?.isDeletedUser}>
+                            Send
+                        </Button>
+                    </div>
+                </>
+            ) : (
+                <CardContent className="flex h-full items-center justify-center p-6">
+                    <p className="text-white/50">Select a conversation to start chatting</p>
+                </CardContent>
+            )}
+        </Card>
     );
 }
