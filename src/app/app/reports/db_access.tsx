@@ -4,6 +4,23 @@ import { prisma } from "@/lib/prisma";
 import {User, Report, Review, PropertyApplication, Property, PropertyListing} from '@/app/app/reports/types';
 import {sendEmail} from '@/app/app/reports/sendEmail'
 
+
+export async function addOffence({user, text} : {user:User; text:string}){
+    await prisma.offenceRecord.create({
+        data: {
+            reason: text,
+            userId: user['id']
+        },
+    }); 
+
+    console.log("Added offence record (" + text + ") to user " + user['username']);
+    return;
+}
+
+
+
+
+
 export  async function deleteReport({report} : Report){
 
     // make sure we actually want to delete this
@@ -36,7 +53,7 @@ export async function deleteUser({user} : User){
 
     // if user is landlord, also remove related properties and property listings
     else if (user['role'] == "LANDLORD"){
-        onsole.log("user to be deleted is a landlord")
+        console.log("user to be deleted is a landlord")
         
         // deleting property listings
         await prisma.propertyListing.deleteMany({
