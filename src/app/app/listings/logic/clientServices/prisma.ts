@@ -11,6 +11,7 @@ type CreateListingInput = PropertyListingForm & {
   landlordId: number;
 };
 
+//TODO: to all of the functions add in {result, error} return types.
 
 // two stage process to create a listing (create property first if needed, and then create listing linked to that property)
 export async function createListing(data: CreateListingInput): Promise<boolean> {
