@@ -10,6 +10,7 @@ export type Message = {
 export type Conversation = {
   id: number;
   name: string;
+  isDeletedUser?: boolean;
   lastMessage: string;
   timestamp: string | null;
   messages: Message[];
