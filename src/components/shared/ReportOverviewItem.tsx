@@ -23,7 +23,6 @@ export default function ReportOverviewItem( {report} : Report){//{id, reason, cr
     const targetUser = "target user";
 
     return(
-        <>
         <section className="px-[7%]">
             <div className="bg-black/70 rounded-[0.5rem] grid-cols-[4fr_1fr] p-4 grid grid-cols-2 items-start gap-4">
                 <div className="flex flex-col gap-1">
@@ -39,12 +38,10 @@ export default function ReportOverviewItem( {report} : Report){//{id, reason, cr
                     </Button>
                     <Button asChild size="lg" variant="outline" className="rounded-2xl border-white/12 bg-white/[0.03] px-5 text-white hover:bg-white/[0.06]">
                         <Link href={`/app/reports/${report['id']}`}>Delete Report</Link>
-                        Delete Report
                     </Button>
                 </div>
 
             </div>
         </section>
-        </>
     );
 }
