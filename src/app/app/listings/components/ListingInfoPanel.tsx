@@ -5,7 +5,6 @@ import PropertyStatsGrid from "./PropertyStatsGrid";
 import RoommateProfileList from "./RoomateProfileList";
 import AmenityList from "../components/AmenityList";
 import { Amenity } from "../types";
-
 // Panel to display the static listing specific data in full
 
 type ListingInfoPanelProps = {
@@ -14,7 +13,9 @@ type ListingInfoPanelProps = {
 
 export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
   // Mock data — replace with db fetch via listingId
+
   const title = "Example Listing Name";
+  const flatNumber: string | null = "4B";
   const description = "This is a description of the property.";
   const rent = 1000;
   const lastUpdated = new Date();
@@ -24,9 +25,13 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
   const bathrooms = 2;
   const beds = 4;
   const maxOccupants = 5;
-  const shared = true;
+  const shared = maxOccupants > 1;
   const area = 120;
   const minStay = 6;
+
+  const buildingAddress = "12 Maple Street";
+  const city = "London";
+  const postcode = "E1 6RF";
 
   const images = [
     "/images/listing1.jpg",
@@ -49,37 +54,57 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
   ];
 
   const amenities: Amenity[] = [
-    { id: 1, propertyId: 1,  name: "Bus Stop", distance: 0.3, type: "TRANSPORT"},
-    { id: 2, propertyId: 1, name: "Hospital", distance: 1.2, type: "HEALTHCARE" },
-    { id: 3, propertyId: 1, name: "Park", distance: 0.5, type: "RECREATIONAL" },
+    { id: 1, propertyId: 1, name: "Bus Stop",  distance: 0.3, type: "TRANSPORT" },
+    { id: 2, propertyId: 1, name: "Hospital",  distance: 1.2, type: "HEALTHCARE" },
+    { id: 3, propertyId: 1, name: "Park",       distance: 0.5, type: "RECREATIONAL" },
   ];
 
-  const stats = [// turn into type later
-    { icon: <BedDouble className="w-4 h-4" />, label: "Rooms", value: totalRooms },
-    { icon: <Bath className="w-4 h-4" />, label: "Bathrooms", value: bathrooms },
-    { icon: <BedDouble className="w-4 h-4" />, label: "Beds", value: beds },
-    { icon: <Users className="w-4 h-4" />, label: "Max Occupants", value: maxOccupants },
-    { icon: <Ruler className="w-4 h-4" />, label: "Area", value: `${area} m²` },
-    { icon: <Clock className="w-4 h-4" />, label: "Min Stay", value: `${minStay} months` },
-    { icon: <CalendarClock className="w-4 h-4" />, label: "Shared", value: shared ? "Yes" : "No",  highlight: true },
+  const stats = [
+    { icon: <BedDouble className="w-4 h-4" />, label: "Rooms",         value: totalRooms },
+    { icon: <Bath      className="w-4 h-4" />, label: "Bathrooms",     value: bathrooms },
+    { icon: <BedDouble className="w-4 h-4" />, label: "Beds",          value: beds },
+    { icon: <Users     className="w-4 h-4" />, label: "Max Occupants", value: maxOccupants },
+    { icon: <Ruler     className="w-4 h-4" />, label: "Area",          value: `${area} m²` },
+    { icon: <Clock     className="w-4 h-4" />, label: "Min Stay",      value: `${minStay} months` },
+    { icon: <CalendarClock className="w-4 h-4" />, label: "Shared",    value: shared ? "Yes" : "No", highlight: true },
   ];
+
+ 
+  // title would be flat number + building name if flat number exists, otherwise just building name
+  const headline = flatNumber ? `Flat ${flatNumber}  ·  ${title}` : title;
+  const addressLine = `${buildingAddress}, ${city}, ${postcode}`;
 
   return (
     <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] overflow-hidden max-w-5xl mx-auto">
       <ImageSlider images={images} />
 
       <div className="p-6 sm:p-8 space-y-6">
+
         {/* Title + last updated */}
-        <div className="flex items-start justify-between">
-          <h2 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight">{title}</h2>
-          <p className="text-xs text-white/50 mt-1">last updated at: {lastUpdated.toLocaleDateString()}</p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight">
+              {headline}
+            </h2>
+            <p className="text-sm text-white/40">{addressLine}</p>
+          </div>
+          <p className="text-xs text-white/50 mt-1 shrink-0">
+            last updated at: {lastUpdated.toLocaleDateString()}
+          </p>
         </div>
 
         {/* Rent */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-1">
-          <p className="text-3xl sm:text-4xl font-semibold text-primary">
-            £{rent} <span className="text-base font-normal text-white/50">/ month</span>
-          </p>
+          <div>
+            <p className="text-3xl sm:text-4xl font-semibold text-primary">
+              £{rent} <span className="text-base font-normal text-white/50">/ month</span>
+            </p>
+            {shared && (
+              <p className="text-xs text-white/40 mt-1">
+                Per person — up to {maxOccupants} people can share this listing
+              </p>
+            )}
+          </div>
         </div>
 
         <p className="text-xs text-white/50 -mt-2">Listed by {landlordName}</p>

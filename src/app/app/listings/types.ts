@@ -57,31 +57,64 @@ export type PropertyApplication = Prisma.PropertyApplicationGetPayload<{}>;
 export type Amenity = Prisma.AmenityGetPayload<{}>;
 
 
+// AmenityDraft keeps distance as a UI range string until submit
+export type AmenityDraft = Omit<Amenity, "distance"> & {
+  distance: DistanceRange | null;
+};
+
 
 
 /**** front end types */
 
-// information that a form has before it is submitted to db
+
+// Form data for creating/editing a listing
 export type PropertyListingForm = {
+  // Property selection
+   // If set → use existing property (building)
+   //If undefine,  create a new property from address fields
+  selectedPropertyId?: number;
+
+  //  Address (only used when creating a NEW property) 
+
+  buildingName?: string; // building / flat name (NOT the listing title)
+  city?: string;
+  streetName?: string;
+  postcode?: string;
+
+  // Flat-level identifier (always optional)
+  flatNumber?: string;
+
+  //  basic listing info details
+
   description: string;
-  rent: number;
+  rent: number; // per person per month (£)
   availableFrom: Date;
+
+  rooms: number;
+  bedrooms: number;
+  bathrooms: number;
+  beds: number;
+  area: number; // m²
 
   maxOccupants: number;
   minStay: number;
 
-  bedrooms: number;
-  bathrooms: number;
-
-  flatNumber?: string;
-
-  propertyId: number;
-
-  // UI-only
-  images?: string[]; // URLs before upload
+  thumbnail: string;
+  images?: string[];
+  amenities?: Amenity[];// any additional amenitie info
 };
 
 
+// For the property selector component when creating a listing, represents a previously saved property (building) that landlords can choose to autofill from
+export type ExistingProperty = {
+  id: number;
+  address: string;
+  city: string;
+  postcode: string;
+  buildingName?: string | null;
+  amenities: Amenity[];
+  hasExistingListings: boolean;
+};
 
 /***** non prisma UI types */
 
