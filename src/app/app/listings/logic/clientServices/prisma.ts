@@ -55,7 +55,6 @@ export async function createListing(data: CreateListingInput): Promise<boolean> 
       throw new Error("Amenity distance cannot be negative");
     }
 
-    const testLandlordId = 3; // hard code a number for now for testing (use an id from actual table)
     //  Step 1: Resolve property
     if (selectedPropertyId) {
       propertyId = selectedPropertyId;
@@ -67,7 +66,7 @@ export async function createListing(data: CreateListingInput): Promise<boolean> 
           address: streetName ?? "",
           city: city ?? "",
           postcode: postcode ?? "",
-          landlordId: testLandlordId,
+          landlordId,
 
           amenities: {
             create: amenities.map((a) => ({
@@ -95,9 +94,38 @@ export async function createListing(data: CreateListingInput): Promise<boolean> 
         minStay,
 
         propertyId,
-        landlordId: testLandlordId,
+        landlordId,
       },
     });
     return listing ? true : false;
   });
 }
+
+
+// function to get any properties for a landlord (NOT LISTINGS, just the building themselves)
+export async function getPropertiesForLandlord(landlordId: number) {
+    const properties = await prisma.property.findMany({
+      where: { landlordId },
+      select: {
+        id: true,
+        title: true,
+        address: true,
+        city: true,
+        postcode: true,
+        amenities: {
+          select: { id: true, name: true, type: true, distance: true },
+        },
+        listings: { select: { id: true }, take: 1 },
+      },
+    });
+  
+    return properties.map((p) => ({
+        id: p.id,
+        buildingName: p.title ?? 'buildName',   // non-nullable, no fallback needed
+        address: p.address,
+        city: p.city,
+        postcode: p.postcode,
+        hasExistingListings: p.listings.length > 0,
+        amenities: p.amenities,
+      }));
+  }

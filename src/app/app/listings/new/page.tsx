@@ -22,7 +22,7 @@ type NewListingsPageProps = {
   landlordId: number;
 };
 
-export default function NewListingsPage({ landlordId }: NewListingsPageProps) {
+export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps) {
   const [amenities, setAmenities] = useState<AmenityDraft[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [thumbnail, setThumbnail] = useState<string | null>(null);
@@ -65,7 +65,15 @@ export default function NewListingsPage({ landlordId }: NewListingsPageProps) {
   const handlePropertySelect = (property: ExistingProperty | null) => {
     setSelectedProperty(property);
     if (property) {
-      setForm((prev) => ({ ...prev, selectedPropertyId: property.id }));
+      setForm((prev) => ({
+        ...prev,
+        selectedPropertyId: property.id,
+        buildingName: property.buildingName, // autofill
+        streetName: property.address,   // autofill
+        city: property.city,            // autofill
+        postcode: property.postcode,    // autofill
+        flatNumber: "",                 // let them fill this in fresh
+      }));
       if (property.hasExistingListings) {
         const drafts: AmenityDraft[] = property.amenities.map((a) => ({
           ...a,
@@ -77,11 +85,16 @@ export default function NewListingsPage({ landlordId }: NewListingsPageProps) {
         setAmenities([]);
       }
     } else {
-      setForm((prev) => ({ ...prev, selectedPropertyId: undefined }));
+      setForm((prev) => ({
+        ...prev,
+        selectedPropertyId: undefined,
+        streetName: "",
+        city: "",
+        postcode: "",
+      }));
       setAmenities([]);
     }
   };
-
   // function to handle form submission, with validation to ensure a thumbnail is added before allowing submission. Converts amenity distance ranges to km values before sending to the backend.
   const handleSubmit = async (e: React.SubmitEvent) => {
     setLoading(true);
@@ -127,6 +140,25 @@ export default function NewListingsPage({ landlordId }: NewListingsPageProps) {
     setAmenities((prev) => prev.filter((a) => a.id !== id));
   };
 
+  function resetForm() {
+    setForm({ buildingName: "",
+      description: "",
+      rent: 0,
+      availableFrom: new Date(),
+      rooms: 0,
+      bedrooms: 0,
+      bathrooms: 0,
+      beds: 0,
+      area: 0,
+      maxOccupants: 1,
+      minStay: 0,
+      flatNumber: "",
+      thumbnail: "", });
+    setSelectedProperty(null);
+    setAmenities([]);
+    setImages([]);
+  }
+
   const addImage = () => setImages((prev) => [...prev, "https://via.placeholder.com/150"]);
   const removeImage = (index: number) => setImages((prev) => prev.filter((_, i) => i !== index));
 
@@ -134,6 +166,9 @@ export default function NewListingsPage({ landlordId }: NewListingsPageProps) {
   useEffect(()=>{
     if (success) {
       alert("Listing created successfully!");
+
+      //reset everything 
+      resetForm();
       setTimeout(() => {
         setSuccess(false);
     }, 2000);

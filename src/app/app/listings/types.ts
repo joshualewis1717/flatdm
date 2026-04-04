@@ -111,7 +111,7 @@ export type ExistingProperty = {
   address: string;
   city: string;
   postcode: string;
-  buildingName?: string | null;
+  buildingName: string;
   amenities: Amenity[];
   hasExistingListings: boolean;
 };
