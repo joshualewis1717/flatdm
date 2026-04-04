@@ -223,3 +223,115 @@ export async function getPropertiesForLandlord(landlordId: number): Promise<Exis
       return false;
     }
   }
+
+  // function to create a new application for a listing:
+  export async function submitApplication(
+    listingId: number,
+    userId: number,
+    moveInDate: Date,
+    moveOutDate: Date | null
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const now = new Date();
+  
+      //  Validate dates
+      if (moveInDate <= now) {
+        return { success: false, error: "Move-in date must be in the future." };
+      }
+  
+      if (moveOutDate && moveOutDate <= moveInDate) {
+        return {
+          success: false,
+          error: "Move-out date must be after move-in date.",
+        };
+      }
+  
+      const [listing, existingApplication, occupantRecord] =
+        await Promise.all([
+          prisma.propertyListing.findUnique({
+            where: { id: listingId, isDeleted: false },
+          }),
+  
+          prisma.propertyApplication.findFirst({
+            where: {
+              listingId,
+              userId,
+              status: {
+                in: ["PENDING", "APPROVED"],// TODO: also include CONFIRMED at some point
+              },
+            },
+          }),
+  
+          prisma.occupant.findFirst({
+            where: {
+              listingId,
+              userId,
+            },
+          }),
+        ]);
+  
+      if (!listing) {
+        return { success: false, error: "Listing not found." };
+      }
+  
+      //  Already has active application
+      if (existingApplication) {
+        return {
+          success: false,
+          error: "You already have an active application for this listing.",
+        };
+      }
+  
+      // Occupancy check
+      if (occupantRecord) {
+        const stillOccupying =
+          occupantRecord.moveOut === null ||
+          occupantRecord.moveOut > now;
+  
+        if (stillOccupying) {
+          return {
+            success: false,
+            error: "You are currently occupying this property.",
+          };
+        }
+      }
+  
+      // Capacity check, check if still full for when they want to move in
+      const activeOccupantsAtMoveIn = await prisma.occupant.count({
+        where: {
+          listingId,
+          moveIn: {
+            lte: moveInDate,
+          },
+          OR: [
+            { moveOut: null },
+            { moveOut: { gt: moveInDate } },
+          ],
+        },
+      });
+  
+      if (activeOccupantsAtMoveIn >= listing.maxOccupants) {
+        return {
+          success: false,
+          error:
+            "This listing will be full at your selected move-in date.",
+        };
+      }
+  
+      // Create application
+      await prisma.propertyApplication.create({
+        data: {
+          moveInDate,
+          moveOutDate: moveOutDate ?? null,
+          status: "PENDING",
+          userId,
+          listingId,
+        },
+      });
+  
+      return { success: true };
+    } catch (error) {
+      console.error("submitApplication error:", error);
+      return { success: false, error: "Something went wrong." };
+    }
+  }
