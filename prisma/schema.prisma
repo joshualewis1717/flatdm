@@ -73,11 +73,11 @@ model ListingImage {
 
 // we are modelling it as the entire building
 model Property {
-  id       Int     @id @default(autoincrement())
-  title    String?
-  address  String
-  city     String
-  postcode String
+  id         Int    @id @default(autoincrement())
+  title      String
+  streetName String @map("address") // i couldn't be arsed to re-add the 3 rows so just mapped it to the old name - ill fix in SQL later
+  city       String
+  postcode   String
 
   landlordId Int
   landlord   User @relation(fields: [landlordId], references: [id])
@@ -90,6 +90,8 @@ model Property {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([streetName, city, postcode, landlordId])
 }
 
 // we are modelling it as a single flat
@@ -107,8 +109,10 @@ model PropertyListing {
   maxOccupants Int // e.g. withRoomates boolean or whatnot is derived from this
   minStay      Int
 
+  rooms      Int
   bedrooms  Int
   bathrooms Int
+  area      Int
 
   propertyId Int
   property   Property @relation(fields: [propertyId], references: [id])
@@ -125,6 +129,8 @@ model PropertyListing {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([flatNumber, propertyId])
 }
 
 model PropertyApplication {

@@ -5,89 +5,109 @@ import SearchBar from '../components/SearchBar';
 import FilterDropdown from '../components/FilterDropdown';
 import PropertyCard from './components/PropertyCard';
 import OccupantModal from './components/OccupantModal';
-import { Occupant, Property } from '../types';
 import { Home, Plus, Trash2 } from 'lucide-react';
 import EmptyState from '../components/EmptyState';
 import { useRouter } from 'next/navigation';
+import { Occupant, Property, PropertyListing } from '../types';
 
 // main page of whiich landlords can view all of their current 
 // properties/ listings and to also add in a new property
 
+export const MOCK_PROPERTY: Property = {
+  id: 1,
+  title: "Maple House",
+  streetName: "14 Maple Street",
+  city: "London",
+  postcode: "E1 6RF",
 
-const MOCK_PROPERTIES: Property[] = [
-  {
-    id: 1,
-    name: 'Maple House',
-    address: '14 Maple Street, Shoreditch, E1 6RF',
-    thumbnail: '🏠',// using emojis as placeholder 
-    maxOccupants: 4,
-    earliestFreeDate: '1 Aug 2025',
-    occupants: [
-      { id: 1, name: 'Alice Johnson', type: 'occupant', movedIn: 'Jan 2024', expectedMoveOut: 'Dec 2025' },
-      { id: 2, name: 'Bob Smith', type: 'occupant', movedIn: 'Mar 2024', expectedMoveOut: null },
-      { id: 3, name: 'Charlie Lee', type: 'occupant', movedIn: null, expectedMoveOut: 'Aug 2025' },
-      { id: 4, name: 'Diana Chen', type: 'applicant', expectedMoveIn: '1 Aug 2025' },
-    ],
-  },
-  {
-    id: 2,
-    name: 'The Pines',
-    address: '7 Pine Avenue, Islington, N1 9GH',
-    thumbnail: '🏢',
-    maxOccupants: 5,
-    earliestFreeDate: 'Available now',
-    occupants: [
-      { id: 5, name: 'Ethan Davis', type: 'occupant', movedIn: 'Jun 2023', expectedMoveOut: 'Jun 2025' },
-      { id: 6, name: 'Fiona Garcia', type: 'occupant', movedIn: 'Sep 2023', expectedMoveOut: null },
-      { id: 7, name: 'George Patel', type: 'applicant', expectedMoveIn: '15 May 2025' },
-    ],
-  },
-  {
-    id: 3,
-    name: 'Riverside Flat',
-    address: '3B Riverside Rd, Battersea, SW8 2LT',
-    thumbnail: '🌊',
-    maxOccupants: 3,
-    earliestFreeDate: 'Sep 2025',
-    occupants: [
-      { id: 8, name: 'Hannah Nguyen', type: 'occupant', movedIn: 'Feb 2024', expectedMoveOut: 'Sep 2025' },
-      { id: 9, name: 'Ian Martinez', type: 'occupant', movedIn: 'Feb 2024', expectedMoveOut: null },
-      { id: 10, name: 'Julia Kim', type: 'occupant', movedIn: 'Apr 2024', expectedMoveOut: null },
-    ],
-  },
-  {
-    id: 4,
-    name: 'Oak Studios',
-    address: '22 Oak Lane, Hackney, E8 4PP',
-    thumbnail: '🌳',
-    maxOccupants: 6,
-    earliestFreeDate: 'Available now',
-    occupants: [],
-  },
-  {
-    id: 5,
-    name: 'Clerkenwell Flat',
-    address: '9 Clerkenwell Rd, EC1M 5PF',
-    thumbnail: '🏙️',
-    maxOccupants: 4,
-    earliestFreeDate: 'Mar 2026',
-    occupants: [
-      { id: 11, name: 'Kevin Brown', type: 'occupant', movedIn: 'Jul 2023', expectedMoveOut: 'Mar 2026' },
-      { id: 12, name: 'Laura White', type: 'occupant', movedIn: 'Jul 2023', expectedMoveOut: null },
-      { id: 13, name: 'Marcus Hall', type: 'occupant', movedIn: 'Oct 2023', expectedMoveOut: null },
-      { id: 14, name: 'Nina Ross', type: 'occupant', movedIn: 'Jan 2024', expectedMoveOut: null },
-    ],
-  },
-];
+  landlordId: 1,
 
+  amenities: [], // keep empty for now
+  listings: [],
+
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+export const MOCK_PROPERTY_LISTING: PropertyListing = {
+  id: 1,
+
+  description: "Modern flat in Shoreditch",
+  rent: 1200,
+  availableFrom: new Date(),
+
+  maxOccupants: 4,
+  minStay: 6,
+
+  rooms: 4,
+  bedrooms: 2,
+  bathrooms: 1,
+  area: 85,
+
+  flatNumber: "2B",
+
+  propertyId: 1,
+  landlordId: 1,
+
+  property: {
+    ...MOCK_PROPERTY,
+  },
+
+  occupants: [
+    {
+      id: 1,
+      userId: 1,
+      listingId: 1,
+      moveIn: new Date("2024-01-01"),
+      moveOut: new Date("2025-12-01"),
+      createdAt: new Date(),
+    },
+    {
+      id: 2,
+      userId: 2,
+      listingId: 1,
+      moveIn: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // future → applicant
+      moveOut: null,
+      createdAt: new Date(),
+    },
+  ],
+
+  applications: [],
+  images: [
+    {
+      id: 1,
+      url: "",
+      isThumbnail: true,
+      listingId: 1,
+      createdAt: new Date(),
+    },
+    {
+      id: 2,
+      url: "",
+      isThumbnail: false,
+      listingId: 1,
+      createdAt: new Date(),
+    },
+  ],
+
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
 
 export default function Page() {
   const router = useRouter();
-  const [properties, setProperties] = useState<Property[]>(MOCK_PROPERTIES);
+
+  const [properties, setProperties] = useState<PropertyListing[]>([
+    MOCK_PROPERTY_LISTING,
+  ]);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('default');
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [modal, setModal] = useState<{ occupant: Occupant; property: Property } | null>(null);
+
+  const [modal, setModal] = useState<{
+    occupant: Occupant;
+    property: PropertyListing;
+  } | null>(null);
 
   // delete mode state
   const [deleteMode, setDeleteMode] = useState(false);
@@ -95,11 +115,15 @@ export default function Page() {
 
   // Filter + sort logic
   const filtered = useMemo(() => {
-    let list = properties.filter(
-      (p) =>
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.address.toLowerCase().includes(search.toLowerCase())
-    );
+    let list = properties.filter((p) => {
+      const address = p.property.streetName.toLowerCase();
+      const desc = p.description.toLowerCase();
+
+      return (
+        address.includes(search.toLowerCase()) ||
+        desc.includes(search.toLowerCase())
+      );
+    });
 
     if (sortBy === 'most') {
       list = [...list].sort((a, b) => b.occupants.length - a.occupants.length);

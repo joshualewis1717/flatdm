@@ -1,14 +1,14 @@
 'use client';
 
-import { Property, Occupant } from '../../types';
-import { Users, ChevronDown, Calendar, Eye, Check } from 'lucide-react';
+import { Users, ChevronDown, Calendar, Eye, Check, Image } from 'lucide-react';
 import PropertyStatusPill from '../../components/PropertyStatusPill';
 import OccupantCard from './OccupantCard';
 import { useRouter } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Occupant, PropertyListing } from '../../types';
 // property card to show property + whether it is full or empty, and also of total occupants allowed + current number of occupants
 type Props = {
-    property: Property;// our property in question
+    property:  PropertyListing;// our property in question
     isExpanded: boolean;// if it has been expanded to show more info
     deleteMode: boolean;// if the parent is in delete mode or not
     isSelected: boolean;// if this specific card is selected by parent in delete mode or not
@@ -24,7 +24,8 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
     const isFull = count >= property.maxOccupants;
     const isEmpty = count === 0;
     const freeSlots = property.maxOccupants - count;
-  
+    const thumbnail = property.images.find(img => img.isThumbnail);
+    const building = property.property;
     function handleRowClick() {
       if (deleteMode) {
         onToggleSelect();
@@ -68,16 +69,16 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
   
           {/* Thumbnail */}
           <div className="w-10 h-10 bg-[rgba(201,251,0,0.12)] border border-[rgba(201,251,0,0.2)] rounded-[10px] flex items-center justify-center shrink-0 text-[17px]">
-            {property.thumbnail}
+            {thumbnail?.url? thumbnail.url : <Image/>}
           </div>
   
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="text-[15px] font-semibold text-white truncate">
-              {property.name}
+              {building.title}
             </div>
             <div className="text-[12px] text-white/45 mt-0.5 truncate">
-              {property.address}
+              {building.streetName + property.flatNumber}
             </div>
           </div>
   
@@ -130,7 +131,7 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
   
               <div className="flex items-center gap-1.5 text-[12px] text-[#c9fb00]">
                 <Calendar className="w-4 h-4" />
-                {property.earliestFreeDate}
+                {property.availableFrom.toLocaleString()}
               </div>
             </div>
   
