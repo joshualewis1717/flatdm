@@ -1,7 +1,7 @@
 export type Message = {
   id: number;
   content: string;
-  createdAt?: string;
+  createdAt?: string | null;
   senderId?: number;
   isOwn: boolean;
   pending?: boolean;
