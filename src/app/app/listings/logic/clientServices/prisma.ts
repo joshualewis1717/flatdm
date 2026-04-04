@@ -114,7 +114,7 @@ export async function createListing(data: CreateListingInput): Promise<boolean> 
 // function to get any properties for a landlord (NOT LISTINGS, just the building themselves)
 export async function getPropertiesForLandlord(landlordId: number): Promise<ExistingProperty[]> {
     const properties = await prisma.property.findMany({
-      where: { landlordId },
+      where: { landlordId},
       select: {
         id: true,
         title: true,
@@ -151,7 +151,7 @@ export async function getPropertiesForLandlord(landlordId: number): Promise<Exis
   export async function getListingById(listingId: string) {
 
     const listing = await prisma.propertyListing.findUnique({
-      where: { id: Number(listingId) },
+      where: { id: Number(listingId), isDeleted: false },
       include: {
         images: true, // include images
         property: {
@@ -198,4 +198,28 @@ export async function getPropertiesForLandlord(landlordId: number): Promise<Exis
       landlordName: listing.property.landlord.username,
       amenities: listing.property.amenities,
     };
+  }
+
+  // smaller function to get listings for a landlord with very basic info
+  export async function getListingsForLandlord(landlordId: number) {
+    const listings = await prisma.propertyListing.findMany({
+      where: { landlordId, isDeleted: false },
+      include: {
+        images: true,
+        property: true,
+        occupants: true,
+      },
+    });
+  
+    return listings;
+  }
+  
+  // function to delete a specific listing by id, soft delete only.
+  export async function deleteListing(listingId: number): Promise<boolean> {
+    try {
+      await prisma.propertyListing.update({ where: { id: listingId }, data: { isDeleted: true } });
+      return true;
+    } catch {
+      return false;
+    }
   }
