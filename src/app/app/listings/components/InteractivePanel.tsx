@@ -29,7 +29,8 @@ export default function InteractivePanel({ listingId, userId }: InteractivePanel
         
         {isConsultant && (
           <>
-            <button className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition">
+            <button className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
+             onClick={()=>router.push('/app/applications/submit-application')}>
             Apply Now {/* this button will need to use listingId to go to propery application page */}
             </button>
 
@@ -44,7 +45,7 @@ export default function InteractivePanel({ listingId, userId }: InteractivePanel
 
         {isLandlord && (
            <button className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
-           onClick={()=>router.push('/app/application/submit-application')}>{/* replace with listing ID later */}
+           onClick={()=>router.push('/app/listings/new')}>{/* pass in id so it can rehydrate the info with the listing info*/}
            Edit Listing
          </button>
         )}
