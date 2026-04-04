@@ -39,8 +39,10 @@ export const MOCK_PROPERTY_LISTING: PropertyListing = {
   maxOccupants: 4,
   minStay: 6,
 
+  rooms: 4,
   bedrooms: 2,
   bathrooms: 1,
+  area: 85,
 
   flatNumber: "2B",
 

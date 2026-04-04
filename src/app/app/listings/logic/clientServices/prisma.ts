@@ -28,6 +28,7 @@ export async function createListing(data: CreateListingInput): Promise<boolean> 
       rooms,
       bedrooms,
       bathrooms,
+      area,
       maxOccupants,
       minStay,
       amenities = [],
@@ -39,8 +40,8 @@ export async function createListing(data: CreateListingInput): Promise<boolean> 
       throw new Error("Must provide either selectedPropertyId or full address details");
     }
 
-    if (rooms <= 0 || bedrooms <= 0 || bathrooms <= 0 || rent <= 0 || maxOccupants <= 0 || minStay <= 0) {
-      throw new Error("Rooms, bedrooms, bathrooms, rent, max occupants and min stay must be greater than 0");
+    if (rooms <= 0 || bedrooms <= 0 || bathrooms <= 0 || area <= 0 || rent <= 0 || maxOccupants <= 0 || minStay <= 0) {
+      throw new Error("Rooms, bedrooms, bathrooms, area, rent, max occupants and min stay must be greater than 0");
     }
 
     if (rooms < (bedrooms + bathrooms)) {
@@ -88,8 +89,10 @@ export async function createListing(data: CreateListingInput): Promise<boolean> 
         description,
         rent,
         availableFrom,
+        rooms,
         bedrooms,
         bathrooms,
+        area,
         maxOccupants,
         minStay,
 

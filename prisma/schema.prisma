@@ -109,8 +109,10 @@ model PropertyListing {
   maxOccupants Int // e.g. withRoomates boolean or whatnot is derived from this
   minStay      Int
 
+  rooms      Int
   bedrooms  Int
   bathrooms Int
+  area      Int
 
   propertyId Int
   property   Property @relation(fields: [propertyId], references: [id])
