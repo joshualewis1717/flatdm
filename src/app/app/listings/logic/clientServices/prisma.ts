@@ -6,6 +6,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { ExistingProperty, PropertyListingForm } from "../../types";
+import { APPLICATION_EXPIRY_TIME } from "../../prismaConst";
 
 type CreateListingInput = PropertyListingForm & {
   landlordId: number;
@@ -143,6 +144,7 @@ export async function getPropertiesForLandlord(landlordId: number): Promise<Exis
           type: a.type,
           distance: a.distance,
           propertyId: p.id,
+        modifiedAt: new Date(), // added this in to remove .ts error, TODO: use a client type wrapper to clean up the types
         })),
       }));
   }
@@ -225,6 +227,8 @@ export async function getPropertiesForLandlord(landlordId: number): Promise<Exis
     }
   }
 
+
+/****************** prisma services for applications **************/
   // function to create a new application for a listing:
   export async function submitApplication(
     listingId: number,
@@ -276,7 +280,7 @@ export async function getPropertiesForLandlord(landlordId: number): Promise<Exis
       }
   
       //  Already has active application
-      if (existingApplication) {
+      if (existingApplication) {// TODO: replace with status check instead of existence
         return {
           success: false,
           error: "You already have an active application for this listing.",
@@ -334,5 +338,117 @@ export async function getPropertiesForLandlord(landlordId: number): Promise<Exis
     } catch (error) {
       console.error("submitApplication error:", error);
       return { success: false, error: "Something went wrong." };
+    }
+  }
+
+  // function to get all applications for a given applicant, including listing and property details for each application
+  export async function getApplicationsForApplicant(userId: number) {
+    const applications = await prisma.propertyApplication.findMany({
+      where: { userId },
+      include: {
+        user: true,
+        listing: {
+          include: {
+            property: {
+              include: { landlord: true },
+            },
+          },
+        },
+      },
+    });
+  
+    return applications.map((a) => ({
+      id: a.id,
+      status: a.status,
+      moveInDate: a.moveInDate.toLocaleString(),
+      moveOutDate: a.moveOutDate?.toLocaleString(),
+      expiryDate: a.expiryDate?.toLocaleString(),
+      submittedDate: a.createdAt.toLocaleString(),
+      lastUpdatedDate: a.updatedAt.toLocaleString(),
+      rent: a.listing.rent,
+      listingName: a.listing.property.title,
+      listingAddress: `${a.listing.property.streetName}, ${a.listing.property.city}`,
+      landlordName: `${a.listing.property.landlord.firstName} ${a.listing.property.landlord.lastName}`,
+      applicantName: `${a.user.firstName} ${a.user.lastName}`,
+    }));
+  }
+  
+  // function to get all applications for a given landlord, including applicant details and listing/property details for each application
+  export async function getApplicationsForLandlord(landlordId: number) {
+    const applications = await prisma.propertyApplication.findMany({
+      where: { listing: { landlordId } },
+      include: {
+        user: true,
+        listing: {
+          include: { property: true },
+        },
+      },
+    });
+  
+    return applications.map((a) => ({
+      id: a.id,
+      status: a.status,
+      moveInDate: a.moveInDate.toLocaleString(),
+      moveOutDate: a.moveOutDate?.toLocaleString(),
+      expiryDate: a.expiryDate?.toLocaleString(),
+      submittedDate: a.createdAt.toLocaleString(),
+      lastUpdatedDate: a.updatedAt.toLocaleString(),
+      rent: a.listing.rent,
+      listingName: a.listing.property.title,
+      listingAddress: `${a.listing.property.streetName}, ${a.listing.property.city}`,
+      applicantName: `${a.user.firstName} ${a.user.lastName}`,
+    }));
+  }
+  
+  // applicant withdraws their own pending application — soft delete for now
+  export async function withdrawApplication(applicationId: number): Promise<boolean> {
+    try {
+      // TODO: when WITHDRAWN enum is added, replace delete with:
+      // await prisma.propertyApplication.update({
+      //   where: { id: applicationId },
+      //   data: { status: "WITHDRAWN" },
+      // });
+      await prisma.propertyApplication.delete({ where: { id: applicationId } });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  
+  // landlord makes offer or rejects
+  export async function updateApplicationStatus(
+    applicationId: number,
+    status: "APPROVED" | "REJECTED"
+  ): Promise<boolean> {
+    try {
+      await prisma.propertyApplication.update({
+        where: { id: applicationId },
+        data: {
+          status,
+          // set expiry 7 days from now when making an offer
+          ...(status === "APPROVED" && {
+            expiryDate: new Date(Date.now() + APPLICATION_EXPIRY_TIME),
+          }),
+        },
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  
+  // applicant accepts or declines an offer
+  export async function respondToOffer(
+    applicationId: number,
+    accept: boolean
+  ): Promise<boolean> {
+    try {
+      await prisma.propertyApplication.update({
+        where: { id: applicationId },
+        data: { status: accept ? "CONFIRMED" : "REJECTED" },
+      });
+      return true;
+    } catch {
+      return false;
     }
   }

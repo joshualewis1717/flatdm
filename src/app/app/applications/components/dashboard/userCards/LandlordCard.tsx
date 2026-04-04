@@ -15,7 +15,7 @@ export default function LandlordCard({ app, onAction,}: props) {
   return (
     <li className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden hover:border-white/20 transition-colors">
       <div className={`h-px w-full ${
-        app.status === 'ACCEPTED'  ? 'bg-[#c9fb00]' :
+        app.status === 'APPROVED'  ? 'bg-[#c9fb00]' :
         app.status === 'CONFIRMED' ? 'bg-sky-400'   : 'bg-amber-400'
       }`} />
 
