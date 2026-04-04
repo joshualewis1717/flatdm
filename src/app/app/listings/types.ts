@@ -1,10 +1,10 @@
 import { Prisma } from "@prisma/client";
 
-//
-// 🔹 ==============================
-// 🔹 PRISMA INCLUDE CONFIGS
-// 🔹 ==============================
-//
+
+// prisma onfigs
+
+
+//TODO PUT ALL OF THESE CONSTS IN A SEPERATE FILE
 
 // Property (building-level)
 export const propertyInclude = {
@@ -142,23 +142,3 @@ export type ReviewUI = {
 
 // If you want a "display-friendly" occupant
 export type OccupantType = 'occupant' | 'applicant';
-
-export type Occupant = {//TODO: use types from prisma instead (consultant table), make this be a wrapper
-  id: number;
-  name: string;
-  type: OccupantType;
-  movedIn?: string | null;
-  expectedMoveOut?: string | null;
-  expectedMoveIn?: string | null;
-}
-
-export type Property= {// TODO: use from pisma table instead 
-  id: number;
-  name: string;
-  streetName: string;
-  thumbnail: string;// thumbnail image of the property (TODO: make this optional later and in public have a default thumbail
-  // image and use that if landlord never added in a thumnail)
-  maxOccupants: number;
-  earliestFreeDate: string;
-  occupants: Occupant[];
-}

@@ -63,8 +63,8 @@ export async function createListing(data: CreateListingInput): Promise<boolean> 
 
       const property = await tx.property.create({
         data: {
-          title: buildingName,
-          address: streetName ?? "",
+          title: buildingName ?? "",
+          streetName: streetName ?? "",
           city: city ?? "",
           postcode: postcode ?? "",
           landlordId,
@@ -112,7 +112,7 @@ export async function getPropertiesForLandlord(landlordId: number) {
       select: {
         id: true,
         title: true,
-        address: true,
+        streetName: true,
         city: true,
         postcode: true,
         amenities: {
@@ -124,8 +124,8 @@ export async function getPropertiesForLandlord(landlordId: number) {
   
     return properties.map((p) => ({
         id: p.id,
-        buildingName: p.title ?? 'buildName',   // non-nullable, no fallback needed
-        address: p.address,
+        buildingName: p.title,   // non-nullable, no fallback needed
+        streetName: p.streetName,
         city: p.city,
         postcode: p.postcode,
         hasExistingListings: p.listings.length > 0,
