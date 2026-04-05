@@ -34,13 +34,14 @@ export default async function MessagesPage() {
       id: conversation.id,
       name: displayName,
       isDeletedUser,
-      lastMessage: lastMessage?.content ?? "",
+      lastMessage: lastMessage?.isDeleted? "This message was deleted": lastMessage?.content ?? "",
       timestamp: lastMessage?.createdAt.toISOString() ?? null,
       messages: conversation.messages.map((message) => ({
         id: message.id,
         content: message.content,
         createdAt: message.createdAt.toISOString(),
-        isOwn: message.senderId === userId
+        isOwn: message.senderId === userId,
+        isDeleted: message.isDeleted
       }))
     };
   });

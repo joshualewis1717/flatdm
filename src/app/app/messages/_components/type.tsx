@@ -1,16 +1,17 @@
 export type Message = {
   id: number;
   content: string;
-  createdAt?: string | null;
+  createdAt: string | null;
   senderId?: number;
   isOwn: boolean;
   pending?: boolean;
+  isDeleted: boolean
 };
 
 export type Conversation = {
   id: number;
   name: string;
-  isDeletedUser?: boolean;
+  isDeletedUser: boolean;
   lastMessage: string;
   timestamp: string | null;
   messages: Message[];
