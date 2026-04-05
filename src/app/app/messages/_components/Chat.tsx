@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState,useMemo,ReactNode } from "react";
+import { useEffect, useState, useMemo, ReactNode } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -9,24 +9,22 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 
 import { Conversation, Message } from "./type";
-import { formatTimestampChat, formatDayLabelChat, isSameDay } from "./helper";
+import { formatDayLabelChat, isSameDay, useScrollToBottom } from "./helperFunctions";
+import { sendMessageRequest, deleteMessageRequest } from "./chat-api-requests";
+import MessageBubble from "./MessageBubble";
 
 type Props = {
   activeConversation?: Conversation;
   addMessage: (conversationId: number, message: Message) => void;
-  replaceMessage: (conversationId: number,tempId: number,savedMessage: Message) => void;
+  replaceMessage: (conversationId: number,tempId: number, savedMessage: Message) => void;
   removeMessage: (conversationId: number, tempId: number) => void;
+  deleteMessage: (conversationId: number, tempId: number) => void;
   mobileInboxTrigger?: ReactNode;
 };
 
-export default function Chat({activeConversation,addMessage,replaceMessage,removeMessage,mobileInboxTrigger}: Props) {
+export default function Chat({activeConversation,addMessage,replaceMessage,removeMessage,deleteMessage,mobileInboxTrigger}: Props) {
     const [input, setInput] = useState("");
-    const bottomRef = useRef<HTMLDivElement | null>(null);
-
-    useEffect(() => {
-        const timer = setTimeout(() => {bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });}, 0);
-        return () => clearTimeout(timer);
-    }, [activeConversation?.messages.length]);
+    const bottomRef = useScrollToBottom(activeConversation?.messages.length);
 
     const messagesWithSeparators = useMemo(() => {if (!activeConversation?.messages) return [];
         return activeConversation.messages.map((message, index, messages) => {
@@ -52,33 +50,29 @@ export default function Chat({activeConversation,addMessage,replaceMessage,remov
             content,
             isOwn: true,
             createdAt: new Date().toISOString(),
+            isDeleted:false
         };
 
         addMessage(activeConversation.id, tempMessage);
         setInput("");
 
         try {
-            const response = await fetch("/api/messages", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                conversationId: activeConversation.id,
-                content,
-            }),
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to send message");
-            }
-
-            const savedMessage: Message = await response.json();
-
+            const savedMessage = await sendMessageRequest(activeConversation.id, content);
             replaceMessage(activeConversation.id, tempId, savedMessage);
         } catch (error) {
             removeMessage(activeConversation.id, tempId);
             setInput(content);
+            console.error(error);
+        }
+    };
+
+    const handleDeleteMessage = async (messageId: number) => {
+        if (!activeConversation) return;
+
+        try {
+            await deleteMessageRequest(messageId);
+            deleteMessage(activeConversation.id, messageId);
+        } catch (error) {
             console.error(error);
         }
     };
@@ -100,27 +94,10 @@ export default function Chat({activeConversation,addMessage,replaceMessage,remov
                     <ScrollArea className="min-h-0 flex-1 p-4">
                         <div className="space-y-3">
                             {messagesWithSeparators.map((message) => (
-                                <div key={message.id}>
-                                    {message.showDaySeparator && (
-                                    <div className="my-4 flex justify-center">
-                                        <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">
-                                            {message.dayLabel}
-                                        </span>
-                                    </div>
-                                    )}
-
-                                    <div className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}>
-                                        <div className={`max-w-xs rounded-2xl px-4 py-2 text-sm shadow-sm ${
-                                        message.isOwn ? "rounded-br-md bg-primary text-black": "rounded-bl-md bg-white/10 text-white"}`}>
-                                            <div className="flex items-end gap-2">
-                                                <p className="break-words">{message.content}</p>
-                                                <span className={`shrink-0 text-[11px] leading-none ${message.isOwn ? "text-black/70" : "text-white/60"}`}>
-                                                    {formatTimestampChat(message.createdAt)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <MessageBubble
+                                key={message.id}
+                                message={message}
+                                handleDeleteMessage={handleDeleteMessage} />
                             ))}
                             <div ref={bottomRef} />
                         </div>

@@ -1,3 +1,5 @@
+import { useRef, useEffect } from "react";
+
 export function formatTimestampInbox(timestamp: string | null) {
     if (!timestamp) return "";
     const date = new Date(timestamp);
@@ -63,4 +65,21 @@ export function formatDayLabelChat(timestamp?: string | null) {
 export function isSameDay(firstTimestamp?: string | null, secondTimestamp?: string | null) {
   if (!firstTimestamp || !secondTimestamp) return false;
   return new Date(firstTimestamp).toDateString() === new Date(secondTimestamp).toDateString();
+}
+
+export function useScrollToBottom(dependency: unknown) {
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      bottomRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [dependency]);
+
+  return bottomRef;
 }

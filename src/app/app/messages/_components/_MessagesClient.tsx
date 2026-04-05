@@ -3,79 +3,113 @@
 import { useState, useEffect } from "react";
 import { UserConversations, Message } from "./type";
 
-import { Sheet,SheetContent,SheetHeader,SheetTitle,SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import Inbox from "./Inbox";
 import Chat from "./Chat";
 
-export default function MessagesClient({ conversations }:UserConversations ) {
+export default function MessagesClient({ conversations }: UserConversations) {
   const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [allConversations, setAllConversations] = useState(conversations);
   const [isMobileInboxOpen, setIsMobileInboxOpen] = useState(false);
 
-  const activeConversation = allConversations.find((c) => c.id === selectedConversation);
+  const activeConversation = allConversations.find((conversation) => conversation.id === selectedConversation);
+
+  const updateConversation = ( 
+    conversationId: number,
+    updater: (conversation: (typeof allConversations)[number]) => (typeof allConversations)[number]
+  ) => {
+    setAllConversations((current) =>
+      current.map((conversation) =>
+        conversation.id === conversationId ? updater(conversation) : conversation
+      )
+    );
+  };
 
   const addMessageToConversation = (conversationId: number, message: Message) => {
     setAllConversations((current) => {
-      const index = current.findIndex((conversation) => conversation.id === conversationId);
-      if (index === -1) return current;
+      const conversation = current.find((item) => item.id === conversationId);
+      if (!conversation) return current;
 
       const updatedConversation = {
-        ...current[index],
-        messages: [...current[index].messages, message],
+        ...conversation,
+        messages: [...conversation.messages, message],
         lastMessage: message.content,
-        timestamp: new Date().toISOString(),
+        timestamp: message.createdAt,
       };
 
       return [
         updatedConversation,
-        ...current.filter((conversation) => conversation.id !== conversationId),
+        ...current.filter((item) => item.id !== conversationId),
       ];
     });
   };
 
-  const replacePendingMessage = (conversationId: number,tempId: number,message: Message) => {
-    setAllConversations((current) =>
-      current.map((conversation) => {
-        if (conversation.id !== conversationId) return conversation;
+  const replacePendingMessage = ( conversationId: number, tempId: number, message: Message ) => {
+    updateConversation(conversationId, (conversation) => {
+      const messages = conversation.messages.map((item) =>
+        item.id === tempId ? message : item
+      );
+      const lastMessage = messages[messages.length - 1];
 
-        const messages = conversation.messages.map((item) =>
-          item.id === tempId ? message : item
-        );
-
-        return {
-          ...conversation,
-          messages,
-          lastMessage: messages.at(-1)?.content ?? conversation.lastMessage,
-          timestamp: messages.at(-1)?.createdAt ?? conversation.timestamp,
-        };
-      })
-    );
+      return {
+        ...conversation,
+        messages,
+        lastMessage: lastMessage?.content ?? conversation.lastMessage,
+        timestamp: lastMessage?.createdAt ?? conversation.timestamp,
+      };
+    });
   };
 
   const removePendingMessage = (conversationId: number, tempId: number) => {
-    setAllConversations((current) =>
-      current.map((conversation) => {
-        if (conversation.id !== conversationId) return conversation;
+    updateConversation(conversationId, (conversation) => {
+      const messages = conversation.messages.filter((message) => message.id !== tempId);
+      const lastMessage = messages[messages.length - 1];
 
-        const messages = conversation.messages.filter((message) => message.id !== tempId);
-        const lastMessage = messages.at(-1);
+      return {
+        ...conversation,
+        messages,
+        lastMessage: lastMessage?.content ?? "",
+        timestamp: lastMessage?.createdAt ?? null,
+      };
+    });
+  };
 
-        return {
-          ...conversation,
-          messages,
-          lastMessage: lastMessage?.content ?? "",
-          timestamp: lastMessage?.createdAt ?? null,
-        };
-      })
-    );
+  const deleteMessage = (conversationId: number, messageId: number) => {
+    updateConversation(conversationId, (conversation) => {
+      const messages = conversation.messages.map((message) =>
+        message.id === messageId
+          ? {
+              ...message,
+              isDeleted: true,
+              deletedAt: new Date().toISOString(),
+            }
+          : message
+      );
+
+      const lastMessage = messages[messages.length - 1];
+
+      return {
+        ...conversation,
+        messages,
+        lastMessage: lastMessage?.isDeleted
+          ? "This message was deleted"
+          : lastMessage?.content ?? "",
+        timestamp: lastMessage?.createdAt ?? conversation.timestamp,
+      };
+    });
   };
 
   useEffect(() => {
+    setAllConversations(conversations);
+  }, [conversations]);
+
+  useEffect(() => {
     if (!selectedConversation) return;
+
     const pollMessages = async () => {
       try {
         const response = await fetch(`/api/messages?conversationId=${selectedConversation}`);
@@ -83,25 +117,23 @@ export default function MessagesClient({ conversations }:UserConversations ) {
 
         const messages: Message[] = await response.json();
 
-        setAllConversations((current) =>
-          current.map((conversation) => {
-            if (conversation.id !== selectedConversation) return conversation;
+        updateConversation(selectedConversation, (conversation) => {
+          const currentLastId = conversation.messages[conversation.messages.length - 1]?.id;
+          const nextLastId = messages[messages.length - 1]?.id;
 
-            const currentLastId = conversation.messages.at(-1)?.id;
-            const nextLastId = messages.at(-1)?.id;
+          if ( currentLastId === nextLastId && conversation.messages.length === messages.length ) {
+            return conversation;
+          }
 
-            if (currentLastId === nextLastId && conversation.messages.length === messages.length) {
-              return conversation;
-            }
+          const lastMessage = messages[messages.length - 1];
 
-            return {
-              ...conversation,
-              messages,
-              lastMessage: messages.at(-1)?.content ?? conversation.lastMessage,
-              timestamp: messages.at(-1)?.createdAt ?? conversation.timestamp,
-            };
-          })
-        );
+          return {
+            ...conversation,
+            messages,
+            lastMessage: lastMessage?.content ?? conversation.lastMessage,
+            timestamp: lastMessage?.createdAt ?? conversation.timestamp,
+          };
+        });
       } catch (error) {
         console.error("Failed to refresh messages", error);
       }
@@ -109,37 +141,33 @@ export default function MessagesClient({ conversations }:UserConversations ) {
 
     pollMessages();
     const intervalId = setInterval(pollMessages, 3000);
+
     return () => clearInterval(intervalId);
   }, [selectedConversation]);
 
-  useEffect(() => { setAllConversations(conversations);}, [conversations]);
-
   return (
-    <div className="grid h-[calc(87vh-4rem)] grid-cols-1 gap-6 md:grid-cols-3">
-      {/* Desktop inbox */}
+    <div className="grid min-h-0 h-[calc(87dvh-4rem)] grid-cols-1 gap-6 md:grid-cols-3">
       <div className="hidden md:block">
         <Inbox
           conversations={allConversations}
           selectedConversation={selectedConversation}
           setSelectedConversation={setSelectedConversation}
           search={search}
-          setSearch={setSearch}/>
+          setSearch={setSearch}
+        />
       </div>
 
-      {/* Chat */}
-      <div className="md:col-span-2">
+      <div className="min-h-0 md:col-span-2">
         <Chat
           activeConversation={activeConversation}
           addMessage={addMessageToConversation}
           replaceMessage={replacePendingMessage}
           removeMessage={removePendingMessage}
+          deleteMessage={deleteMessage}
           mobileInboxTrigger={
             <Sheet open={isMobileInboxOpen} onOpenChange={setIsMobileInboxOpen}>
               <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="md:hidden text-white">
+                <Button variant="ghost" size="icon" className="md:hidden text-white">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
@@ -158,7 +186,8 @@ export default function MessagesClient({ conversations }:UserConversations ) {
                       setIsMobileInboxOpen(false);
                     }}
                     search={search}
-                    setSearch={setSearch}/>
+                    setSearch={setSearch}
+                  />
                 </div>
               </SheetContent>
             </Sheet>
