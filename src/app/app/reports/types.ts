@@ -77,3 +77,12 @@ type Property = {
   createdAt: string;
   landlordId: number;
 }
+
+type Status = "Under Review" | "Resolved - No Action" | "Action Taken";
+
+
+type FilterSearchProps = {
+  selectedStatuses: Record<Status, boolean>;
+  sortField: 'modifiedAt' | 'createdAt';
+  sortDirection: 'asc' | 'desc';
+};

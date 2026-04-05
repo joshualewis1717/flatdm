@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import {User, Report, Review, PropertyApplication, Property, PropertyListing} from '@/app/app/reports/types';
+import {User, Report, Review, PropertyApplication, Property, PropertyListing, FilterSearchProps} from '@/app/app/reports/types';
 import {sendEmail} from '@/app/app/reports/sendEmail'
 import { use } from "react";
 import { isErrored } from "stream";
@@ -137,6 +137,35 @@ export async function deleteReport({report} : Report){
     return;
 }
 
+
+export async function getReportsFilteredSorted({selectedStatuses, sortField, sortDirection} : FilterSearchProps){
+    console.log("want")
+    console.log(selectedStatuses)
+    console.log(sortField)
+    console.log(sortDirection)
+
+    const statuses = [];
+
+    // process statuses from eg [OPEN: true, UNDER_REVIEW: false, RESOLVED: true] into eg [OPEN, RESOLVED]
+    for (let i = 0; i < selectedStatuses.length; i++){
+        console.log("fsndfrgth")
+        console.log(selectedStatuses[i]);
+        statuses.push(selectedStatuses[i][0])
+    }
+
+    // const reports = await prisma.report.findMany({
+    //   where: {status: {in: statuses}},
+    //   orderBy: {[sortField]: sortDirection}
+    // });
+
+    // return reports;
+}
+
+
+export async function getAllReports(){
+    const reports = await prisma.report.findMany();
+    return reports;
+}
 
 
 export async function deleteUser({user} : User){

@@ -1,19 +1,9 @@
-import ReportOverviewItem from '@/components/shared/ReportOverviewItem';
 import { prisma } from "@/lib/prisma";
+import ReportsClient from "./ReportsClient";
 
-
-
-export default async function HomePage({ params } : { params: Promise<{id: number}> }) {
+export default async function ReportsPage() {
   const reports = await prisma.report.findMany();
-
-  return (
-
-    <div className="flex flex-col gap-2 py-[3%]">
-
-      {reports.map((report) => (
-          <ReportOverviewItem key={report.id} report={report} />
-      ))}
-      
-    </div>
-  );
+  
+  const serializable = reports.map(r => ({ ...r, createdAt: r.createdAt.toISOString(), modifiedAt: r.modifiedAt.toISOString() }));
+  return <ReportsClient initialReports={serializable} />;
 }
