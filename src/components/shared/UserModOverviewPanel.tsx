@@ -16,7 +16,6 @@ function setPanelFeatures({user, setFocusUser, confirmFunc, setConfirmFunction, 
     
     setFocusUser(user);
     setConfirmFunction(confirmFunc);
-    console.log(confirmFunc);
     
     setPanelText(panelText);
     setShowTextPanel(true);

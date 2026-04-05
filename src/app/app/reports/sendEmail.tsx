@@ -3,12 +3,13 @@ import {User, Report, Review, PropertyApplication, Property, PropertyListing} fr
 
 
 
-export function sendEmail(args?: { user?: User | null; text?: string }) {
-    const { user, text } = args ?? {};
+export function sendEmail({user, text} : {user:User; text:string}) {
+    
     if (!user || !text) {
         console.error("sendEmail missing user or text", { user, text });
         return;
     }
+
     console.log(user);
     console.log("sending email to " + user['email'] + ": " + text);
     return;

@@ -3,10 +3,120 @@
 import { prisma } from "@/lib/prisma";
 import {User, Report, Review, PropertyApplication, Property, PropertyListing} from '@/app/app/reports/types';
 import {sendEmail} from '@/app/app/reports/sendEmail'
+import { use } from "react";
+import { isErrored } from "stream";
 
+// delete all properties (and all associated listings and applications) by a given landlord id
+async function rawDeletePropertiesByLandlord({landlordId} : {landlordId : number}){
+    if (landlordId == undefined){
+        console.log("error: trying to delete properties for undefined user id");
+        return;
+    }
+
+    // first remove associated property listings
+    rawDeletePropertyListingByLandlord({landlordId:landlordId});
+
+    // deleting properties
+    await prisma.property.deleteMany({
+        where: {landlordId: landlordId}
+    });
+    console.log("deleted properties")
+    return;
+}
+
+// delete all property applications made by a given user id
+async function rawDeletePropertyApplicationsByUser({userId} : {userId : number}){
+
+    await prisma.propertyApplication.deleteMany({
+        where: {userId: {equals: userId}}
+    });
+
+    console.log("deleted property applications by user " + userId);
+    return;
+}
+
+
+
+// delete all property applications for a given listing id
+async function rawDeletePropertyApplicationsByListing({listingId} : {listingId : number}){
+    await prisma.propertyApplication.deleteMany({
+        where: {listingId: listingId}
+    });
+
+    console.log("deleted property applications for listing id " + listingId);
+    return;
+}
+
+
+async function rawDeletePropertyListingByLandlord({landlordId} : {landlordId : number}){
+
+    // get all property listings ids where the landlord id is landlordId
+    const propertyListingIds = await prisma.property.findMany({
+        where: { landlordId: { equals: landlordId } },
+        select: { id: true },
+    }).then(rows => rows.map(r => r.id));
+    console.log("property listing ids to be removed:");
+    console.log(propertyListingIds);
+
+    // first delete all associated property applications
+    for (let p = 0; p< propertyListingIds.length; p++){
+        rawDeletePropertyApplicationsByListing({listingId:propertyListingIds[p]});
+    };
+    
+    // finally 'delete' property listings
+    await prisma.propertyListing.updateMany({
+        where: {landlordId: landlordId},
+        data: {isDeleted: true}
+    });
+
+    console.log("deleted property listings")
+}
+
+async function rawDeleteReview({reviewId} : {reviewId : number}){
+    await prisma.review.updateMany({
+        where: {id: reviewId},
+        data: { isDeleted: true }
+    });
+
+    console.log("deleted review " + reviewId);
+    return;
+}
+
+
+// delete all reviews written by this user or about this user
+async function rawDeleteReviewByUser({userId} : {userId : number}){
+    await prisma.review.updateMany({
+        where: {
+            OR: [
+                { authorId: {equals: userId} },
+                { targetUserId: {equals: userId} }
+            ]
+        },
+        data: { isDeleted: true }
+    });
+
+    console.log("deleted reviews linked to user " + userId);
+    return;
+}
+
+
+// delete a user - should be done last since not recursive for other tables
+async function rawDeleteUser({userId} : {userId:number}){
+    await prisma.user.update({
+        where: {id: userId},
+        data: {isDeleted: true}
+    });
+
+    return;
+}
+
+
+
+
+// functions to be used externally:
 
 export async function addOffence({user, text} : {user:User; text:string}){
-    await prisma.offenceRecord.create({
+    prisma.offenceRecord.create({
         data: {
             reason: text,
             userId: user['id']
@@ -18,10 +128,7 @@ export async function addOffence({user, text} : {user:User; text:string}){
 }
 
 
-
-
-
-export  async function deleteReport({report} : Report){
+export async function deleteReport({report} : Report){
 
     // make sure we actually want to delete this
     const ok = window.confirm(`Delete Report ${report['reason']}? This cannot be undone.`);
@@ -38,48 +145,29 @@ export  async function deleteReport({report} : Report){
     return;
 }
 
+
+
 export async function deleteUser({user} : User){
 
-    // if user is consultant, also remove related property applications
-    if (user['role'] == "CONSULTANT"){
-        console.log("user to be deleted is a consultant")
+    if (user['role'] == "LANDLORD"){
+        // delete properties (-> delete property listings (-> delete associated property applications) )
+        rawDeletePropertiesByLandlord({landlordId:user.id});        
+    }
+    else if (user['role'] == "CONSULTANT"){
 
-        // deleting property applications
-        await prisma.propertyApplication.deleteMany({
-            where: {userId: user["id"]}
-        });
-        console.log("deleted assocaited property applications")
+        // delete property applications made
+        rawDeletePropertyApplicationsByUser({userId:user.id});
     }
 
-    // if user is landlord, also remove related properties and property listings
-    else if (user['role'] == "LANDLORD"){
-        console.log("user to be deleted is a landlord")
-        
-        // deleting property listings
-        await prisma.propertyListing.deleteMany({
-            where: {landlordId: user["id"]}
-        });
-        console.log("deleted property listings")
-
-        // deleting properties
-        await prisma.property.deleteMany({
-            where: {landlordId: user["id"]}
-        });
-        console.log("deleted properties")
-    }
-
-    // for all users, delete reviews they wrote and that were about them
-    deleteReviewsLinkedToUser(user['id']);
-    console.log("deleted reviews")
+    // for both roles, 'delete' reviews made about them and by them
+    rawDeleteReviewByUser({userId:user.id});
 
 
     // 'delete' from database by setting isDeleted to true
-    await prisma.user.update({
-        where: {id: user["id"]},
-        data: {isDeleted: true}
-    });
+    rawDeleteUser({userId:user.id});
 
-    sendEmail({user}, "Your account has been deleted");
+    const text : string = "Your accoutn has been deleted";
+    sendEmail({user, text});
 
     // confirm in logs
     console.log("deleting user with id: " + user['id']);
@@ -92,67 +180,10 @@ export async function deleteReview({review} : Review){
     const ok = window.confirm(`Delete Review ${review['comment']}? This cannot be undone.`);
     if (!ok) return;
 
-    // add to removed reviews database
-    await prisma.removedReview.create({
-        data: {
-            originalReviewId: review['id'],
-            rating: review['rating'],
-            comment: review['comment'],
-            createdAt: review['createdAt'],
-            authorId: review['authorId'],
-            targetUserId: review['targetUserId'],
-            listingId: review['listingId']
-        },
-    });
-
-
-    // delete from database
-    await prisma.review.delete({
-        where: {id: review['id']}
-    });
+    rawDeleteReview({reviewId:review.id});
 
     // confirm in logs
-    console.log("deleting review with id: " + id);
+    console.log("deleting review with id: " + review.id);
     
     return;
-}
-
-async function deleteReviewsLinkedToUser({userId} : number){
-    console.log("userId: " + userId);
-
-    // first get all reviews to be deleted (written by them or about them)
-    const reviews = await prisma.review.findMany({
-          where: {
-            OR: [
-            { authorId: userId },
-            { targetUserId: userId }
-            ],
-        }
-    });
-
-    console.log("to del:");
-    console.log(reviews);
-
-    // put the reviews into the removed reviews table
-    for (let r = 0; r < reviews.length; r++){
-        const review = reviews[r];
-
-        // put this review into removed reviews table
-        await prisma.removedReview.create({
-            data: {
-                originalReviewId: review['id'],
-                rating: review['rating'],
-                comment: review['comment'],
-                createdAt: review['createdAt'],
-                authorId: review['authorId'],
-                targetUserId: review['targetUserId'],
-                listingId: review['listingId']
-            },
-        });
-    }
-
-    // remove all the original reviews
-    await prisma.review.deleteMany({
-        where: {authorId: userId},
-    });
 }
