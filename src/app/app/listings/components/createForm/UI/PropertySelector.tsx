@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { ChevronDown, Check, MapPin } from "lucide-react";
 import { ExistingProperty } from "../../../types";
-import { getPropertiesForLandlord } from "../../../clientServices/listings.prisma";
+import { getPropertiesForLandlord } from "../../../prisma/clientServices";
 
 // Component for landlords to select from their previously used properties (buildings) when creating a new listing.
 type PropertySelectorProps = {

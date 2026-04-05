@@ -9,8 +9,7 @@ import ConfirmedCard from "../components/dashboard/UI/userCards/ConfirmedCard";
 import LandlordCard from "../components/dashboard/UI/userCards/LandlordCard";
 import { Application } from "../types";
 import { getApplicationsForApplicant, getApplicationsForLandlord, withdrawApplication, updateApplicationStatus, respondToOffer,
-} from "../clientServices/applications.prisma";
-
+} from "../prisma/clientServices";
 // main page for landlords and consultants to see their applications and interact with them in various ways
 
 type Props = {
@@ -18,7 +17,7 @@ type Props = {
   landlordId?: number;
 };
 
-export default function ApplicationDashBoardPage({ applicantId= 4, landlordId }: Props) {
+export default function ApplicationDashBoardPage({ applicantId=5, landlordId }: Props) {
   const isApplicant = !!applicantId;
   const isLandlord  = !!landlordId;
 

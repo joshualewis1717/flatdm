@@ -1,15 +1,15 @@
 'use client';
-import { Occupant } from '../../types';
+import {OccupantUI } from '../../types';
 import Avatar from '@/app/app/applications/components/dashboard/UI/profile/Avatar';
 
 // user card, lets landlords know of which consultant is in which listing/ property
 type props={
-    occupant: Occupant;// replace with applicant/ consultant later
+    occupant: OccupantUI;// replace with applicant/ consultant later
     onClick: () => void;// what to do when this card is clicked
   
 }
 export default function OccupantCard({occupant,onClick,}:props ) {
-  const isApplicant = occupant.moveIn.getTime() > Date.now();
+  const isApplicant = occupant.moveInDate.getTime() > Date.now();
   const consultant = occupant.userId
 
   return (

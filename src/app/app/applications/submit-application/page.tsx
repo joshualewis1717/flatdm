@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { ApplicationForm } from "../types";
 import InputField from "../components/Submitform/UI/InputField";
-import { submitApplication } from "../clientServices/applications.prisma";
+import { submitApplication } from "../prisma/clientServices";
 
 // page where consultants can submit an application form for a specific listing
 
@@ -11,7 +11,7 @@ type SubmitApplicationPageProps = {
   userId: number;// id of the user submitting the application
 };
 
-export default function SubmitApplicationPage({ listingId = 3, userId = 3 }: SubmitApplicationPageProps) {
+export default function SubmitApplicationPage({ listingId = 3, userId = 5 }: SubmitApplicationPageProps) {
   const [form, setForm] = useState<ApplicationForm>({
     moveInDate: null,
     moveOutDate: null,

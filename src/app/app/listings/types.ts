@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { AmenityType, Prisma } from "@prisma/client";
 import { propertyInclude, propertyListingBasicInclude, propertyListingFullInclude } from "./prismaConst";
 
 /***** prisma types relatin with listing and property management *********/
@@ -21,6 +21,9 @@ export type PropertyListingBasic = Prisma.PropertyListingGetPayload<{
 
 /****** types in which there is no relation for us to inclide */
 export type Occupant = Prisma.OccupantGetPayload<{}>;
+export type OccupantWithUser = Prisma.OccupantGetPayload<{
+  include: { user: true };
+}>;
 export type ListingImage = Prisma.ListingImageGetPayload<{}>;
 export type PropertyApplication = Prisma.PropertyApplicationGetPayload<{}>;
 export type Amenity = Prisma.AmenityGetPayload<{}>;
@@ -35,6 +38,13 @@ export type AmenityDraft = Omit<Amenity, "distance"> & {
 
 /**** front end types */
 
+export type AmenityUI={
+  id: string;// for tracking in the UI, not related to DB id (we are using uuids)
+  dbId?: number;// the actual DB id if this amenity already exists in the DB, used for updating existing amenities vs creating new ones on submit 
+  type: AmenityType;
+  name: Amenity['name'];
+  distance: number;
+};
 
 // Form data for creating/editing a listing
 export type PropertyListingForm = {
@@ -62,7 +72,6 @@ export type PropertyListingForm = {
   rooms: number;
   bedrooms: number;
   bathrooms: number;
-  beds: number;
   area: number; // m²
 
   maxOccupants: number;
@@ -70,20 +79,74 @@ export type PropertyListingForm = {
 
   thumbnail: string;
   images?: string[];
-  amenities?: Amenity[];// any additional amenitie info
+  amenities?: AmenityUI[];// any additional amenitie info
 };
 
 
 // For the property selector component when creating a listing, represents a previously saved property (building) that landlords can choose to autofill from
 export type ExistingProperty = {
-  id: number;
+  id: number;// property id
   streetName: string;
   city: string;
   postcode: string;
   buildingName: string;
-  amenities: Amenity[];
-  hasExistingListings: boolean;
+  amenities: AmenityUI[];
+  hasExistingAmenities: boolean;
 };
+
+/**** Listing info data client side type wrapper */
+export type ListingInfoData = {
+  id: number;// listing id
+  buildingName: string;
+  flatNumber: string | null;
+  streetName: string;
+  city: string;
+  postcode: string;
+  landlordName: string;
+  description: string;
+  rent: number;
+  availableFrom: Date;
+  totalRooms: number;
+  bedrooms: number;
+  bathrooms: number;
+  maxOccupants: number;
+  area: number;
+  minStay: number;
+  lastUpdated: Date;
+  thumbnail: string | null;
+  images?: string[];
+  amenities: AmenityUI[];
+}
+  
+export type OccupantUI ={
+  id: number;// occupant id
+  userId: number;
+  name: string;
+  moveInDate: Date;
+  moveOutDate: Date | null;
+}
+
+export type PropertyListingUI = {
+  id: number;
+  buildingName: string;
+  flatNumber: string | null;
+  streetName: string;
+  city: string;
+  postcode: string;
+  createdAt: Date;
+  lastUpdated: Date;
+  thumbnail: string | null;
+  images?: string[];
+  availableFrom: Date;
+  maxOccupants: number;
+  currentOccupants: number;
+};
+
+/*** type wrapper for the data in my properties page */
+export type MyPropertyListingData = {
+  propertyListing: PropertyListingUI;
+  occupants: OccupantUI[];
+}
 
 /***** non prisma UI types */
 

@@ -5,7 +5,7 @@ import ImageSlider from "../UI/ImageSlider";
 import PropertyStatsGrid from "../UI/PropertyStatsGrid";
 import RoommateProfileList from "../UI/RoomateProfileList";
 import AmenityList from "../UI/AmenityList";
-import { getListingById } from "../../../clientServices/listings.prisma";
+import { getListingById } from "../../../prisma/clientServices";
 // Panel to display the static listing specific data in full
 
 type ListingInfoPanelProps = {
@@ -49,7 +49,7 @@ export default function ListingInfoPanel({ listingId = '5' }: ListingInfoPanelPr
   // combine thumbnail + images for the slider, thumbnail first
   const sliderImages = [
     ...(thumbnail ? ['/images/listing1.jpg'] : ['/images/listing1.jpg']),// use placeholder if no thumbnail
-    ...images,
+    ...(images ?? []),
   ];
 
   // hardcoded roommates for now, in real app this would come from our listing data (occupants relation)

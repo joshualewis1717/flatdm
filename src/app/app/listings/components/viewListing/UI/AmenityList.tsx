@@ -1,12 +1,12 @@
 'use client'
 import { useState } from "react";
-import { Amenity } from "../../../types";
+import {AmenityUI } from "../../../types";
 
 // generic component to display information about the different amenities that a property listing may have
 
 
 type AmenityListProps = {
-  amenities: Amenity[];
+  amenities: AmenityUI[];
 };
 
 export default function AmenityList({ amenities }: AmenityListProps) {
