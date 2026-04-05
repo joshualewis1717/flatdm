@@ -108,3 +108,8 @@ export type ReviewUI = {
 
 // If you want a "display-friendly" occupant
 export type OccupantType = 'occupant' | 'applicant';
+
+// Shared query/filter params state for listings pages.
+export type ListingParameters = Record<string, unknown> & {
+  changed: boolean;
+};
