@@ -161,7 +161,7 @@ export default function NewListingsPage() {
   function removeImage(index: number){setImages((prev) => prev.filter((_, i) => i !== index))};
 
   useEffect(()=>{
-    if (!isLandlord) router.push('/login')
+    if (!isLandlord) router.replace('/login')
   },[router, isLandlord])
 
   // very rough success alert using useEffect to trigger on success state change, can be improved with a proper toast notification system

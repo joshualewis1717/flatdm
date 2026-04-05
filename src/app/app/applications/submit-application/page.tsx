@@ -51,7 +51,7 @@ export default function SubmitApplicationPage({ listingId = 1 }: SubmitApplicati
 
   
   useEffect(()=>{
-    if (!isConsultant) router.push('/login')
+    if (!isConsultant) router.replace('/login')
   }, [isConsultant, router])
 
 
