@@ -37,7 +37,7 @@ export default function Page({ landlordId = 3 }: Props) {
   useEffect(() => {
     async function fetchListings() {
       try {
-        const data = await getListingsForLandlord(landlordId);
+        const data = await getListingsForLandlord();
         setListings(data);
       } catch (error) {
         console.error("Failed to fetch listings:", error);

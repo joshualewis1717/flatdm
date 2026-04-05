@@ -49,17 +49,39 @@ export async function createApplicationQuery(data: {
   });
 }
 
-export async function deleteApplicationQuery(applicationId: number) {
+export async function deleteApplicationQuery(applicationId: number, userId: number) {
   return prisma.propertyApplication.delete({
-    where: { id: applicationId },
+    where: { id: applicationId, userId: userId },
   });
 }
 
-export async function updateApplicationStatusQuery(
-  applicationId: number,
-  status: "APPROVED" | "REJECTED" | "CONFIRMED",
-  expiryDate?: Date
-) {
+export async function updateApplicationStatusAsLandlordQuery(applicationId: number,landlordId: number,status: "APPROVED" | "REJECTED",
+  expiryDate?: Date) {
+
+  // check if application exists
+  const application = await prisma.propertyApplication.findUnique({
+    where: { id: applicationId },
+    select: {
+      listing: {
+        select: {
+          property: {
+            select: {
+              landlordId: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!application) throw new Error("Application not found");
+
+  // check if correct landlord trying to update listing
+  if (application.listing.property.landlordId !== landlordId) {
+    throw new Error("Forbidden");
+  }
+
+  
   return prisma.propertyApplication.update({
     where: { id: applicationId },
     data: {
@@ -68,6 +90,32 @@ export async function updateApplicationStatusQuery(
     },
   });
 }
+
+
+export async function updateApplicationStatusAsConsultantQuery(applicationId: number,userId: number, status: "CONFIRMED" | "REJECTED") {
+  // check if application exists
+  const application = await prisma.propertyApplication.findUnique({
+    where: { id: applicationId },
+    select: {
+      userId: true,
+    },
+  });
+
+  if (!application) throw new Error("Application not found");
+
+  // check if correct appllicant is trying to update it
+  if (application.userId !== userId) {
+    throw new Error("Forbidden");
+  }
+
+  return prisma.propertyApplication.update({
+    where: { id: applicationId },
+    data: {
+      status,
+    },
+  });
+}
+
 
 export async function getApplicationsForApplicantQuery(userId: number) {
   return prisma.propertyApplication.findMany({

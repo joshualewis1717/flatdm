@@ -23,7 +23,7 @@ export default function PropertySelector({ landlordId, onSelect }: PropertySelec
   async function getLandlordProperties() {
     setLoading(true);
     try{
-    const data = await getPropertiesForLandlord(landlordId);
+    const data = await getPropertiesForLandlord();
     setProperties(data.map(property => ({
       ...property,
       amenities: property.amenities.map(amenity => ({

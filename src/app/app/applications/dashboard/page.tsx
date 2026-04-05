@@ -27,10 +27,10 @@ export default function ApplicationDashBoardPage({ applicantId=5, landlordId }: 
   useEffect(() => {
     const fetch = async () => {
       if (isConsultant && applicantId) {
-        const data = await getApplicationsForApplicant(applicantId);
+        const data = await getApplicationsForApplicant();
         setApps(data);
       } else if (isLandlord && landlordId) {
-        const data = await getApplicationsForLandlord(landlordId);
+        const data = await getApplicationsForLandlord();
         setApps(data);
       }
       setLoading(false);

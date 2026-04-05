@@ -54,9 +54,9 @@ export async function queryCreateListing(tx: any, data: Parameters<typeof prisma
   return tx.propertyListing.create({ data });
 }
 
-export async function querySoftDeleteListing(listingId: number) {
+export async function querySoftDeleteListing(listingId: number, landlordId: number) {
   return prisma.propertyListing.update({
-    where: { id: listingId },
+    where: { id: listingId, landlordId: landlordId},
     data: { isDeleted: true },
   });
 }

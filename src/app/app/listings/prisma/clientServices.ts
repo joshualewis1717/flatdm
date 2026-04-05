@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import {ExistingProperty, MyPropertyListingData, PropertyListingForm } from "../types";
 import { queryPropertiesForLandlord, queryListingById, queryListingsForLandlord, querySoftDeleteListing,} from "./rawQueries";
 import { mapToExistingProperty, mapToListingDetail, mapToMyPropertyListing } from "./mappers";
+import { requireRole } from "@/userAuth";
 
 type CreateListingInput = PropertyListingForm & { landlordId: number };
 // validation for listing input
@@ -31,8 +32,10 @@ function validateListingInput(data: CreateListingInput) {
 
 
 
-export async function getPropertiesForLandlord(landlordId: number): Promise<ExistingProperty[]> {
-  const properties = await queryPropertiesForLandlord(landlordId);
+export async function getPropertiesForLandlord(): Promise<ExistingProperty[]> {
+  const user = await requireRole('LANDLORD');
+  if (!user) throw new Error("user timed out")
+  const properties = await queryPropertiesForLandlord(user.id);
   return properties.map(mapToExistingProperty);
 }
 
@@ -42,15 +45,20 @@ export async function getListingById(listingId: string) {
   return mapToListingDetail(listing);
 }
 
-export async function getListingsForLandlord(landlordId: number): Promise<MyPropertyListingData[]> {
-    const listings = await queryListingsForLandlord(landlordId);
+export async function getListingsForLandlord(): Promise<MyPropertyListingData[]> {
+    const user = await requireRole('LANDLORD');
+    if (!user) throw new Error("user timed out")
+    const listings = await queryListingsForLandlord(user.id);
     return listings.map(mapToMyPropertyListing);
 }
 
 
 //TO DO: delete an amenity from db if user deletes amenity though UI of existing property
+//TO DO: also pass in an optional landlord id for when data is being updated (also for when amenities are same, need to check owneership)
+//TODO: move all raw createm uodate, delete etc in the raw file
 export async function createListing(data: CreateListingInput): Promise<boolean> {
     validateListingInput(data);
+    await requireRole('LANDLORD');// check if correct role or not
   
     return prisma.$transaction(async (tx) => {
       const {
@@ -151,8 +159,10 @@ export async function createListing(data: CreateListingInput): Promise<boolean> 
   }
 
 export async function deleteListing(listingId: number): Promise<boolean> {
+  const user = await requireRole('LANDLORD');
+  if (!user) throw new Error("user timed out")
   try {
-    await querySoftDeleteListing(listingId);
+    await querySoftDeleteListing(listingId, user.id);
     return true;
   } catch {
     return false;

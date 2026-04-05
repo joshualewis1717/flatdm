@@ -38,7 +38,6 @@ export default function SubmitApplicationPage({ listingId = 3, userId = 5 }: Sub
     setLoading(true);
     const result = await submitApplication(
       listingId,
-      userId,
       form.moveInDate,
       specifyMoveOut ? form.moveOutDate : null
     );

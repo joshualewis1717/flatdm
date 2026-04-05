@@ -7,21 +7,19 @@ import {
   countOccupantsAtDate,
   createApplicationQuery,
   deleteApplicationQuery,
-  updateApplicationStatusQuery,
   getApplicationsForApplicantQuery,
   getApplicationsForLandlordQuery,
+  updateApplicationStatusAsLandlordQuery,
+  updateApplicationStatusAsConsultantQuery,
 } from "./rawQueries";
 
 import {mapApplicantApplication,mapLandlordApplication,} from "./mappers";
-
+import { requireRole } from "@/userAuth";
 // CREATE APPLICATION
-export async function submitApplication(
-  listingId: number,
-  userId: number,
-  moveInDate: Date,
-  moveOutDate: Date | null
-) {
+export async function submitApplication(listingId: number,moveInDate: Date,moveOutDate: Date | null) {
   try {
+    const user = await requireRole("CONSULTANT")
+    if (!user)  throw new Error("timed out session")
     const now = new Date();
 
     if (moveInDate <= now) {
@@ -34,8 +32,8 @@ export async function submitApplication(
 
     const [listing, existingApp, occupant] = await Promise.all([
       getListingById(listingId),
-      getActiveApplication(listingId, userId),
-      getOccupant(listingId, userId),
+      getActiveApplication(listingId, user.id),
+      getOccupant(listingId, user.id),
     ]);
 
     if (!listing) {
@@ -63,7 +61,7 @@ export async function submitApplication(
 
     await createApplicationQuery({
       listingId,
-      userId,
+      userId: user.id,
       moveInDate,
       moveOutDate,
     });
@@ -76,53 +74,58 @@ export async function submitApplication(
 }
 
 // GET (APPLICANT)
-export async function getApplicationsForApplicant(userId: number) {
-  const data = await getApplicationsForApplicantQuery(userId);
+export async function getApplicationsForApplicant() {
+  const user = await requireRole("CONSULTANT")
+  if (!user)  throw new Error("timed out session")
+  const data = await getApplicationsForApplicantQuery(user.id);
   return data.map(mapApplicantApplication);
 }
 
 // GET (LANDLORD)
-export async function getApplicationsForLandlord(landlordId: number) {
-  const data = await getApplicationsForLandlordQuery(landlordId);
+export async function getApplicationsForLandlord() {
+  const user = await requireRole("LANDLORD")
+  if (!user)  throw new Error("timed out session")
+  const data = await getApplicationsForLandlordQuery(user.id);
   return data.map(mapLandlordApplication);
 }
 
-// WITHDRAW
+// WITHDRAW: TODO: remove delete application query and use the update application status as consultant instead
 export async function withdrawApplication(applicationId: number) {
   try {
-    await deleteApplicationQuery(applicationId);
+    const user = await requireRole("CONSULTANT")
+    if (!user)  throw new Error("timed out session")
+    await deleteApplicationQuery(applicationId, user.id);
     return true;
   } catch {
     return false;
   }
 }
 
-// STATUS UPDATE
-export async function updateApplicationStatus(
-  applicationId: number,
-  status: "APPROVED" | "REJECTED"
-) {
+// STATUS UPDATE (for landlord to handle)
+export async function updateApplicationStatus(applicationId: number, status: "APPROVED" | "REJECTED") {
   try {
+    const user = await requireRole("LANDLORD")
+    if (!user)  throw new Error("timed out session")
     const expiry =
       status === "APPROVED"
         ? new Date(Date.now() + APPLICATION_EXPIRY_TIME)
         : undefined;
 
-    await updateApplicationStatusQuery(applicationId, status, expiry);
+    await updateApplicationStatusAsLandlordQuery(applicationId, user.id, status, expiry);
     return true;
   } catch {
     return false;
   }
 }
 
-// RESPONSE
-export async function respondToOffer(
-  applicationId: number,
-  accept: boolean
-) {
+// RESPONSE (for consultants)
+export async function respondToOffer( applicationId: number, accept: boolean) {// TODO extend this with a status prop for when users want to withdraw
   try {
-    await updateApplicationStatusQuery(
+    const user = await requireRole("CONSULTANT")
+    if (!user)  throw new Error("timed out session")
+    await updateApplicationStatusAsConsultantQuery(
       applicationId,
+      user.id,
       accept ? "CONFIRMED" : "REJECTED"
     );
     return true;
