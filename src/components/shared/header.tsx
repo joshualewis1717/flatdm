@@ -14,7 +14,7 @@ const headers: Record<string, { title: string; description: string }> = {
     title: "Listings",
     description: "Review available properties, add new stock, and manage what is currently live.",
   },
-  "/app/application": {
+  "/app/applications": {
     title: "Applications",
     description: "Stay on top of active applicants, current decisions, and outstanding follow-up.",
   },
@@ -35,7 +35,10 @@ const headers: Record<string, { title: string; description: string }> = {
 
 export default function Header({ onMenuClick } : { onMenuClick: () => void; }) {
   const pathname = usePathname();
-  const meta = headers[pathname] ?? headers["/app"];
+  const meta =
+    pathname.startsWith("/app/profile/")
+      ? headers["/app/profile"]
+      : headers[pathname] ?? headers["/app"];
 
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-background/80 backdrop-blur-xl">
