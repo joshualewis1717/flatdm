@@ -2,6 +2,14 @@ import { StringToBoolean } from "class-variance-authority/types";
 import { CreateReadStreamOptions } from "fs/promises";
 import { WeekNumberLabel } from "react-day-picker";
 
+type ConfirmFunctionArgs = {
+  user: User;
+  text: string;
+}
+
+type ConfirmFunction = (args: ConfirmFunctionArgs) => Promise<void> | void
+
+
 type Report = {
   id: number;
   reason: string;

@@ -9,11 +9,11 @@
 - USER LIST
     - [X] each user has 2 buttons: ban / add offence / issue warning
     - [ ] if banned/offenced/warned send auto email
-    - [ ] if banned automatically remove associated listings and withdraw all related property applications
+    - [X] if banned automatically remove associated listings and withdraw all related property applications
 
 - REVIEWS
     - [ ] remove reviews
-    - [ ] retain record of removed reviews
+    - [X] retain record of removed reviews
 
 
 ## reqs

@@ -4,15 +4,13 @@ import User from '@/app/app/reports/types';
 type Props = {
   text: string;
   user?: User | null;
-  Confirm: (args: { user?: User | null; text: string }) => void;
+  confirm: (user?: User | null, text?: string) => void | Promise<void>;
   visible?: boolean;
   hide?: () => void;
 };
 
-export function TextPromptPanel({ text, user, Confirm, visible , hide }: Props){
+export function TextPromptPanel({ text, user, confirm, visible , hide }: Props){
   const [inputValue, setInputValue] = useState("");
-  console.log("aaasdfghj")
-  console.log({ text, user, Confirm, visible , hide })
 
   if (visible){
         return (
@@ -76,7 +74,16 @@ export function TextPromptPanel({ text, user, Confirm, visible , hide }: Props){
             </button>
 
             <button
-                onClick={() => typeof Confirm === "function" && Confirm({ user, text: inputValue })}
+                onClick={async () => {
+                    if (typeof confirm !== "function") return;
+                    try {
+                        await confirm({ user, text: inputValue });
+                    } catch (e) {
+                        console.error("confirm error:", e);
+                    } finally {
+                        hide?.();
+                    }
+                }}
                 className="
                 px-4 py-2 rounded-md
                 bg-green-400 text-black

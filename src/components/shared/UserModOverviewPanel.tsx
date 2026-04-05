@@ -1,7 +1,7 @@
 "use client";
 
 import { Props, ScriptProps } from 'next/script';
-import User from '@/app/app/reports/types';
+import {User, ConfirmFunction} from '@/app/app/reports/types';
 import { Button } from '../ui/button';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
@@ -15,7 +15,7 @@ import { addOffence } from '@/app/app/reports/db_access';
 function setPanelFeatures({user, setFocusUser, confirmFunc, setConfirmFunction, setShowTextPanel, panelText, setPanelText} : {user:User; setFocusUser:any; confirmFunc:any; setConfirmFunction:any; setShowTextPanel:any, panelText:string; setPanelText: any}){
     
     setFocusUser(user);
-    setConfirmFunction(confirmFunc);
+    setConfirmFunction(() => confirmFunc);
     
     setPanelText(panelText);
     setShowTextPanel(true);
@@ -38,9 +38,10 @@ export default function UserModOverviewPanel({user} : User){
 
     const [showUser, setShowUser] = useState(true);             // handles hiding user from list after they have been deleted
     const [showTextPanel, setShowTextPanel] = useState(false);  // handles whether text input panel should show
-    const [confirmFunction, setConfirmFunction] = useState(undefined); // handles what function the text panel does when confirmed
-    const [focusUser, setFocusUser] = useState(undefined);      // which user should action (eg warning) happen to
+    const [confirmFunction, setConfirmFunction] = useState<ConfirmFunction>(() => sendEmail); // handles what function the text panel does when confirmed
+    const [focusUser, setFocusUser] = useState(user);      // which user should action (eg warning) happen to
     const [panelText, setPanelText] = useState("");             // what should the text panel say
+    const impactUser = user;
 
     function hide(){
         setShowTextPanel(false);
@@ -50,7 +51,7 @@ export default function UserModOverviewPanel({user} : User){
             return(
             <section className="flex flex-row gap-1 rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
 
-                <TextPromptPanel text={panelText} user={focusUser} Confirm={confirmFunction} visible={showTextPanel} hide={hide}  />
+                <TextPromptPanel text={panelText} user={impactUser} confirm={confirmFunction} visible={showTextPanel} hide={hide}  />
             
                 <div>
                     <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">

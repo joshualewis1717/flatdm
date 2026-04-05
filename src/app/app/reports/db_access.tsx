@@ -5,6 +5,7 @@ import {User, Report, Review, PropertyApplication, Property, PropertyListing} fr
 import {sendEmail} from '@/app/app/reports/sendEmail'
 import { use } from "react";
 import { isErrored } from "stream";
+import {ConfirmFunction} from '@/app/app/reports/types';
 
 // delete all properties (and all associated listings and applications) by a given landlord id
 async function rawDeletePropertiesByLandlord({landlordId} : {landlordId : number}){
@@ -14,7 +15,7 @@ async function rawDeletePropertiesByLandlord({landlordId} : {landlordId : number
     }
 
     // first remove associated property listings
-    rawDeletePropertyListingByLandlord({landlordId:landlordId});
+    await rawDeletePropertyListingByLandlord({landlordId:landlordId});
 
     // deleting properties
     await prisma.property.deleteMany({
@@ -35,8 +36,6 @@ async function rawDeletePropertyApplicationsByUser({userId} : {userId : number})
     return;
 }
 
-
-
 // delete all property applications for a given listing id
 async function rawDeletePropertyApplicationsByListing({listingId} : {listingId : number}){
     await prisma.propertyApplication.deleteMany({
@@ -47,26 +46,23 @@ async function rawDeletePropertyApplicationsByListing({listingId} : {listingId :
     return;
 }
 
-
 async function rawDeletePropertyListingByLandlord({landlordId} : {landlordId : number}){
 
     // get all property listings ids where the landlord id is landlordId
-    const propertyListingIds = await prisma.property.findMany({
+    const propertyListingIds = await prisma.propertyListing.findMany({
         where: { landlordId: { equals: landlordId } },
         select: { id: true },
     }).then(rows => rows.map(r => r.id));
-    console.log("property listing ids to be removed:");
-    console.log(propertyListingIds);
 
     // first delete all associated property applications
     for (let p = 0; p< propertyListingIds.length; p++){
-        rawDeletePropertyApplicationsByListing({listingId:propertyListingIds[p]});
+        await rawDeletePropertyApplicationsByListing({listingId:propertyListingIds[p]});
+        console.log("removed property applications " + propertyListingIds[p]);
     };
     
     // finally 'delete' property listings
-    await prisma.propertyListing.updateMany({
-        where: {landlordId: landlordId},
-        data: {isDeleted: true}
+    await prisma.propertyListing.deleteMany({
+        where: {landlordId: landlordId}
     });
 
     console.log("deleted property listings")
@@ -81,7 +77,6 @@ async function rawDeleteReview({reviewId} : {reviewId : number}){
     console.log("deleted review " + reviewId);
     return;
 }
-
 
 // delete all reviews written by this user or about this user
 async function rawDeleteReviewByUser({userId} : {userId : number}){
@@ -99,7 +94,6 @@ async function rawDeleteReviewByUser({userId} : {userId : number}){
     return;
 }
 
-
 // delete a user - should be done last since not recursive for other tables
 async function rawDeleteUser({userId} : {userId:number}){
     await prisma.user.update({
@@ -111,19 +105,17 @@ async function rawDeleteUser({userId} : {userId:number}){
 }
 
 
-
-
 // functions to be used externally:
 
-export async function addOffence({user, text} : {user:User; text:string}){
-    prisma.offenceRecord.create({
+export const addOffence: ConfirmFunction = async ({ user, text }) => {
+    await prisma.offenceRecord.create({
         data: {
             reason: text,
-            userId: user['id']
+            userId: user.id
         },
     }); 
 
-    console.log("Added offence record (" + text + ") to user " + user['username']);
+    console.log("Added offence record (" + text + ") to user ");// + user['username']);
     return;
 }
 
@@ -140,7 +132,7 @@ export async function deleteReport({report} : Report){
     });
 
     // confirm in logs
-    console.log("deleting report with id: " + report['id']);
+    console.log("deleted report with id: " + report['id']);
 
     return;
 }
@@ -151,26 +143,26 @@ export async function deleteUser({user} : User){
 
     if (user['role'] == "LANDLORD"){
         // delete properties (-> delete property listings (-> delete associated property applications) )
-        rawDeletePropertiesByLandlord({landlordId:user.id});        
+        await rawDeletePropertiesByLandlord({landlordId:user.id});        
     }
     else if (user['role'] == "CONSULTANT"){
 
         // delete property applications made
-        rawDeletePropertyApplicationsByUser({userId:user.id});
+        await rawDeletePropertyApplicationsByUser({userId:user.id});
     }
 
     // for both roles, 'delete' reviews made about them and by them
-    rawDeleteReviewByUser({userId:user.id});
+    await rawDeleteReviewByUser({userId:user.id});
 
 
     // 'delete' from database by setting isDeleted to true
     rawDeleteUser({userId:user.id});
 
-    const text : string = "Your accoutn has been deleted";
+    const text : string = "Your account has been deleted";
     sendEmail({user, text});
 
     // confirm in logs
-    console.log("deleting user with id: " + user['id']);
+    console.log("deleted user with id: " + user['id']);
 
     return;
 }
@@ -183,7 +175,7 @@ export async function deleteReview({review} : Review){
     rawDeleteReview({reviewId:review.id});
 
     // confirm in logs
-    console.log("deleting review with id: " + review.id);
+    console.log("deleted review with id: " + review.id);
     
     return;
 }
