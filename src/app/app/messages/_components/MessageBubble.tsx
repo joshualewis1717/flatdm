@@ -33,7 +33,7 @@ export default function MessageBubble({ message, handleDeleteMessage }: Props){
                             : "rounded-bl-md bg-white/10 text-white"
                         } ${message.isDeleted ? "opacity-70 italic" : ""}`}>
                             <div className="flex items-end gap-2">
-                                <p className="break-words">
+                                <p className="break-all">
                                     {message.isDeleted ? "This message was deleted" : message.content}
                                 </p>
                                 <span className={`shrink-0 text-[11px] leading-none ${message.isOwn ? "text-black/70" : "text-white/60"}`}>
