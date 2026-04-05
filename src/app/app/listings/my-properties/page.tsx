@@ -10,6 +10,7 @@ import EmptyState from '../components/UI/EmptyState';
 import { useRouter } from 'next/navigation';
 import { MyPropertyListingData, OccupantUI } from '../types';
 import { getListingsForLandlord, deleteListing } from '../prisma/clientServices';
+import { useSessionContext } from '@/components/shared/app-frame';
 
 type Props = {
   landlordId: number;
@@ -17,7 +18,7 @@ type Props = {
 
 export default function Page({ landlordId = 3 }: Props) {
   const router = useRouter();
-
+  const {isLandlord} = useSessionContext()
   const [listings, setListings] = useState<MyPropertyListingData[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -117,6 +118,14 @@ export default function Page({ landlordId = 3 }: Props) {
     setDeleteLoading(false);
   }
 
+  // use effect to redirect user if they are not a landlord
+  useEffect(() => {
+  if (!isLandlord) {
+    router.push('/login');
+  }
+}, [isLandlord, router]);
+
+  if (!isLandlord) return null;
   if (loading)
     return (
       <p className="text-sm text-white/40 p-8">

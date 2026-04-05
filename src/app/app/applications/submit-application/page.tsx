@@ -1,8 +1,10 @@
 'use client'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ApplicationForm } from "../types";
 import InputField from "../components/Submitform/UI/InputField";
 import { submitApplication } from "../prisma/clientServices";
+import { useSessionContext } from "@/components/shared/app-frame";
+import { useRouter } from "next/navigation";
 
 // page where consultants can submit an application form for a specific listing
 
@@ -21,6 +23,8 @@ export default function SubmitApplicationPage({ listingId = 3, userId = 5 }: Sub
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const {isConsultant} = useSessionContext();
+  const router = useRouter();
 
   async function handleSubmit(e: React.SubmitEvent){
     e.preventDefault();
@@ -55,6 +59,12 @@ export default function SubmitApplicationPage({ listingId = 3, userId = 5 }: Sub
       </div>
     );
   }
+
+  useEffect(()=>{
+    if (!isConsultant) router.push('/login')
+  }, [isConsultant, router])
+
+  if (!isConsultant)return null;
 
   return (
     <div className="max-w-3xl mx-auto p-6 sm:p-8 space-y-6">

@@ -10,6 +10,7 @@ import LandlordCard from "../components/dashboard/UI/userCards/LandlordCard";
 import { Application } from "../types";
 import { getApplicationsForApplicant, getApplicationsForLandlord, withdrawApplication, updateApplicationStatus, respondToOffer,
 } from "../prisma/clientServices";
+import { useSessionContext } from "@/components/shared/app-frame";
 // main page for landlords and consultants to see their applications and interact with them in various ways
 
 type Props = {
@@ -18,15 +19,14 @@ type Props = {
 };
 
 export default function ApplicationDashBoardPage({ applicantId=5, landlordId }: Props) {
-  const isApplicant = !!applicantId;
-  const isLandlord  = !!landlordId;
 
+  const {isConsultant, isLandlord} = useSessionContext();
   const [apps, setApps] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetch = async () => {
-      if (isApplicant && applicantId) {
+      if (isConsultant && applicantId) {
         const data = await getApplicationsForApplicant(applicantId);
         setApps(data);
       } else if (isLandlord && landlordId) {
@@ -95,7 +95,7 @@ export default function ApplicationDashBoardPage({ applicantId=5, landlordId }: 
         </div>
 
         {/* ── APPLICANT VIEW ── */}
-        {isApplicant && (
+        {isConsultant && (
           <>
             {appOffers.length > 0 && (
               <>

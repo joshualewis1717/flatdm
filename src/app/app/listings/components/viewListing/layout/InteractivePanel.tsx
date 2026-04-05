@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import ReviewSlider from "../UI/ReviewSlider";
 import { ListingReview} from "../../../types";
+import { useSessionContext } from "@/components/shared/app-frame";
 
 type InteractivePanelProps = {
   listingId: string;
@@ -12,10 +13,9 @@ type InteractivePanelProps = {
 export default function InteractivePanel({ listingId, userId }: InteractivePanelProps) {
   const router = useRouter();
   // Mock data — replace with db fetch via listingId
+  const {isConsultant, isLandlord} = useSessionContext();
   const totalReviews = 12;
   const averageRating = 5;
-  const isConsultant = false;// place holder, replace this with some token logic
-  const isLandlord = !isConsultant;// also place holder, we willderive this from token
   const reviews: ListingReview[] = [
     { id: 1, listingId: Number(listingId), rating: 5, comment: "Great place!", createdAt: new Date(), reviewerId: 1, username: "Alice" },
     { id: 2, listingId: Number(listingId), rating: 4, comment: "Really enjoyed it.", createdAt: new Date(), reviewerId: 2 , username: "Bob"},

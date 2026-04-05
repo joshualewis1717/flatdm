@@ -8,6 +8,8 @@ import AddImagesPanel from "../components/createForm/layout/AddImagePanel";
 import AddThumbnailPanel from "../components/createForm/layout/AddThumbnailPanel";
 import PropertySelector from "../components/createForm/UI/PropertySelector";
 import { createListing } from "../prisma/clientServices";
+import { useSessionContext } from "@/components/shared/app-frame";
+import { useRouter } from "next/navigation";
 
 // page for landlords to create a new listing
 // Converts the user-selected range string to a representative number for persistence.
@@ -30,6 +32,8 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const {isLandlord} = useSessionContext();
+  const router = useRouter();
 
   const [selectedProperty, setSelectedProperty] = useState<ExistingProperty | null>(null);
 
@@ -170,6 +174,10 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
   // function to remove an image from form
   function removeImage(index: number){setImages((prev) => prev.filter((_, i) => i !== index))};
 
+  useEffect(()=>{
+    if (!isLandlord) router.push('/login')
+  },[router, isLandlord])
+
   // very rough success alert using useEffect to trigger on success state change, can be improved with a proper toast notification system
   useEffect(()=>{
     if (success) {
@@ -194,6 +202,7 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
   }
   }, [error])
 
+  if (!isLandlord) return null;
 
   return (
     <div className="max-w-4xl mx-auto p-6 sm:p-8 space-y-6">
