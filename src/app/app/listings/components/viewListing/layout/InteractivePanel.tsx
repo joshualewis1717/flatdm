@@ -2,7 +2,7 @@
 'use client'
 import { useRouter } from "next/navigation";
 import ReviewSlider from "../UI/ReviewSlider";
-import { Review } from "@prisma/client";
+import { ListingReview} from "../../../types";
 
 type InteractivePanelProps = {
   listingId: string;
@@ -16,10 +16,10 @@ export default function InteractivePanel({ listingId, userId }: InteractivePanel
   const averageRating = 5;
   const isConsultant = false;// place holder, replace this with some token logic
   const isLandlord = !isConsultant;// also place holder, we willderive this from token
-  const reviews: Review[] = [
-    { id: 1, listingId: null, rating: 5, comment: "Great place!", createdAt: new Date(), authorId: 1, targetUserId: 2 },
-    { id: 2, listingId: null, rating: 4, comment: "Really enjoyed it.", createdAt: new Date(), authorId: 2, targetUserId: 2 },
-    { id: 3, listingId: null, rating: 5, comment: "Perfect for short stays.", createdAt: new Date(), authorId: 3, targetUserId: 2 },
+  const reviews: ListingReview[] = [
+    { id: 1, listingId: Number(listingId), rating: 5, comment: "Great place!", createdAt: new Date(), reviewerId: 1, username: "Alice" },
+    { id: 2, listingId: Number(listingId), rating: 4, comment: "Really enjoyed it.", createdAt: new Date(), reviewerId: 2 , username: "Bob"},
+    { id: 3, listingId: Number(listingId), rating: 5, comment: "Perfect for short stays.", createdAt: new Date(), reviewerId: 3, username: "Charlie" },
   ];
 
   return (

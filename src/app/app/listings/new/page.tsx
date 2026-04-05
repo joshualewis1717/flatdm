@@ -8,6 +8,7 @@ import AddImagesPanel from "../components/createForm/layout/AddImagePanel";
 import AddThumbnailPanel from "../components/createForm/layout/AddThumbnailPanel";
 import PropertySelector from "../components/createForm/UI/PropertySelector";
 import { createListing } from "../clientServices/listings.prisma";
+import { set } from "date-fns";
 
 // page for landlords to create a new listing
 // Converts the user-selected range string to a representative number for persistence.
@@ -119,10 +120,16 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
       distance: a.distance ? DISTANCE_RANGE_TO_KM[a.distance] : 0,
     }));
   
-    const result = await createListing({...form,landlordId,thumbnail,images,amenities: resolvedAmenities,});
-    if (!result) setError("Failed to create listing. Please try again.");
-    else setSuccess(true);
-    setLoading(false);
+    try{
+      const result = await createListing({...form,landlordId,thumbnail,images,amenities: resolvedAmenities,});
+      if (!result) setError("Failed to create listing. Please try again.");
+      else setSuccess(true);
+      setLoading(false);
+    }
+      catch (err) {
+        setError("An unexpected error occurred. Please try again.");
+        setLoading(false);
+      }
   };
 
 
@@ -137,6 +144,7 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
         type: "OTHER" as AmenityType,
         name: "",
         distance: null,
+        modifiedAt: new Date(),
       },
     ]);
     setAmenityCounter((c) => c + 1);

@@ -96,15 +96,13 @@ export type Roommate = {
   avatarUrl?: string | null;
 };
 
-// UI-only review (not DB Review model)
-export type ReviewUI = {
+// UI-only review (not DB Review model), used for ratings
+export type ListingReview = {
   id: number;
-  user: string;
+  reviewerId: number;
+  username: string;
   comment: string;
   rating?: number;
+  listingId?: number | null;// which listing the review is for
+  createdAt?: Date;
 };
-
-
-
-// If you want a "display-friendly" occupant
-export type OccupantType = 'occupant' | 'applicant';
