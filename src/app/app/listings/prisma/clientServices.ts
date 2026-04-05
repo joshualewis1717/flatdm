@@ -5,10 +5,7 @@ import { queryPropertiesForLandlord, queryListingById, queryListingsForLandlord,
 import { mapToExistingProperty, mapToListingDetail, mapToMyPropertyListing } from "./mappers";
 import { requireRole } from "@/userAuth";
 
-type CreateListingInput = PropertyListingForm & { landlordId: number };
-// validation for listing input
-
-function validateListingInput(data: CreateListingInput) {
+function validateListingInput(data: PropertyListingForm) {
   const { buildingName, streetName, city, postcode, rooms, bedrooms, bathrooms, area, rent, maxOccupants, minStay, availableFrom, amenities = [] } = data;
 
   if (!buildingName && !streetName && !city && !postcode)
@@ -56,9 +53,11 @@ export async function getListingsForLandlord(): Promise<MyPropertyListingData[]>
 //TO DO: delete an amenity from db if user deletes amenity though UI of existing property
 //TO DO: also pass in an optional landlord id for when data is being updated (also for when amenities are same, need to check owneership)
 //TODO: move all raw createm uodate, delete etc in the raw file
-export async function createListing(data: CreateListingInput): Promise<boolean> {
+export async function createListing(data: PropertyListingForm): Promise<boolean> {
     validateListingInput(data);
-    await requireRole('LANDLORD');// check if correct role or not
+    const user = await requireRole('LANDLORD');// check if correct role or not
+    if (!user) throw new Error("user timed out")
+    const landlordId = user.id
   
     return prisma.$transaction(async (tx) => {
       const {
@@ -67,7 +66,6 @@ export async function createListing(data: CreateListingInput): Promise<boolean> 
         streetName,
         city,
         postcode,
-        landlordId,
         amenities = [],
         flatNumber,
         description,

@@ -4,9 +4,10 @@ import { useState } from "react";
 import { createContext, useContext } from "react";
 import Header from "@/components/shared/header";
 import Menu from "@/components/shared/menu";
+import { Role } from "@prisma/client";
 
 type AppFrameProps = {
-  role?: string;
+  role?: Role;
   name?: string | null;
   children: React.ReactNode;
 };
@@ -14,7 +15,7 @@ type AppFrameProps = {
 
 
 type SessionContextType = {
-  role?: string;
+  role?: Role;
   name?: string | null;
 };
 
@@ -25,12 +26,11 @@ const SessionContext = createContext<SessionContextType | null>(null);
 export const useSessionContext = () => {
   const ctx = useContext(SessionContext);
   if (!ctx) throw new Error("useSessionContext must be used within AppFrame");
-
   const isConsultant = ctx.role === "CONSULTANT";
   const isLandlord = ctx.role === "LANDLORD";
   const isModerator = ctx.role === "MODERATOR";
 
-  return {...ctx,isConsultant, isLandlord, isModerator,};
+  return {...ctx,isConsultant, isLandlord, isModerator};
 };
 
 export function AppFrame({ role, name, children }: AppFrameProps) {

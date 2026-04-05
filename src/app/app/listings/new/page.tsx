@@ -14,18 +14,8 @@ import { useRouter } from "next/navigation";
 // page for landlords to create a new listing
 // Converts the user-selected range string to a representative number for persistence.
 
-const DISTANCE_RANGE_TO_KM: Record<DistanceRange, number> = {// converts the range selected by the user into a
-//  representative number in km for storage in the database
-  "0-2":  1,
-  "2-5":  3,
-  "5-10": 7,
-};
 
-type NewListingsPageProps = {
-  landlordId: number;// in a real app this would come from the session, but for testing we can pass it as a prop
-};
-
-export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps) {
+export default function NewListingsPage() {
   const [amenities, setAmenities] = useState<AmenityUI[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [thumbnail, setThumbnail] = useState<string | null>(null);
@@ -112,7 +102,7 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
     }
     
     try{
-      const result = await createListing({...form,landlordId,thumbnail,images,amenities});
+      const result = await createListing({...form,thumbnail,images,amenities});
       if (!result) setError("Failed to create listing. Please try again.");
       else setSuccess(true);
       setLoading(false);
@@ -222,7 +212,7 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
             Select a location you've registered before to autofill some information
           </p>
 
-          <PropertySelector landlordId={landlordId} onSelect={handlePropertySelect} />
+          <PropertySelector onSelect={handlePropertySelect} />
         </section>
 
         {/* address, merge all fields except for flat number into one string and store as address in db */}

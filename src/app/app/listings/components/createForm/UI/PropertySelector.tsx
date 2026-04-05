@@ -6,13 +6,12 @@ import { getPropertiesForLandlord } from "../../../prisma/clientServices";
 
 // Component for landlords to select from their previously used properties (buildings) when creating a new listing.
 type PropertySelectorProps = {
-  landlordId: number;
   onSelect: (property: ExistingProperty | null) => void;
 };
 
 type Mode = "idle" | "existing";// should it show the suggesstions or just be idle and do nothing
 
-export default function PropertySelector({ landlordId, onSelect }: PropertySelectorProps) {
+export default function PropertySelector({ onSelect }: PropertySelectorProps) {
   const [mode, setMode] = useState<Mode>("idle");
   const [open, setOpen] = useState(false);// should it show the dropdown of suggestions or not
   const [selected, setSelected] = useState<ExistingProperty | null>(null);// which property did it select
@@ -62,7 +61,7 @@ export default function PropertySelector({ landlordId, onSelect }: PropertySelec
   // fetch once on mount so it's ready when the user clicks
   useEffect(() => {
     getLandlordProperties();
-  }, [landlordId]);
+  }, []);
 
   return (
     <div className="space-y-4">
