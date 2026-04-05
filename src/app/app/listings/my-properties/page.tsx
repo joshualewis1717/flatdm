@@ -1,15 +1,15 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import SearchBar from '../components/SearchBar';
-import FilterDropdown from '../components/FilterDropdown';
+import SearchBar from '../components/UI/SearchBar';
+import FilterDropdown from '../components/ownProperties/UI/FilterDropdown';
 import PropertyCard from './components/PropertyCard';
 import OccupantModal from './components/OccupantModal';
 import { Home, Plus, Trash2 } from 'lucide-react';
-import EmptyState from '../components/EmptyState';
+import EmptyState from '../components/UI/EmptyState';
 import { useRouter } from 'next/navigation';
 import { Occupant, PropertyListing } from '../types';
-import { getListingsForLandlord, deleteListing } from '../logic/clientServices/prisma';
+import { getListingsForLandlord, deleteListing } from '../clientServices/listings.prisma';
 
 type Props = {
   landlordId: number;

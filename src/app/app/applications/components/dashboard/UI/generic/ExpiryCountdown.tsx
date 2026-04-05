@@ -1,5 +1,5 @@
 import { AlertTriangle } from "lucide-react";
-import {daysUntilDate } from "../logic/dateUtils";
+import {daysUntilDate } from "../../../../logic/dateUtils";
 
 // small widget to dislay when a specific appliciation is going to expire
 type props={

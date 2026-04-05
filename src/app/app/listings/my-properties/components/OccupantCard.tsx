@@ -1,6 +1,6 @@
 'use client';
 import { Occupant } from '../../types';
-import Avatar from '@/app/app/applications/components/dashboard/profile/Avatar';
+import Avatar from '@/app/app/applications/components/dashboard/UI/profile/Avatar';
 
 // user card, lets landlords know of which consultant is in which listing/ property
 type props={

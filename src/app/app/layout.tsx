@@ -10,14 +10,16 @@ export default async function AppLayout({
 }) {
   const session = await auth();
 
-  if (!session?.user) redirect("/login");
+  //if (!session?.user) redirect("/login");
   
 
   return (
     <AppFrame
-      role={session.user.role}
-      name={session.user.name}
-      email={session.user.email}
+    // overwrite actual session for testing
+      //role={session.user.role}
+      //name={session.user.firstName}
+      role='CONSULTANT'
+      name='hello world'
     >
       {children}
     </AppFrame>

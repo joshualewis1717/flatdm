@@ -1,7 +1,7 @@
 'use client';
 
 import { Users, ChevronDown, Calendar, Eye, Check, Image } from 'lucide-react';
-import PropertyStatusPill from '../../components/PropertyStatusPill';
+import PropertyStatusPill from '../../components/ownProperties/UI/PropertyStatusPill';
 import OccupantCard from './OccupantCard';
 import { useRouter } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';

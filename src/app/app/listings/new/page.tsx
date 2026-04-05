@@ -1,13 +1,13 @@
 'use client'
 import { useEffect, useState } from "react";
-import InputField from "../../applications/components/InputField";
+import InputField from "../../applications/components/Submitform/UI/InputField";
 import { PropertyListingForm, AmenityDraft,DistanceRange, ExistingProperty } from "../types";
 import { AmenityType } from "@prisma/client";
-import AddAmenitiesPanel from "../components/AddAmenityPanel";
-import AddImagesPanel from "../components/AddImagePanel";
-import AddThumbnailPanel from "../components/AddThumbnailPanel";
-import PropertySelector from "../components/PropertySelector";
-import { createListing } from "../logic/clientServices/prisma";
+import AddAmenitiesPanel from "../components/createForm/layout/AddAmenityPanel";
+import AddImagesPanel from "../components/createForm/layout/AddImagePanel";
+import AddThumbnailPanel from "../components/createForm/layout/AddThumbnailPanel";
+import PropertySelector from "../components/createForm/UI/PropertySelector";
+import { createListing } from "../clientServices/listings.prisma";
 
 // page for landlords to create a new listing
 // Converts the user-selected range string to a representative number for persistence.

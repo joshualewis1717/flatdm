@@ -1,9 +1,9 @@
 import { ArrowUpRight, FileText } from "lucide-react";
-import CardFooter from "../layout/CardFooter";
+import CardFooter from "../../layout/CardFooter";
 import DateColumn from "../generic/DateColumn";
 import ListingInfo from "../generic/ListingInfo";
 import ProfileButton from "../profile/ProfileButton";
-import { Application } from "../../../types";
+import { Application } from "../../../../types";
 // card which is viewable to applicant, to quickly see their current applications and what actions they can perform on it
 // produced by landlords
 type props={

@@ -1,5 +1,5 @@
-import InteractivePanel from "../components/InteractivePanel";
-import ListingInfoPanel from "../components/ListingInfoPanel";
+import InteractivePanel from "../components/viewListing/layout/InteractivePanel";
+import ListingInfoPanel from "../components/viewListing/layout/ListingInfoPanel";
 // listing page to show information about a specific listing 
 
 //TODO: add in buttons for landlords to edit and whatnot, also a mode for current/ past occupants to leave a review?

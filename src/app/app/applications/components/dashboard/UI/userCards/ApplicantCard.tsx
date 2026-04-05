@@ -1,10 +1,10 @@
 import { ArrowUpRight, RotateCcw } from "lucide-react";
-import CardFooter from "../layout/CardFooter";
+import CardFooter from "../../layout/CardFooter";
 import DateColumn from "../generic/DateColumn";
 import ExpiryCountdown from "../generic/ExpiryCountdown";
 import ListingInfo from "../generic/ListingInfo";
 import ProfileButton from "../profile/ProfileButton";
-import { Application } from "../../../types";
+import { Application } from "../../../../types";
 
 // cards that was produced by applicants, landlords will be seeing these cards and interacting with them
 type props={

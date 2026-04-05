@@ -1,6 +1,7 @@
-import InputField from "../../applications/components/InputField";
-import { Amenity, DistanceRange } from "../types";
+import InputField from "@/app/app/applications/components/Submitform/UI/InputField";
+import { Amenity } from "@prisma/client";
 import { AmenityType } from "@prisma/client";
+import { DistanceRange } from "../../../types";
 // panel for landlords to add in new amenity info
 export type AmenityDraft = Omit<Amenity, "distance"> & {
   distance: DistanceRange | null;
@@ -47,13 +48,13 @@ export default function AddAmenitiesPanel({ amenities, onAdd, onRemove, onUpdate
             required
             type="select"
             value={a.type}
-            onValueChange={(val) => onUpdate(a.id, "type", val as AmenityType)}
+            onValueChange={(val: string) => onUpdate(a.id, "type", val as AmenityType)}
             options={AMENITY_TYPE_OPTIONS}
           />
           <InputField
             label="Name"
             value={a.name}
-            onChange={(e) => onUpdate(a.id, "name", e.target.value)}
+            onChange={(e: any) => onUpdate(a.id, "name", e.target.value)}
             placeholder="Name of amenity"
           />
           <InputField
@@ -62,7 +63,7 @@ export default function AddAmenitiesPanel({ amenities, onAdd, onRemove, onUpdate
             name={`distance-${a.id}`}
             value={a.distance ?? ""}
             radioOptions={DISTANCE_OPTIONS}
-            onRadioChange={(val) => onUpdate(a.id, "distance", val as DistanceRange)}
+            onRadioChange={(val: string) => onUpdate(a.id, "distance", val as DistanceRange)}
           />
           <button
             type="button"

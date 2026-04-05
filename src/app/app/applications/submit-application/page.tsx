@@ -1,8 +1,8 @@
 'use client'
 import { useState } from "react";
 import { ApplicationForm } from "../types";
-import InputField from "../components/InputField";
-import { submitApplication } from "../../listings/logic/clientServices/prisma";
+import InputField from "../components/Submitform/UI/InputField";
+import { submitApplication } from "../clientServices/applications.prisma";
 
 // page where consultants can submit an application form for a specific listing
 

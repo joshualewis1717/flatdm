@@ -1,11 +1,11 @@
 'use client'
 import { useEffect, useState } from "react";
 import { BedDouble, Bath, Users, Ruler, CalendarClock, Clock } from "lucide-react";
-import ImageSlider from "../components/ImageSlider";
-import PropertyStatsGrid from "./PropertyStatsGrid";
-import RoommateProfileList from "./RoomateProfileList";
-import AmenityList from "../components/AmenityList";
-import { getListingById } from "../logic/clientServices/prisma";
+import ImageSlider from "../UI/ImageSlider";
+import PropertyStatsGrid from "../UI/PropertyStatsGrid";
+import RoommateProfileList from "../UI/RoomateProfileList";
+import AmenityList from "../UI/AmenityList";
+import { getListingById } from "../../../clientServices/listings.prisma";
 // Panel to display the static listing specific data in full
 
 type ListingInfoPanelProps = {

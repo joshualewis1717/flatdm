@@ -1,15 +1,15 @@
 'use client'
 
 import { useEffect, useState } from "react";
-import EmptyState from "../components/dashboard/generic/EmptyState";
+import EmptyState from "../components/dashboard/UI/generic/EmptyState";
 import DashboardSection from "../components/dashboard/layout/DashboardSection";
 import Divider from "../components/dashboard/layout/Divider";
-import ApplicantCard from "../components/dashboard/userCards/ApplicantCard";
-import ConfirmedCard from "../components/dashboard/userCards/ConfirmedCard";
-import LandlordCard from "../components/dashboard/userCards/LandlordCard";
+import ApplicantCard from "../components/dashboard/UI/userCards/ApplicantCard";
+import ConfirmedCard from "../components/dashboard/UI/userCards/ConfirmedCard";
+import LandlordCard from "../components/dashboard/UI/userCards/LandlordCard";
 import { Application } from "../types";
 import { getApplicationsForApplicant, getApplicationsForLandlord, withdrawApplication, updateApplicationStatus, respondToOffer,
-} from "../../listings/logic/clientServices/prisma";
+} from "../clientServices/applications.prisma";
 
 // main page for landlords and consultants to see their applications and interact with them in various ways
 

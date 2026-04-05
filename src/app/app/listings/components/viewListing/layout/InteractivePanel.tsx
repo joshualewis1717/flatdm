@@ -1,7 +1,7 @@
 // component to handle all interactive elements that a user can do within a specicc listing page e.g apply, see reviews ec (links to other pages)
 'use client'
 import { useRouter } from "next/navigation";
-import ReviewSlider from "./ReviewSlider";
+import ReviewSlider from "../UI/ReviewSlider";
 import { Review } from "@prisma/client";
 
 type InteractivePanelProps = {
