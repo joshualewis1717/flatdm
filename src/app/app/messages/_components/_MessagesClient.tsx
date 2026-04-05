@@ -112,9 +112,7 @@ export default function MessagesClient({ conversations }: UserConversations) {
 
     const pollMessages = async () => {
       try {
-        const response = await fetch(
-          `/api/messages?conversationId=${selectedConversation}`
-        );
+        const response = await fetch(`/api/messages?conversationId=${selectedConversation}`);
         if (!response.ok) return;
 
         const messages: Message[] = await response.json();
@@ -123,10 +121,7 @@ export default function MessagesClient({ conversations }: UserConversations) {
           const currentLastId = conversation.messages[conversation.messages.length - 1]?.id;
           const nextLastId = messages[messages.length - 1]?.id;
 
-          if (
-            currentLastId === nextLastId &&
-            conversation.messages.length === messages.length
-          ) {
+          if ( currentLastId === nextLastId && conversation.messages.length === messages.length ) {
             return conversation;
           }
 
