@@ -26,11 +26,6 @@ export default function Chat({activeConversation,addMessage,replaceMessage,remov
     const [input, setInput] = useState("");
     const bottomRef = useScrollToBottom(activeConversation?.messages.length);
 
-    useEffect(() => {
-        const timer = setTimeout(() => {bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });}, 0);
-        return () => clearTimeout(timer);
-    }, [activeConversation?.messages.length]);
-
     const messagesWithSeparators = useMemo(() => {if (!activeConversation?.messages) return [];
         return activeConversation.messages.map((message, index, messages) => {
             const previousMessage = messages[index - 1];

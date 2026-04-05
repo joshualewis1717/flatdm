@@ -146,7 +146,7 @@ export default function MessagesClient({ conversations }: UserConversations) {
   }, [selectedConversation]);
 
   return (
-    <div className="grid h-[calc(87vh-4rem)] grid-cols-1 gap-6 md:grid-cols-3">
+    <div className="grid min-h-0 h-[calc(87dvh-4rem)] grid-cols-1 gap-6 md:grid-cols-3">
       <div className="hidden md:block">
         <Inbox
           conversations={allConversations}
@@ -157,7 +157,7 @@ export default function MessagesClient({ conversations }: UserConversations) {
         />
       </div>
 
-      <div className="md:col-span-2">
+      <div className="min-h-0 md:col-span-2">
         <Chat
           activeConversation={activeConversation}
           addMessage={addMessageToConversation}

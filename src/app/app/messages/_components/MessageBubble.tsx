@@ -45,7 +45,7 @@ export default function MessageBubble({ message, handleDeleteMessage }: Props){
                         {message.isOwn && !message.isDeleted && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <button className="mt-1 rounded-md p-1 text-white/60 opacity-0 transition hover:bg-white/10 hover:text-white group-hover:opacity-100">
+                                <button className="mt-1 rounded-md p-1 text-white/60 transition hover:bg-white/10 hover:text-white md:opacity-0 md:group-hover:opacity-100">
                                     <MoreVertical className="h-4 w-4" />
                                 </button>
                             </DropdownMenuTrigger>
