@@ -13,7 +13,6 @@ type AppFrameProps = {
 };
 
 
-
 type SessionContextType = {
   role?: Role;
   name?: string | null;
@@ -36,7 +35,7 @@ export const useSessionContext = () => {
 export function AppFrame({ role, name, children }: AppFrameProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
-    <SessionContext.Provider value={{ role, name}}>
+    <SessionContext.Provider value={{ role, name }}>
       <div className="min-h-screen bg-[#1a1a1a] text-white">
         <div className="mx-auto flex min-h-screen w-full">
           <Menu
