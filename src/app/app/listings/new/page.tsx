@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from "react";
 import InputField from "../../applications/components/Submitform/UI/InputField";
-import { PropertyListingForm, DistanceRange, ExistingProperty, AmenityUI } from "../types";
+import { PropertyListingForm, ExistingProperty, AmenityUI } from "../types";
 import { AmenityType } from "@prisma/client";
 import AddAmenitiesPanel from "../components/createForm/layout/AddAmenityPanel";
 import AddImagesPanel from "../components/createForm/layout/AddImagePanel";
@@ -93,24 +93,20 @@ export default function NewListingsPage() {
 
   // function to handle form submission, with validation to ensure a thumbnail is added before allowing submission. Converts amenity distance ranges to km values before sending to the backend.
   async function handleSubmit(e: React.SubmitEvent){
-    setLoading(true);
     e.preventDefault();
+    setLoading(true);
   
     if (!thumbnail) {
       alert("Please add a thumbnail image before saving.");
+      setLoading(false);
       return;
     }
     
-    try{
-      const result = await createListing({...form,thumbnail,images,amenities});
-      if (!result) setError("Failed to create listing. Please try again.");
-      else setSuccess(true);
-      setLoading(false);
-    }
-      catch (err) {
-        setError("An unexpected error occurred. Please try again.");
-        setLoading(false);
-      }
+    const { error } = await createListing({ ...form, thumbnail, images, amenities });
+    setLoading(false);
+
+    if (error) setError(error);
+    else setSuccess(true);
   };
 
 
@@ -177,8 +173,8 @@ export default function NewListingsPage() {
       resetForm();
       setTimeout(() => {
         setSuccess(false);
-    }, 2000);
-  }
+      }, 2000);
+    }
   }, [success])
 
   
@@ -188,8 +184,8 @@ export default function NewListingsPage() {
       alert(error);
       setTimeout(() => {
         setError(null);
-    }, 2000);
-  }
+      }, 2000);
+    }
   }, [error])
 
   if (!isLandlord) return null;

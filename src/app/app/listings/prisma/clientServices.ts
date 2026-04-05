@@ -1,12 +1,18 @@
 'use server'
 import { prisma } from "@/lib/prisma";
-import {ExistingProperty, MyPropertyListingData, PropertyListingForm } from "../types";
-import { queryPropertiesForLandlord, queryListingById, queryListingsForLandlord, querySoftDeleteListing,} from "./rawQueries";
+import {PropertyListingForm } from "../types";
+import { queryPropertiesForLandlord, queryListingById, queryListingsForLandlord, querySoftDeleteListing, queryCreateProperty, queryCreateListing,} from "./rawQueries";
 import { mapToExistingProperty, mapToListingDetail, mapToMyPropertyListing } from "./mappers";
-import { requireRole } from "@/userAuth";
+import { runService, withRole } from "../../clientService/prismaUtils";
+
+/************ validation **********/
 
 function validateListingInput(data: PropertyListingForm) {
-  const { buildingName, streetName, city, postcode, rooms, bedrooms, bathrooms, area, rent, maxOccupants, minStay, availableFrom, amenities = [] } = data;
+  const {
+    buildingName, streetName, city, postcode,
+    rooms, bedrooms, bathrooms, area, rent, maxOccupants, minStay,
+    availableFrom, amenities = [],
+  } = data;
 
   if (!buildingName && !streetName && !city && !postcode)
     throw new Error("Must provide either a selected property or full address details");
@@ -27,142 +33,96 @@ function validateListingInput(data: PropertyListingForm) {
     throw new Error("Amenity distance cannot be negative");
 }
 
+/************** getters */
 
-
-export async function getPropertiesForLandlord(): Promise<ExistingProperty[]> {
-  const user = await requireRole('LANDLORD');
-  if (!user) throw new Error("user timed out")
-  const properties = await queryPropertiesForLandlord(user.id);
-  return properties.map(mapToExistingProperty);
+export async function getPropertiesForLandlord() {
+  return runService(async () => {
+    const user = await withRole("LANDLORD");
+    const properties = await queryPropertiesForLandlord(user.id);
+    return properties.map(mapToExistingProperty);
+  });
 }
 
 export async function getListingById(listingId: string) {
-  const listing = await queryListingById(Number(listingId));
-  if (!listing) return null;
-  return mapToListingDetail(listing);
+  return runService(async () => {
+    const listing = await queryListingById(Number(listingId));
+    if (!listing) throw new Error("Listing not found.");
+    return mapToListingDetail(listing);
+  });
 }
 
-export async function getListingsForLandlord(): Promise<MyPropertyListingData[]> {
-    const user = await requireRole('LANDLORD');
-    if (!user) throw new Error("user timed out")
+export async function getListingsForLandlord() {
+  return runService(async () => {
+    const user = await withRole("LANDLORD");
     const listings = await queryListingsForLandlord(user.id);
     return listings.map(mapToMyPropertyListing);
+  });
 }
 
+/*********** setters/ create ********/
 
-//TO DO: delete an amenity from db if user deletes amenity though UI of existing property
-//TO DO: also pass in an optional landlord id for when data is being updated (also for when amenities are same, need to check owneership)
-//TODO: move all raw createm uodate, delete etc in the raw file
-export async function createListing(data: PropertyListingForm): Promise<boolean> {
+// TODO: delete stale amenities from db when user removes them in the UI
+// TODO: pass optional landlordId for update path + ownership check
+export async function createListing(data: PropertyListingForm) {
+  return runService(async () => {
     validateListingInput(data);
-    const user = await requireRole('LANDLORD');// check if correct role or not
-    if (!user) throw new Error("user timed out")
-    const landlordId = user.id
-  
-    return prisma.$transaction(async (tx) => {
-      const {
-        selectedPropertyId,
-        buildingName,
-        streetName,
-        city,
-        postcode,
-        amenities = [],
-        flatNumber,
-        description,
-        rent,
-        availableFrom,
-        rooms,
-        bedrooms,
-        bathrooms,
-        area,
-        maxOccupants,
-        minStay,
+    const user = await withRole("LANDLORD");
+
+    await prisma.$transaction(async (tx) => {// we use transaction to make sure that everything happens in one go e.g.
+      // do not want to create a property without a listing and vice versa
+      const { selectedPropertyId, buildingName, streetName, city, postcode, amenities = [],
+        flatNumber, description, rent, availableFrom, rooms, bedrooms, bathrooms, area, maxOccupants, minStay,
       } = data;
-  
+
       let propertyId: number;
-  
-  
+
       if (selectedPropertyId) {
         propertyId = selectedPropertyId;
-  
-        // UPDATE existing amenities using dbId
+
         for (const amenity of amenities) {
           if (amenity.dbId) {
-            // UPDATE existing
             await tx.amenity.update({
               where: { id: amenity.dbId },
-              data: {
-                name: amenity.name,
-                type: amenity.type,
-                distance: amenity.distance ?? null,
-              },
+              data: { name: amenity.name, type: amenity.type, distance: amenity.distance ?? null },
             });
           } else {
-            // CREATE new
             await tx.amenity.create({
-              data: {
-                name: amenity.name,
-                type: amenity.type,
-                distance: amenity.distance ?? null,
-                propertyId,
-              },
+              data: { name: amenity.name, type: amenity.type, distance: amenity.distance ?? null, propertyId },
             });
           }
         }
-  
       } else {
-        // create a new property if landlord did not use an existing one
-  
-        const property = await tx.property.create({
-          data: {
-            title: buildingName ?? "",
-            streetName: streetName ?? "",
-            city: city ?? "",
-            postcode: postcode ?? "",
-            landlordId,
-  
-            amenities: {
-              create: amenities.map(({ name, type, distance }) => ({
-                name,
-                type,
-                distance: distance ?? null,
-              })),
-            },
+        const property = await queryCreateProperty(tx, {
+          title: buildingName ?? "",
+          streetName: streetName ?? "",
+          city: city ?? "",
+          postcode: postcode ?? "",
+          landlordId: user.id,
+          amenities: {
+            create: amenities.map(({ name, type, distance }) => ({
+              name, type, distance: distance ?? null,
+            })),
           },
         });
-  
         propertyId = property.id;
       }
-  
-    // listing creation
-      const listing = await tx.propertyListing.create({
-        data: {
-          flatNumber: flatNumber || "WHOLE_PROPERTY",
-          description,
-          rent,
-          availableFrom,
-          rooms,
-          bedrooms,
-          bathrooms,
-          area,
-          maxOccupants,
-          minStay,
-          propertyId,
-          landlordId,
-        },
-      });
-  
-      return !!listing;
-    });
-  }
 
-export async function deleteListing(listingId: number): Promise<boolean> {
-  const user = await requireRole('LANDLORD');
-  if (!user) throw new Error("user timed out")
-  try {
+      await queryCreateListing(tx, {
+        flatNumber: flatNumber || "WHOLE_PROPERTY", // we give it whole property in DB to enforce uniqueness
+        description, rent, availableFrom,
+        rooms, bedrooms, bathrooms, area, maxOccupants, minStay,
+        propertyId,
+        landlordId: user.id,
+      });
+    });
+  });
+}
+
+// ******Delete **********
+
+export async function deleteListing(listingId: number) {
+  return runService(async () => {
+    const user = await withRole("LANDLORD");
     await querySoftDeleteListing(listingId, user.id);
-    return true;
-  } catch {
-    return false;
-  }
+  });
 }

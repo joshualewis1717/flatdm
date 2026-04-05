@@ -12,23 +12,28 @@ import {
   updateApplicationStatusAsLandlordQuery,
   updateApplicationStatusAsConsultantQuery,
 } from "./rawQueries";
+import { mapApplicantApplication, mapLandlordApplication } from "./mappers";
+import { runService, withRole } from "@/app/app/clientService/prismaUtils";
 
-import {mapApplicantApplication,mapLandlordApplication,} from "./mappers";
-import { requireRole } from "@/userAuth";
-// CREATE APPLICATION
-export async function submitApplication(listingId: number,moveInDate: Date,moveOutDate: Date | null) {
-  try {
-    const user = await requireRole("CONSULTANT")
-    if (!user)  throw new Error("timed out session")
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+// Derive mapped return types directly from the mappers so they stay in sync
+type ApplicantApplication = ReturnType<typeof mapApplicantApplication>;
+type LandlordApplication = ReturnType<typeof mapLandlordApplication>;
+
+// Create application
+
+export async function submitApplication(
+  listingId: number,
+  moveInDate: Date,
+  moveOutDate: Date | null
+) {
+  return runService(async () => {
+    const user = await withRole("CONSULTANT");
     const now = new Date();
 
-    if (moveInDate <= now) {
-      return { success: false, error: "Move-in must be in the future." };
-    }
-
-    if (moveOutDate && moveOutDate <= moveInDate) {
-      return { success: false, error: "Move-out must be after move-in." };
-    }
+    if (moveInDate <= now) throw new Error("Move-in must be in the future.");
+    if (moveOutDate && moveOutDate <= moveInDate) throw new Error("Move-out must be after move-in.");
 
     const [listing, existingApp, occupant] = await Promise.all([
       getListingById(listingId),
@@ -36,100 +41,75 @@ export async function submitApplication(listingId: number,moveInDate: Date,moveO
       getOccupant(listingId, user.id),
     ]);
 
-    if (!listing) {
-      return { success: false, error: "Listing not found." };
-    }
-
-    if (existingApp) {
-      return { success: false, error: "Already applied." };
-    }
+    if (!listing)     throw new Error("Listing not found.");
+    if (existingApp)  throw new Error("Already applied.");
 
     if (occupant) {
-      const stillOccupying =
-        !occupant.moveOut || occupant.moveOut > now;
-
-      if (stillOccupying) {
-        return { success: false, error: "Already occupying." };
-      }
+      const stillOccupying = !occupant.moveOut || occupant.moveOut > now;
+      if (stillOccupying) throw new Error("Already occupying.");
     }
 
     const count = await countOccupantsAtDate(listingId, moveInDate);
+    if (count >= listing.maxOccupants) throw new Error("Listing full at that time.");
 
-    if (count >= listing.maxOccupants) {
-      return { success: false, error: "Listing full at that time." };
-    }
-
-    await createApplicationQuery({
-      listingId,
-      userId: user.id,
-      moveInDate,
-      moveOutDate,
-    });
-
-    return { success: true };
-  } catch (e) {
-    console.error(e);
-    return { success: false, error: "Something went wrong." };
-  }
+    await createApplicationQuery({ listingId, userId: user.id, moveInDate, moveOutDate });
+  });
 }
 
-// GET (APPLICANT)
+// get applications for a specific applicant
+
 export async function getApplicationsForApplicant() {
-  const user = await requireRole("CONSULTANT")
-  if (!user)  throw new Error("timed out session")
-  const data = await getApplicationsForApplicantQuery(user.id);
-  return data.map(mapApplicantApplication);
+  return runService(async () => {
+    const user = await withRole("CONSULTANT");
+    const data = await getApplicationsForApplicantQuery(user.id);
+    return data.map(mapApplicantApplication);
+  });
 }
 
-// GET (LANDLORD)
 export async function getApplicationsForLandlord() {
-  const user = await requireRole("LANDLORD")
-  if (!user)  throw new Error("timed out session")
-  const data = await getApplicationsForLandlordQuery(user.id);
-  return data.map(mapLandlordApplication);
+  return runService(async () => {
+    const user = await withRole("LANDLORD");
+    const data = await getApplicationsForLandlordQuery(user.id);
+    return data.map(mapLandlordApplication);
+  });
 }
 
-// WITHDRAW: TODO: remove delete application query and use the update application status as consultant instead
+// Withdraw
+
+// TODO: swap deleteApplicationQuery for updateApplicationStatusAsConsultantQuery
 export async function withdrawApplication(applicationId: number) {
-  try {
-    const user = await requireRole("CONSULTANT")
-    if (!user)  throw new Error("timed out session")
+  return runService(async () => {
+    const user = await withRole("CONSULTANT");
     await deleteApplicationQuery(applicationId, user.id);
-    return true;
-  } catch {
-    return false;
-  }
+  });
 }
 
-// STATUS UPDATE (for landlord to handle)
-export async function updateApplicationStatus(applicationId: number, status: "APPROVED" | "REJECTED") {
-  try {
-    const user = await requireRole("LANDLORD")
-    if (!user)  throw new Error("timed out session")
+// Landlord status update
+
+export async function updateApplicationStatus(
+  applicationId: number,
+  status: "APPROVED" | "REJECTED"
+) {
+  return runService(async () => {
+    const user = await withRole("LANDLORD");
     const expiry =
       status === "APPROVED"
         ? new Date(Date.now() + APPLICATION_EXPIRY_TIME)
         : undefined;
-
     await updateApplicationStatusAsLandlordQuery(applicationId, user.id, status, expiry);
-    return true;
-  } catch {
-    return false;
-  }
+  });
 }
 
-// RESPONSE (for consultants)
-export async function respondToOffer( applicationId: number, accept: boolean) {// TODO extend this with a status prop for when users want to withdraw
-  try {
-    const user = await requireRole("CONSULTANT")
-    if (!user)  throw new Error("timed out session")
+// Consultant response
+
+// TODO: extend with a WITHDRAWN status option
+export async function respondToOffer(applicationId: number, accept: boolean) {
+  return runService(async () => {
+    const user = await withRole("CONSULTANT");
     await updateApplicationStatusAsConsultantQuery(
       applicationId,
       user.id,
       accept ? "CONFIRMED" : "REJECTED"
     );
-    return true;
-  } catch {
-    return false;
-  }
+  });
 }

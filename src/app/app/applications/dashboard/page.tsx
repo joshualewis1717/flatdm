@@ -23,11 +23,13 @@ export default function ApplicationDashBoardPage() {
   useEffect(() => {
     const fetch = async () => {
       if (isConsultant) {
-        const data = await getApplicationsForApplicant();
-        setApps(data);
+        const {result, error} = await getApplicationsForApplicant();
+        if (error) console.error("Failed to load applications:", error);
+        else setApps(result ?? []);
       } else if (isLandlord) {
-        const data = await getApplicationsForLandlord();
-        setApps(data);
+        const { result, error } = await getApplicationsForLandlord();
+        if (error) console.error("Failed to load applications:", error);
+        else setApps(result ?? []);
       }
       setLoading(false);
     };
@@ -43,24 +45,29 @@ export default function ApplicationDashBoardPage() {
 
   const handleApplicantAction = async (id: number, action: "accept" | "reject" | "withdraw") => {
     if (action === "withdraw") {
-      await withdrawApplication(id);
-      removeApp(id);
+      const { error } = await withdrawApplication(id);
+      if (error) console.error("Failed to withdraw:", error);
+      else removeApp(id);
     } else if (action === "accept") {
-      await respondToOffer(id, true);
-      updateApp(id, "CONFIRMED");
+      const { error } = await respondToOffer(id, true);
+      if (error) console.error("Failed to accept offer:", error);
+      else updateApp(id, "CONFIRMED");
     } else if (action === "reject") {
-      await respondToOffer(id, false);
-      updateApp(id, "REJECTED");
+      const { error } = await respondToOffer(id, false);
+      if (error) console.error("Failed to reject offer:", error);
+      else updateApp(id, "REJECTED");
     }
   };
 
   const handleLandlordAction = async (id: number, action: "accept" | "reject") => {
     if (action === "accept") {
-      await updateApplicationStatus(id, "APPROVED");
-      updateApp(id, "APPROVED");
+      const { error } = await updateApplicationStatus(id, "APPROVED");
+      if (error) console.error("Failed to approve application:", error);
+      else updateApp(id, "APPROVED");
     } else {
-      await updateApplicationStatus(id, "REJECTED");
-      updateApp(id, "REJECTED");
+      const { error } = await updateApplicationStatus(id, "REJECTED");
+      if (error) console.error("Failed to reject application:", error);
+      else updateApp(id, "REJECTED");
     }
   };
 

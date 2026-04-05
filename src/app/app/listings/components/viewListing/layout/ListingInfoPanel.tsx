@@ -12,7 +12,7 @@ type ListingInfoPanelProps = {
   listingId: string;
 };
 
-type ListingData = NonNullable<Awaited<ReturnType<typeof getListingById>>>;
+type ListingData = NonNullable<Awaited<ReturnType<typeof getListingById>>["result"]>;
 
 export default function ListingInfoPanel({ listingId = '5' }: ListingInfoPanelProps) {
   const [data, setData] = useState<ListingData | null>(null);
@@ -20,14 +20,10 @@ export default function ListingInfoPanel({ listingId = '5' }: ListingInfoPanelPr
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const listing = await getListingById(listingId);
-        setData(listing);
-      } catch (error) {
-        console.error("Failed to fetch listing data:", error);
-      } finally {
-        setLoading(false);
-      }
+      const { result, error } = await getListingById(listingId);
+      if (error) console.error("Failed to fetch listing data:", error);
+      else setData(result);
+      setLoading(false);
     };
 
     fetchData();

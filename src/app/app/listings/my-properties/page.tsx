@@ -12,11 +12,8 @@ import { MyPropertyListingData, OccupantUI } from '../types';
 import { getListingsForLandlord, deleteListing } from '../prisma/clientServices';
 import { useSessionContext } from '@/components/shared/app-frame';
 
-type Props = {
-  landlordId: number;
-};
 
-export default function Page({ landlordId = 3 }: Props) {
+export default function Page() {
   const router = useRouter();
   const {isLandlord} = useSessionContext()
   const [listings, setListings] = useState<MyPropertyListingData[]>([]);
@@ -36,18 +33,14 @@ export default function Page({ landlordId = 3 }: Props) {
 
   useEffect(() => {
     async function fetchListings() {
-      try {
-        const data = await getListingsForLandlord();
-        setListings(data);
-      } catch (error) {
-        console.error("Failed to fetch listings:", error);
-      } finally {
-        setLoading(false);
-      }
+      const { result, error } = await getListingsForLandlord();
+      if (error) console.error("Failed to fetch listings:", error);
+      else setListings(result ?? []);
+      setLoading(false);
     }
 
     fetchListings();
-  }, [landlordId]);
+  }, []);
 
   //  filter by address and also sort by most occupants, least occupants, empty first, full first
   const filtered = useMemo(() => {
@@ -108,10 +101,16 @@ export default function Page({ landlordId = 3 }: Props) {
   async function deleteSelected() {
     setDeleteLoading(true);
 
-    await Promise.all([...selectedIds].map((id) => deleteListing(id)));
+    const results = await Promise.all([...selectedIds].map((id) => deleteListing(id)));
+
+    // only remove listings that were successfully deleted
+    const deletedIds = [...selectedIds].filter((_, i) => !results[i].error);
+    const failedCount = results.filter(r => r.error).length;
+
+    if (failedCount > 0) console.error(`Failed to delete ${failedCount} listing(s).`);
 
     setListings((prev) =>
-      prev.filter((l) => !selectedIds.has(l.propertyListing.id))
+      prev.filter((l) => !deletedIds.includes(l.propertyListing.id))
     );
 
     exitDeleteMode();

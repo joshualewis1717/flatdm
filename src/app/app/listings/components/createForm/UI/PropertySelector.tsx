@@ -21,20 +21,21 @@ export default function PropertySelector({ onSelect }: PropertySelectorProps) {
   // function to fetch the landlord properties from database
   async function getLandlordProperties() {
     setLoading(true);
-    try{
-    const data = await getPropertiesForLandlord();
-    setProperties(data.map(property => ({
-      ...property,
-      amenities: property.amenities.map(amenity => ({
-        ...amenity,
-        propertyId: property.id,
-      })),
-    })));
-    } catch (e) {
-      console.error("Failed to load properties", e);
-    } finally {
-      setLoading(false);
+    const { result, error } = await getPropertiesForLandlord();
+    if (error) {
+      console.error("Failed to load properties", error);
+    } else {
+      if (result)
+      setProperties(result.map(property => ({
+        ...property,
+        amenities: property.amenities.map(amenity => ({
+          ...amenity,
+          propertyId: property.id,
+        })),
+      })));
+    else setProperties([])
     }
+    setLoading(false);
   }
 
 

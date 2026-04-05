@@ -12,7 +12,7 @@ type SubmitApplicationPageProps = {
   listingId: number;// id of the lisitng that this application procress applies towards
 };
 
-export default function SubmitApplicationPage({ listingId = 3 }: SubmitApplicationPageProps) {
+export default function SubmitApplicationPage({ listingId = 1 }: SubmitApplicationPageProps) {
   const [form, setForm] = useState<ApplicationForm>({
     moveInDate: null,
     moveOutDate: null,
@@ -35,19 +35,25 @@ export default function SubmitApplicationPage({ listingId = 3 }: SubmitApplicati
     }
 
     setLoading(true);
-    const result = await submitApplication(
+    const { error } = await submitApplication(
       listingId,
       form.moveInDate,
       specifyMoveOut ? form.moveOutDate : null
     );
     setLoading(false);
 
-    if (!result.success) {
-      setError(result.error ?? "Something went wrong.");
+    if (error) {
+      setError(error);
     } else {
       setSuccess(true);
     }
   };
+
+  
+  useEffect(()=>{
+    if (!isConsultant) router.push('/login')
+  }, [isConsultant, router])
+
 
   if (success) {
     return (
@@ -58,11 +64,8 @@ export default function SubmitApplicationPage({ listingId = 3 }: SubmitApplicati
     );
   }
 
-  useEffect(()=>{
-    if (!isConsultant) router.push('/login')
-  }, [isConsultant, router])
 
-  if (!isConsultant)return null;
+  if (!isConsultant) return null;
 
   return (
     <div className="max-w-3xl mx-auto p-6 sm:p-8 space-y-6">

@@ -1,5 +1,7 @@
 'use server'
 import { prisma } from "@/lib/prisma";
+type PrismaTx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
 // raw prisma queries for listings
 export async function queryPropertiesForLandlord(landlordId: number) {
   return prisma.property.findMany({
@@ -46,11 +48,11 @@ export async function queryListingsForLandlord(landlordId: number) {
   });
 }
 
-export async function queryCreateProperty(tx: any, data: Parameters<typeof prisma.property.create>[0]['data']) {
+export async function queryCreateProperty(tx: PrismaTx, data: Parameters<typeof prisma.property.create>[0]['data']) {
   return tx.property.create({ data });
 }
 
-export async function queryCreateListing(tx: any, data: Parameters<typeof prisma.propertyListing.create>[0]['data']) {
+export async function queryCreateListing(tx: PrismaTx, data: Parameters<typeof prisma.propertyListing.create>[0]['data']) {
   return tx.propertyListing.create({ data });
 }
 
