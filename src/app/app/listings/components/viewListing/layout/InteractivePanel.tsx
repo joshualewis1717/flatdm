@@ -7,10 +7,9 @@ import { useSessionContext } from "@/components/shared/app-frame";
 
 type InteractivePanelProps = {
   listingId: string;
-  userId: string;// replace this with the token to see if it's a landlord or consultant or moderator etc.
 };
 
-export default function InteractivePanel({ listingId, userId }: InteractivePanelProps) {
+export default function InteractivePanel({ listingId}: InteractivePanelProps) {
   const router = useRouter();
   // Mock data — replace with db fetch via listingId
   const {isConsultant, isLandlord} = useSessionContext();

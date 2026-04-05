@@ -10,10 +10,9 @@ import { useRouter } from "next/navigation";
 
 type SubmitApplicationPageProps = {
   listingId: number;// id of the lisitng that this application procress applies towards
-  userId: number;// id of the user submitting the application
 };
 
-export default function SubmitApplicationPage({ listingId = 3, userId = 5 }: SubmitApplicationPageProps) {
+export default function SubmitApplicationPage({ listingId = 3 }: SubmitApplicationPageProps) {
   const [form, setForm] = useState<ApplicationForm>({
     moveInDate: null,
     moveOutDate: null,

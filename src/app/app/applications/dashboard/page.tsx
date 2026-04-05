@@ -13,12 +13,8 @@ import { getApplicationsForApplicant, getApplicationsForLandlord, withdrawApplic
 import { useSessionContext } from "@/components/shared/app-frame";
 // main page for landlords and consultants to see their applications and interact with them in various ways
 
-type Props = {
-  applicantId?: number;
-  landlordId?: number;
-};
 
-export default function ApplicationDashBoardPage({ applicantId=5, landlordId }: Props) {
+export default function ApplicationDashBoardPage() {
 
   const {isConsultant, isLandlord} = useSessionContext();
   const [apps, setApps] = useState<Application[]>([]);
@@ -26,17 +22,17 @@ export default function ApplicationDashBoardPage({ applicantId=5, landlordId }: 
 
   useEffect(() => {
     const fetch = async () => {
-      if (isConsultant && applicantId) {
+      if (isConsultant) {
         const data = await getApplicationsForApplicant();
         setApps(data);
-      } else if (isLandlord && landlordId) {
+      } else if (isLandlord) {
         const data = await getApplicationsForLandlord();
         setApps(data);
       }
       setLoading(false);
     };
     fetch();
-  }, [applicantId, landlordId]);
+  }, []);
 
   // optimistically remove or update an application in local state
   const removeApp = (id: number) =>
