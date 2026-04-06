@@ -92,27 +92,47 @@ export async function updateApplicationStatusAsLandlordQuery(applicationId: numb
 }
 
 
-export async function updateApplicationStatusAsConsultantQuery(applicationId: number,userId: number, status: "CONFIRMED" | "REJECTED" | "WITHDRAWN") {
-  // check if application exists
-  const application = await prisma.propertyApplication.findUnique({
-    where: { id: applicationId },
-    select: {
-      userId: true,
-    },
-  });
+export async function updateApplicationStatusAsConsultantQuery(applicationId: number,userId: number,status: "CONFIRMED" | "REJECTED" | "WITHDRAWN"
+) {
+  return prisma.$transaction(async (tx) => {
+    // 1. Get application
+    const application = await tx.propertyApplication.findUnique({
+      where: { id: applicationId },
+      select: {
+        userId: true,
+      },
+    });
 
-  if (!application) throw new Error("Application not found");
+    if (!application) throw new Error("Application not found");
 
-  // check if correct appllicant is trying to update it
-  if (application.userId !== userId) {
-    throw new Error("Forbidden");
-  }
+    // 2. Auth check
+    if (application.userId !== userId) {
+      throw new Error("Forbidden");
+    }
 
-  return prisma.propertyApplication.update({
-    where: { id: applicationId },
-    data: {
-      status,
-    },
+    // 3. Update current application
+    const updated = await tx.propertyApplication.update({
+      where: { id: applicationId },
+      data: { status },
+    });
+
+    // 4. If user clicked confirmed, all other applications are withdrawn
+    if (status === "CONFIRMED") {
+      await tx.propertyApplication.updateMany({
+        where: {
+          userId,
+          id: { not: applicationId },
+          status: {
+            in: ["PENDING", "APPROVED"], // only active ones
+          },
+        },
+        data: {
+          status: "WITHDRAWN",
+        },
+      });
+    }
+
+    return updated;
   });
 }
 

@@ -37,13 +37,29 @@ export default function ApplicationDashBoardPage() {
   }, []);
 
   // optimistically remove or update an application in local state
-  const removeApp = (id: number) =>
-    setApps((prev) => prev.filter((a) => a.id !== id));
+  function updateApp(id: number, status: Application["status"]){
+  setApps((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)))
+};
 
-  const updateApp = (id: number, status: Application["status"]) =>
-    setApps((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
+// update UI to confirm one application and auto reject othetrs
+function confirmAppAndRejectOthers(confirmedId: number){
+  setApps((prev) =>
+    prev.map((a) => {
+      if (a.id === confirmedId) {
+        return { ...a, status: "CONFIRMED" };
+      }
 
-  const handleApplicantAction = async (id: number, action: "accept" | "reject" | "withdraw") => {
+      // only update active ones
+      if (a.status === "PENDING" || a.status === "APPROVED") {
+        return { ...a, status: "WITHDRAWN" };
+      }
+
+      return a;
+    })
+  );
+};
+
+  async function handleApplicantAction(id: number, action: "accept" | "reject" | "withdraw"){
     if (action === "withdraw") {
       const { error } = await respondToOffer(id, "WITHDRAWN");
       if (error) console.error("Failed to withdraw:", error);
@@ -51,7 +67,7 @@ export default function ApplicationDashBoardPage() {
     } else if (action === "accept") {
       const { error } = await respondToOffer(id, "CONFIRMED");
       if (error) console.error("Failed to accept offer:", error);
-      else updateApp(id, "CONFIRMED");
+      else confirmAppAndRejectOthers(id);
     } else if (action === "reject") {
       const { error } = await respondToOffer(id, "REJECTED");
       if (error) console.error("Failed to reject offer:", error);
@@ -59,7 +75,7 @@ export default function ApplicationDashBoardPage() {
     }
   };
 
-  const handleLandlordAction = async (id: number, action: "accept" | "reject") => {
+  async function handleLandlordAction (id: number, action: "accept" | "reject"){
     if (action === "accept") {
       const { error } = await updateApplicationStatus(id, "APPROVED");
       if (error) console.error("Failed to approve application:", error);
