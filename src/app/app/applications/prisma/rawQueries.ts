@@ -46,6 +46,7 @@ export async function createApplicationQuery(data: {
     data: {
       ...data,
       status: "PENDING",
+      expiryDate: data.moveInDate,// set expiry date to be move in date for when a new application is created
     },
   });
 }
@@ -57,15 +58,12 @@ export async function deleteApplicationQuery(applicationId: number, userId: numb
 }
 
 
-export async function updateApplicationStatusAsLandlordQuery(
-  applicationId: number,
-  landlordId: number,
-  status: "APPROVED" | "REJECTED"
-) {
-  // check if application exists
+export async function updateApplicationStatusAsLandlordQuer(applicationId: number, landlordId: number,  status: "APPROVED" | "REJECTED") {
+   // check if application exists
   const application = await prisma.propertyApplication.findUnique({
     where: { id: applicationId },
     select: {
+      expiryDate: true,
       listing: {
         select: {
           property: {
@@ -80,21 +78,25 @@ export async function updateApplicationStatusAsLandlordQuery(
 
   if (!application) throw new Error("Application not found");
 
-  // check ownership
+   // check ownership
   if (application.listing.property.landlordId !== landlordId) {
     throw new Error("Forbidden");
   }
 
+  const newExpiryTime = new Date(Date.now() + APPLICATION_EXPIRY_TIME);
+
+
   const expiryDate =
-    status === "APPROVED"
-      ? new Date(Date.now() + APPLICATION_EXPIRY_TIME)
+    status === "APPROVED"? application.expiryDate// if status is approved lower expiry date to our constant if current expiry
+    // date is greater than it (always take minimum of expiry date, we do not want to extend expiry date)
+        ? new Date( Math.min( application.expiryDate.getTime(), newExpiryTime.getTime())) : newExpiryTime
       : null;
 
   return prisma.propertyApplication.update({
     where: { id: applicationId },
     data: {
       status,
-      expiryDate, // will be null if rejected
+      expiryDate,
     },
   });
 }
@@ -146,7 +148,14 @@ export async function updateApplicationStatusAsConsultantQuery(applicationId: nu
 
 export async function getApplicationsForApplicantQuery(userId: number) {
   return prisma.propertyApplication.findMany({
-    where: { userId },
+    where: {// do not return any expired applications
+      userId,
+      listing: {isDeleted: false},// don't return applications where listing is deleted
+      OR: [
+        { expiryDate: null },
+        { expiryDate: { gte: new Date() } },
+      ],
+    },
     include: {
       user: true,
       listing: {
@@ -162,7 +171,12 @@ export async function getApplicationsForApplicantQuery(userId: number) {
 
 export async function getApplicationsForLandlordQuery(landlordId: number) {
   return prisma.propertyApplication.findMany({
-    where: { listing: { landlordId } },
+    where: { listing: { landlordId, isDeleted: false },// do not return any expired applications or applications belonging to deleted listings
+    OR: [
+      { expiryDate: null },
+      { expiryDate: { gte: new Date() } },
+    ],
+    },
     include: {
       user: true,
       listing: {
