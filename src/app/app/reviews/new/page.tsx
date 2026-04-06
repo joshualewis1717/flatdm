@@ -1,0 +1,42 @@
+import Link from "next/link";
+import { ArrowLeft, Star } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+
+export default async function NewReviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ userId?: string }>;
+}) {
+  const { userId } = await searchParams;
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
+        <p className="text-xs font-medium uppercase tracking-[0.35em] text-primary/85">Leave a review</p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          Review flow placeholder
+        </h1>
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-white/68">
+          This route is now hooked up from public profile pages.
+          {userId ? ` You arrived here to review user #${userId}.` : " Pick a user or listing once the review form is built."}
+        </p>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Button asChild size="lg" className="rounded-2xl px-5">
+            <Link href={userId ? `/app/profile/${userId}` : "/app/reviews"}>
+              <ArrowLeft />
+              Go back
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="rounded-2xl border-white/12 bg-white/[0.03] px-5 text-white hover:bg-white/[0.06]">
+            <Link href="/app/reviews">
+              <Star />
+              Reviews hub
+            </Link>
+          </Button>
+        </div>
+      </section>
+    </div>
+  );
+}
