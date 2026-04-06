@@ -352,7 +352,7 @@ export default function AuthModal({
                 </div>
               ) : null}
 
-              <Button type="submit" size="lg" disabled={isSubmitting || !passwordValid} className="h-12 w-full rounded-2xl text-sm font-semibold">
+              <Button type="submit" size="lg" disabled={isSubmitting || (!passwordValid && authMode === "register")} className="h-12 w-full rounded-2xl text-sm font-semibold">
                 {isSubmitting ? 
                   (authMode === "register" ? "Creating account..." : "Logging in...") 
                   :
