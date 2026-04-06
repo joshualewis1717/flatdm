@@ -144,3 +144,18 @@ export async function getApplicationsForLandlordQuery(landlordId: number) {
     },
   });
 }
+
+
+// function to check if ladlord owns a listing or not
+export async function isListingOwnedByLandlord(  listingId: number,userId: number) {
+  const listing = await prisma.propertyListing.findFirst({
+    where: {
+      id: listingId,
+      landlordId: userId,
+      isDeleted: false,
+    },
+    select: { id: true },
+  });
+
+  return !!listing; // boolean
+}

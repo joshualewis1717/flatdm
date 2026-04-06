@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import ReviewSlider from "../UI/ReviewSlider";
 import { ListingReview} from "../../../types";
 import { useSessionContext } from "@/components/shared/app-frame";
+import { landlordOwnsListing } from "@/app/app/applications/prisma/clientServices";
+import { useEffect, useState } from "react";
 
 type InteractivePanelProps = {
   listingId: string;
@@ -13,6 +15,7 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
   const router = useRouter();
   // Mock data — replace with db fetch via listingId
   const {isConsultant, isLandlord} = useSessionContext();
+  const [landlordIsOwner, setLandlordIsOwner] = useState<boolean>(false);
   const totalReviews = 12;
   const averageRating = 5;
   const reviews: ListingReview[] = [
@@ -20,6 +23,17 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
     { id: 2, listingId: Number(listingId), rating: 4, comment: "Really enjoyed it.", createdAt: new Date(), reviewerId: 2 , username: "Bob"},
     { id: 3, listingId: Number(listingId), rating: 5, comment: "Perfect for short stays.", createdAt: new Date(), reviewerId: 3, username: "Charlie" },
   ];
+
+
+
+  // check if landlord owns the listing, if so, display edit button
+  useEffect(()=>{
+    async function checkLandlordOwnerShip(){
+      const {result} = await landlordOwnsListing(Number(listingId));
+      setLandlordIsOwner(result ?? false);
+    }
+    checkLandlordOwnerShip();
+  }, [])
 
   return (
     <aside className="flex flex-col gap-6 w-full h-full bg-white/[0.05] rounded-[1.5rem] py-6 px-6">
@@ -42,7 +56,7 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
          </>
         )}
 
-        {isLandlord && (
+        {isLandlord &&  landlordIsOwner &&  (
            <button className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
            onClick={()=>router.push('/app/listings/new')}>{/* pass in id so it can rehydrate the info with the listing info*/}
            Edit Listing

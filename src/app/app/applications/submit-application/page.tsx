@@ -12,7 +12,7 @@ type SubmitApplicationPageProps = {
   listingId: number;// id of the lisitng that this application procress applies towards
 };
 
-export default function SubmitApplicationPage({ listingId = 1 }: SubmitApplicationPageProps) {
+export default function SubmitApplicationPage({ listingId }: SubmitApplicationPageProps) {
   const [form, setForm] = useState<ApplicationForm>({
     moveInDate: null,
     moveOutDate: null,
@@ -65,7 +65,7 @@ export default function SubmitApplicationPage({ listingId = 1 }: SubmitApplicati
   }
 
 
-  if (!isConsultant) return null;
+  if (!isConsultant || !listingId) return null;
 
   return (
     <div className="max-w-3xl mx-auto p-6 sm:p-8 space-y-6">
