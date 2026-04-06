@@ -104,13 +104,13 @@ export async function updateApplicationStatus(
 // Consultant response
 
 // TODO: extend with a WITHDRAWN status option
-export async function respondToOffer(applicationId: number, accept: boolean) {
+export async function respondToOffer(applicationId: number, status: 'CONFIRMED' | 'REJECTED' | 'WITHDRAWN') {
   return runService(async () => {
     const user = await withRole("CONSULTANT");
     await updateApplicationStatusAsConsultantQuery(
       applicationId,
       user.id,
-      accept ? "CONFIRMED" : "REJECTED"
+      status
     );
   });
 }

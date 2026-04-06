@@ -12,7 +12,7 @@ type SubmitApplicationPageProps = {
   listingId: number;// id of the lisitng that this application procress applies towards
 };
 
-export default function SubmitApplicationPage({ listingId }: SubmitApplicationPageProps) {
+export default function SubmitApplicationPage({ listingId = 20 }: SubmitApplicationPageProps) {
   const [form, setForm] = useState<ApplicationForm>({
     moveInDate: null,
     moveOutDate: null,

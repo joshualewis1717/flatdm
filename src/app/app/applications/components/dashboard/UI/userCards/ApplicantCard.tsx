@@ -15,10 +15,17 @@ type props={
 export default function ApplicantCard({ application,onAction, }: props) {
     return (
       <li className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden hover:border-white/20 transition-colors">
-        <div className={`h-px w-full ${
-          application.status === 'APPROVED' ? 'bg-[#c9fb00]' :
-          application.status === 'REJECTED' ? 'bg-red-500'   : 'bg-amber-400'
-        }`} />
+      <div
+        className={`h-px w-full ${
+          application.status === "APPROVED"
+            ? "bg-[#c9fb00]"
+            : application.status === "REJECTED" || application.status === "WITHDRAWN"
+            ? "bg-red-500"
+            : application.status === "PENDING"
+            ? "bg-amber-400"
+            : ""
+        }`}
+      />
   
         <div className="p-5 flex flex-col gap-4">
   

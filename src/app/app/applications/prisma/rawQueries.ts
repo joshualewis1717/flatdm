@@ -92,7 +92,7 @@ export async function updateApplicationStatusAsLandlordQuery(applicationId: numb
 }
 
 
-export async function updateApplicationStatusAsConsultantQuery(applicationId: number,userId: number, status: "CONFIRMED" | "REJECTED") {
+export async function updateApplicationStatusAsConsultantQuery(applicationId: number,userId: number, status: "CONFIRMED" | "REJECTED" | "WITHDRAWN") {
   // check if application exists
   const application = await prisma.propertyApplication.findUnique({
     where: { id: applicationId },
