@@ -1,18 +1,18 @@
 'use client'
 import { useEffect, useState } from "react";
 import { BedDouble, Bath, Users, Ruler, CalendarClock, Clock } from "lucide-react";
-import ImageSlider from "../components/ImageSlider";
-import PropertyStatsGrid from "./PropertyStatsGrid";
-import RoommateProfileList from "./RoomateProfileList";
-import AmenityList from "../components/AmenityList";
-import { getListingById } from "../logic/clientServices/prisma";
+import ImageSlider from "../UI/ImageSlider";
+import PropertyStatsGrid from "../UI/PropertyStatsGrid";
+import RoommateProfileList from "../UI/RoomateProfileList";
+import AmenityList from "../UI/AmenityList";
+import { getListingById } from "../../../prisma/clientServices";
 // Panel to display the static listing specific data in full
 
 type ListingInfoPanelProps = {
   listingId: string;
 };
 
-type ListingData = NonNullable<Awaited<ReturnType<typeof getListingById>>>;
+type ListingData = NonNullable<Awaited<ReturnType<typeof getListingById>>["result"]>;
 
 export default function ListingInfoPanel({ listingId = '5' }: ListingInfoPanelProps) {
   const [data, setData] = useState<ListingData | null>(null);
@@ -20,14 +20,10 @@ export default function ListingInfoPanel({ listingId = '5' }: ListingInfoPanelPr
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const listing = await getListingById(listingId);
-        setData(listing);
-      } catch (error) {
-        console.error("Failed to fetch listing data:", error);
-      } finally {
-        setLoading(false);
-      }
+      const { result, error } = await getListingById(listingId);
+      if (error) console.error("Failed to fetch listing data:", error);
+      else setData(result);
+      setLoading(false);
     };
 
     fetchData();
@@ -49,7 +45,7 @@ export default function ListingInfoPanel({ listingId = '5' }: ListingInfoPanelPr
   // combine thumbnail + images for the slider, thumbnail first
   const sliderImages = [
     ...(thumbnail ? ['/images/listing1.jpg'] : ['/images/listing1.jpg']),// use placeholder if no thumbnail
-    ...images,
+    ...(images ?? []),
   ];
 
   // hardcoded roommates for now, in real app this would come from our listing data (occupants relation)

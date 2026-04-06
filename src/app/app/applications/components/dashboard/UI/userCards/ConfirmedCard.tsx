@@ -1,11 +1,11 @@
 // component for applicants to see their confirmed application (i.e they acceted the offer and is scheduled to move into there)
 
 import { ArrowUpRight } from "lucide-react";
-import CardFooter from "../layout/CardFooter";
+import CardFooter from "../../layout/CardFooter";
 import DateColumn from "../generic/DateColumn";
 import ListingInfo from "../generic/ListingInfo";
 import ProfileButton from "../profile/ProfileButton";
-import { Application } from "../../../types";
+import { Application } from "../../../../types";
 
 type props={
     app: Application;

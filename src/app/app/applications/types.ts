@@ -1,3 +1,5 @@
+import { ApplicationStatus } from "@prisma/client";
+
 export type ApplicationForm={
     moveInDate: Date | null,
     moveOutDate: Date | null,
@@ -11,7 +13,7 @@ export type Application = {
   applicantAvatar?: string;
   landlordName?: string;
   landlordAvatar?: string;
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CONFIRMED';
+  status: ApplicationStatus;
   submittedDate: string;
   lastUpdatedDate?: string;
   expiryDate?: string;

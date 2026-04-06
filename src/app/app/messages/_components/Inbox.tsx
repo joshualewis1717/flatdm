@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Conversation } from "./type";
 
-import { formatTimestampInbox } from "./helper";
+import { formatTimestampInbox } from "./helperFunctions";
 
 type Props = {
   conversations: Conversation[];

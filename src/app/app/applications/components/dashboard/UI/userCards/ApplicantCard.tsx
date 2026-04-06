@@ -1,10 +1,10 @@
 import { ArrowUpRight, RotateCcw } from "lucide-react";
-import CardFooter from "../layout/CardFooter";
+import CardFooter from "../../layout/CardFooter";
 import DateColumn from "../generic/DateColumn";
 import ExpiryCountdown from "../generic/ExpiryCountdown";
 import ListingInfo from "../generic/ListingInfo";
 import ProfileButton from "../profile/ProfileButton";
-import { Application } from "../../../types";
+import { Application } from "../../../../types";
 
 // cards that was produced by applicants, landlords will be seeing these cards and interacting with them
 type props={
@@ -16,7 +16,7 @@ export default function ApplicantCard({ application,onAction, }: props) {
     return (
       <li className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden hover:border-white/20 transition-colors">
         <div className={`h-px w-full ${
-          application.status === 'ACCEPTED' ? 'bg-[#c9fb00]' :
+          application.status === 'APPROVED' ? 'bg-[#c9fb00]' :
           application.status === 'REJECTED' ? 'bg-red-500'   : 'bg-amber-400'
         }`} />
   
@@ -34,7 +34,7 @@ export default function ApplicantCard({ application,onAction, }: props) {
           )}
   
           {/* Row 3: expiry (ACCEPTED only) */}
-          {application.status === 'ACCEPTED' && application.expiryDate && (
+          {application.status === 'APPROVED' && application.expiryDate && (
             <ExpiryCountdown expiryDate={application.expiryDate} />
           )}
   
@@ -55,7 +55,7 @@ export default function ApplicantCard({ application,onAction, }: props) {
                   Withdraw
                 </button>
               )}
-              {application.status === 'ACCEPTED' && (
+              {application.status =='APPROVED' && (
                 <>
                   <button
                     onClick={() => onAction(application.id, 'reject')}

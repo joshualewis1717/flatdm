@@ -1,31 +1,32 @@
 'use client';
 
-import { Users, ChevronDown, Calendar, Eye, Check, Image } from 'lucide-react';
-import PropertyStatusPill from '../../components/PropertyStatusPill';
+import { Users, ChevronDown, Calendar, Eye, Image } from 'lucide-react';
+import PropertyStatusPill from '../../components/ownProperties/UI/PropertyStatusPill';
 import OccupantCard from './OccupantCard';
 import { useRouter } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Occupant, PropertyListing } from '../../types';
+import { MyPropertyListingData, OccupantUI,} from '../../types';
 // property card to show property + whether it is full or empty, and also of total occupants allowed + current number of occupants
 type Props = {
-    property:  PropertyListing;// our property in question
+    property:  MyPropertyListingData;// our property listing + all of it's data including occupants in question
     isExpanded: boolean;// if it has been expanded to show more info
     deleteMode: boolean;// if the parent is in delete mode or not
     isSelected: boolean;// if this specific card is selected by parent in delete mode or not
     onToggleSelect: () => void;// what to do when user clicks on it in delete mode
     onToggleExpand: () => void;// call to let parent control on how this component should be expanded
-    onOccupantClick: (occ: Occupant) => void;// callback on when an occupant card is clicked
+    onOccupantClick: (occ: OccupantUI) => void;// callback on when an occupant card is clicked
 };
 
 
 export default function PropertyCard({property,isExpanded,deleteMode,isSelected,onToggleSelect,onToggleExpand,onOccupantClick,}: Props) {
     const router = useRouter();
     const count = property.occupants.length;
-    const isFull = count >= property.maxOccupants;
+    const isFull = count >= property.propertyListing.maxOccupants;
     const isEmpty = count === 0;
-    const freeSlots = property.maxOccupants - count;
-    const thumbnail = property.images.find(img => img.isThumbnail);
-    const building = property.property;
+    const freeSlots = property.propertyListing.maxOccupants - count;
+    const thumbnail = property.propertyListing.thumbnail;
+
+
     function handleRowClick() {
       if (deleteMode) {
         onToggleSelect();
@@ -69,16 +70,18 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
   
           {/* Thumbnail */}
           <div className="w-10 h-10 bg-[rgba(201,251,0,0.12)] border border-[rgba(201,251,0,0.2)] rounded-[10px] flex items-center justify-center shrink-0 text-[17px]">
-            {thumbnail?.url? thumbnail.url : <Image/>}
+            {thumbnail? thumbnail : <Image/>}
           </div>
   
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="text-[15px] font-semibold text-white truncate">
-              {building.title}
+              {}
             </div>
             <div className="text-[12px] text-white/45 mt-0.5 truncate">
-              {building.streetName + property.flatNumber}
+              {property.propertyListing.buildingName}{/* only show flat number if it's not the whole property */}
+              {property.propertyListing.flatNumber !== 'WHOLE_PROPERTY' &&
+              ' ' + property.propertyListing.flatNumber}
             </div>
           </div>
   
@@ -92,7 +95,7 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
                 {count}
               </span>
               <span className="text-white/45">/</span>
-              {property.maxOccupants}
+              {property.propertyListing.maxOccupants}
             </div>
   
             {/* View Button */}
@@ -100,7 +103,7 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  router.push(`${property.id}`);
+                  router.push(`${property.propertyListing.id}`);
                 }}
                 className="
                   flex items-center gap-1.5 px-2.5 py-1.5
@@ -131,7 +134,7 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
   
               <div className="flex items-center gap-1.5 text-[12px] text-[#c9fb00]">
                 <Calendar className="w-4 h-4" />
-                {property.availableFrom.toLocaleString()}
+                {'easliest availability: ' + property.propertyListing.availableFrom.toLocaleString()}
               </div>
             </div>
   

@@ -1,25 +1,24 @@
 // component to handle all interactive elements that a user can do within a specicc listing page e.g apply, see reviews ec (links to other pages)
 'use client'
 import { useRouter } from "next/navigation";
-import ReviewSlider from "./ReviewSlider";
-import { Review } from "@prisma/client";
+import ReviewSlider from "../UI/ReviewSlider";
+import { ListingReview} from "../../../types";
+import { useSessionContext } from "@/components/shared/app-frame";
 
 type InteractivePanelProps = {
   listingId: string;
-  userId: string;// replace this with the token to see if it's a landlord or consultant or moderator etc.
 };
 
-export default function InteractivePanel({ listingId, userId }: InteractivePanelProps) {
+export default function InteractivePanel({ listingId}: InteractivePanelProps) {
   const router = useRouter();
   // Mock data — replace with db fetch via listingId
+  const {isConsultant, isLandlord} = useSessionContext();
   const totalReviews = 12;
   const averageRating = 5;
-  const isConsultant = false;// place holder, replace this with some token logic
-  const isLandlord = !isConsultant;// also place holder, we willderive this from token
-  const reviews: Review[] = [
-    { id: 1, listingId: null, rating: 5, comment: "Great place!", createdAt: new Date(), authorId: 1, targetUserId: 2 },
-    { id: 2, listingId: null, rating: 4, comment: "Really enjoyed it.", createdAt: new Date(), authorId: 2, targetUserId: 2 },
-    { id: 3, listingId: null, rating: 5, comment: "Perfect for short stays.", createdAt: new Date(), authorId: 3, targetUserId: 2 },
+  const reviews: ListingReview[] = [
+    { id: 1, listingId: Number(listingId), rating: 5, comment: "Great place!", createdAt: new Date(), reviewerId: 1, username: "Alice" },
+    { id: 2, listingId: Number(listingId), rating: 4, comment: "Really enjoyed it.", createdAt: new Date(), reviewerId: 2 , username: "Bob"},
+    { id: 3, listingId: Number(listingId), rating: 5, comment: "Perfect for short stays.", createdAt: new Date(), reviewerId: 3, username: "Charlie" },
   ];
 
   return (

@@ -1,5 +1,5 @@
-import InteractivePanel from "../components/InteractivePanel";
-import ListingInfoPanel from "../components/ListingInfoPanel";
+import InteractivePanel from "../components/viewListing/layout/InteractivePanel";
+import ListingInfoPanel from "../components/viewListing/layout/ListingInfoPanel";
 // listing page to show information about a specific listing 
 
 //TODO: add in buttons for landlords to edit and whatnot, also a mode for current/ past occupants to leave a review?
@@ -18,7 +18,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
         {/* Interactive panel: 1/3 */}
         <div className="lg:w-1/3">
-          <InteractivePanel  listingId={id} userId={id}/>
+          <InteractivePanel  listingId={id}/>
         </div>
       </div>
     </div>

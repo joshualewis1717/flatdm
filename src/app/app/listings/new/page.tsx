@@ -1,36 +1,29 @@
 'use client'
 import { useEffect, useState } from "react";
-import InputField from "../../applications/components/InputField";
-import { PropertyListingForm, AmenityDraft,DistanceRange, ExistingProperty } from "../types";
+import InputField from "../../applications/components/Submitform/UI/InputField";
+import { PropertyListingForm, ExistingProperty, AmenityUI } from "../types";
 import { AmenityType } from "@prisma/client";
-import AddAmenitiesPanel from "../components/AddAmenityPanel";
-import AddImagesPanel from "../components/AddImagePanel";
-import AddThumbnailPanel from "../components/AddThumbnailPanel";
-import PropertySelector from "../components/PropertySelector";
-import { createListing } from "../logic/clientServices/prisma";
+import AddAmenitiesPanel from "../components/createForm/layout/AddAmenityPanel";
+import AddImagesPanel from "../components/createForm/layout/AddImagePanel";
+import AddThumbnailPanel from "../components/createForm/layout/AddThumbnailPanel";
+import PropertySelector from "../components/createForm/UI/PropertySelector";
+import { createListing } from "../prisma/clientServices";
+import { useSessionContext } from "@/components/shared/app-frame";
+import { useRouter } from "next/navigation";
 
 // page for landlords to create a new listing
 // Converts the user-selected range string to a representative number for persistence.
 
-const DISTANCE_RANGE_TO_KM: Record<DistanceRange, number> = {// converts the range selected by the user into a
-//  representative number in km for storage in the database
-  "0-2":  1,
-  "2-5":  3,
-  "5-10": 7,
-};
 
-type NewListingsPageProps = {
-  landlordId: number;// in a real app this would come from the session, but for testing we can pass it as a prop
-};
-
-export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps) {
-  const [amenities, setAmenities] = useState<AmenityDraft[]>([]);
+export default function NewListingsPage() {
+  const [amenities, setAmenities] = useState<AmenityUI[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [thumbnail, setThumbnail] = useState<string | null>(null);
-  const [amenityCounter, setAmenityCounter] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const {isLandlord} = useSessionContext();
+  const router = useRouter();
 
   const [selectedProperty, setSelectedProperty] = useState<ExistingProperty | null>(null);
 
@@ -42,7 +35,6 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
     rooms: 0,
     bedrooms: 0,
     bathrooms: 0,
-    beds: 0,
     area: 0,
     maxOccupants: 1,
     minStay: 0,
@@ -81,13 +73,8 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
       }));
 
       // selector returned a property, we need to then map the amenities to our UI amenity draft type.
-      if (property.hasExistingListings) {
-        const drafts: AmenityDraft[] = property.amenities.map((a) => ({
-          ...a,
-          distance: null,
-        }));
-        setAmenities(drafts);
-        setAmenityCounter(drafts.length);
+      if (property.hasExistingAmenities){
+        setAmenities(property.amenities);
       } else {
         setAmenities([]);
       }
@@ -106,23 +93,20 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
 
   // function to handle form submission, with validation to ensure a thumbnail is added before allowing submission. Converts amenity distance ranges to km values before sending to the backend.
   async function handleSubmit(e: React.SubmitEvent){
-    setLoading(true);
     e.preventDefault();
+    setLoading(true);
   
     if (!thumbnail) {
       alert("Please add a thumbnail image before saving.");
+      setLoading(false);
       return;
     }
-  
-    const resolvedAmenities = amenities.map((a) => ({
-      ...a,
-      distance: a.distance ? DISTANCE_RANGE_TO_KM[a.distance] : 0,
-    }));
-  
-    const result = await createListing({...form,landlordId,thumbnail,images,amenities: resolvedAmenities,});
-    if (!result) setError("Failed to create listing. Please try again.");
-    else setSuccess(true);
+    
+    const { error } = await createListing({ ...form, thumbnail, images, amenities });
     setLoading(false);
+
+    if (error) setError(error);
+    else setSuccess(true);
   };
 
 
@@ -131,24 +115,22 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
     setAmenities((prev) => [
       ...prev,
       {
-        id: amenityCounter,// we need to generate a unique id for each amenity to keep track of them.
+        id: crypto.randomUUID(),// we need to generate a unique id for each amenity to keep track of them.
         // need a number instead of string since back end uses number id.
-        propertyId: form.selectedPropertyId ?? 0,
         type: "OTHER" as AmenityType,
         name: "",
-        distance: null,
+        distance: -1, // default distance value indicating "not set", since 0 is a valid distance (within 1km)
       },
     ]);
-    setAmenityCounter((c) => c + 1);
   };
 
   // function to update a specific field of an amenity.
-  function updateAmenity<K extends keyof AmenityDraft>(id: number, field: K, value: AmenityDraft[K]){
+  function updateAmenity<K extends keyof AmenityUI>(id: string, field: K, value: AmenityUI[K]){
     setAmenities((prev) => prev.map((a) => (a.id === id ? { ...a, [field]: value } : a)));
   };
 
   // function to remove an amenity from our form state based on its id
-  function removeAmenity(id: number){
+  function removeAmenity(id: string){
     setAmenities((prev) => prev.filter((a) => a.id !== id));
   };
 
@@ -161,7 +143,6 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
       rooms: 0,
       bedrooms: 0,
       bathrooms: 0,
-      beds: 0,
       area: 0,
       maxOccupants: 1,
       minStay: 0,
@@ -179,6 +160,10 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
   // function to remove an image from form
   function removeImage(index: number){setImages((prev) => prev.filter((_, i) => i !== index))};
 
+  useEffect(()=>{
+    if (!isLandlord) router.replace('/login')
+  },[router, isLandlord])
+
   // very rough success alert using useEffect to trigger on success state change, can be improved with a proper toast notification system
   useEffect(()=>{
     if (success) {
@@ -188,8 +173,8 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
       resetForm();
       setTimeout(() => {
         setSuccess(false);
-    }, 2000);
-  }
+      }, 2000);
+    }
   }, [success])
 
   
@@ -199,10 +184,11 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
       alert(error);
       setTimeout(() => {
         setError(null);
-    }, 2000);
-  }
+      }, 2000);
+    }
   }, [error])
 
+  if (!isLandlord) return null;
 
   return (
     <div className="max-w-4xl mx-auto p-6 sm:p-8 space-y-6">
@@ -222,7 +208,7 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
             Select a location you've registered before to autofill some information
           </p>
 
-          <PropertySelector landlordId={landlordId} onSelect={handlePropertySelect} />
+          <PropertySelector onSelect={handlePropertySelect} />
         </section>
 
         {/* address, merge all fields except for flat number into one string and store as address in db */}
@@ -331,6 +317,7 @@ export default function NewListingsPage({ landlordId = 3 }: NewListingsPageProps
         <AddImagesPanel images={images} onAdd={addImage} onRemove={removeImage} />
 
         <AddAmenitiesPanel
+        selectedProperty={!!selectedProperty}
           amenities={amenities}
           onAdd={addAmenity}
           onRemove={removeAmenity}

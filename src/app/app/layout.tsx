@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { AppFrame } from "@/components/shared/app-frame";
 import { auth } from "@/lib/auth";
+import { Role } from "@prisma/client";
 
 export default async function AppLayout({
   children,
@@ -9,15 +10,16 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
+  console.log("session is", session)
 
   if (!session?.user) redirect("/login");
   
 
   return (
     <AppFrame
-      role={session.user.role}
-      name={session.user.name}
-      email={session.user.email}
+    // overwrite actual session for testing
+      role={session.user.role as (Role | undefined)}
+      name={session.user.firstName}
     >
       {children}
     </AppFrame>

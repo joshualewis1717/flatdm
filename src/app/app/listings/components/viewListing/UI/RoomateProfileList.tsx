@@ -1,7 +1,6 @@
 
 // a generic component to show a list of roomate profiles stacked together
-
-import { Roommate } from "../types";
+import { Roommate } from "../../../types";
 
   
 type RoommateAvatarsProps = {

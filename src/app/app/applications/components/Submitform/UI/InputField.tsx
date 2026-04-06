@@ -1,4 +1,4 @@
-import { InputFieldInput, RadioOption } from "../types";
+import { InputFieldInput, RadioOption } from "../../../types";
 import DatePicker from "./DatePicker";
 import RadioGroup from "./RadioGroup";
 import SelectBox from "./SelectBox";

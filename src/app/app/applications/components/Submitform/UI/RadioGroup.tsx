@@ -1,6 +1,6 @@
 // generic component to hold many radio buttons
 
-import { RadioOption } from "../types";
+import { RadioOption } from "../../../types";
 
   
 type RadioGroupProps<T extends string> = {

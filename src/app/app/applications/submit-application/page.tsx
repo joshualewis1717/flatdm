@@ -1,17 +1,18 @@
 'use client'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ApplicationForm } from "../types";
-import InputField from "../components/InputField";
-import { submitApplication } from "../../listings/logic/clientServices/prisma";
+import InputField from "../components/Submitform/UI/InputField";
+import { submitApplication } from "../prisma/clientServices";
+import { useSessionContext } from "@/components/shared/app-frame";
+import { useRouter } from "next/navigation";
 
 // page where consultants can submit an application form for a specific listing
 
 type SubmitApplicationPageProps = {
   listingId: number;// id of the lisitng that this application procress applies towards
-  userId: number;// id of the user submitting the application
 };
 
-export default function SubmitApplicationPage({ listingId = 3, userId = 3 }: SubmitApplicationPageProps) {
+export default function SubmitApplicationPage({ listingId = 1 }: SubmitApplicationPageProps) {
   const [form, setForm] = useState<ApplicationForm>({
     moveInDate: null,
     moveOutDate: null,
@@ -21,6 +22,8 @@ export default function SubmitApplicationPage({ listingId = 3, userId = 3 }: Sub
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const {isConsultant} = useSessionContext();
+  const router = useRouter();
 
   async function handleSubmit(e: React.SubmitEvent){
     e.preventDefault();
@@ -32,20 +35,25 @@ export default function SubmitApplicationPage({ listingId = 3, userId = 3 }: Sub
     }
 
     setLoading(true);
-    const result = await submitApplication(
+    const { error } = await submitApplication(
       listingId,
-      userId,
       form.moveInDate,
       specifyMoveOut ? form.moveOutDate : null
     );
     setLoading(false);
 
-    if (!result.success) {
-      setError(result.error ?? "Something went wrong.");
+    if (error) {
+      setError(error);
     } else {
       setSuccess(true);
     }
   };
+
+  
+  useEffect(()=>{
+    if (!isConsultant) router.replace('/login')
+  }, [isConsultant, router])
+
 
   if (success) {
     return (
@@ -55,6 +63,9 @@ export default function SubmitApplicationPage({ listingId = 3, userId = 3 }: Sub
       </div>
     );
   }
+
+
+  if (!isConsultant) return null;
 
   return (
     <div className="max-w-3xl mx-auto p-6 sm:p-8 space-y-6">

@@ -1,18 +1,17 @@
 'use client'
 import { useState, useEffect } from "react";
 import { ChevronDown, Check, MapPin } from "lucide-react";
-import { ExistingProperty } from "../types";
-import { getPropertiesForLandlord } from "../logic/clientServices/prisma";
+import { ExistingProperty } from "../../../types";
+import { getPropertiesForLandlord } from "../../../prisma/clientServices";
 
 // Component for landlords to select from their previously used properties (buildings) when creating a new listing.
 type PropertySelectorProps = {
-  landlordId: number;
   onSelect: (property: ExistingProperty | null) => void;
 };
 
 type Mode = "idle" | "existing";// should it show the suggesstions or just be idle and do nothing
 
-export default function PropertySelector({ landlordId, onSelect }: PropertySelectorProps) {
+export default function PropertySelector({ onSelect }: PropertySelectorProps) {
   const [mode, setMode] = useState<Mode>("idle");
   const [open, setOpen] = useState(false);// should it show the dropdown of suggestions or not
   const [selected, setSelected] = useState<ExistingProperty | null>(null);// which property did it select
@@ -22,20 +21,21 @@ export default function PropertySelector({ landlordId, onSelect }: PropertySelec
   // function to fetch the landlord properties from database
   async function getLandlordProperties() {
     setLoading(true);
-    try{
-    const data = await getPropertiesForLandlord(landlordId);
-    setProperties(data.map(property => ({
-      ...property,
-      amenities: property.amenities.map(amenity => ({
-        ...amenity,
-        propertyId: property.id,
-      })),
-    })));
-    } catch (e) {
-      console.error("Failed to load properties", e);
-    } finally {
-      setLoading(false);
+    const { result, error } = await getPropertiesForLandlord();
+    if (error) {
+      console.error("Failed to load properties", error);
+    } else {
+      if (result)
+      setProperties(result.map(property => ({
+        ...property,
+        amenities: property.amenities.map(amenity => ({
+          ...amenity,
+          propertyId: property.id,
+        })),
+      })));
+    else setProperties([])
     }
+    setLoading(false);
   }
 
 
@@ -62,7 +62,7 @@ export default function PropertySelector({ landlordId, onSelect }: PropertySelec
   // fetch once on mount so it's ready when the user clicks
   useEffect(() => {
     getLandlordProperties();
-  }, [landlordId]);
+  }, []);
 
   return (
     <div className="space-y-4">
