@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { APPLICATION_EXPIRY_TIME } from "../const";
 // raw prisma queries for applications
 export async function getListingById(listingId: number) {
   return prisma.propertyListing.findUnique({
@@ -55,9 +56,12 @@ export async function deleteApplicationQuery(applicationId: number, userId: numb
   });
 }
 
-export async function updateApplicationStatusAsLandlordQuery(applicationId: number,landlordId: number,status: "APPROVED" | "REJECTED",
-  expiryDate?: Date) {
 
+export async function updateApplicationStatusAsLandlordQuery(
+  applicationId: number,
+  landlordId: number,
+  status: "APPROVED" | "REJECTED"
+) {
   // check if application exists
   const application = await prisma.propertyApplication.findUnique({
     where: { id: applicationId },
@@ -76,21 +80,24 @@ export async function updateApplicationStatusAsLandlordQuery(applicationId: numb
 
   if (!application) throw new Error("Application not found");
 
-  // check if correct landlord trying to update listing
+  // check ownership
   if (application.listing.property.landlordId !== landlordId) {
     throw new Error("Forbidden");
   }
 
-  
+  const expiryDate =
+    status === "APPROVED"
+      ? new Date(Date.now() + APPLICATION_EXPIRY_TIME)
+      : null;
+
   return prisma.propertyApplication.update({
     where: { id: applicationId },
     data: {
       status,
-      ...(expiryDate && { expiryDate }),
+      expiryDate, // will be null if rejected
     },
   });
 }
-
 
 export async function updateApplicationStatusAsConsultantQuery(applicationId: number,userId: number,status: "CONFIRMED" | "REJECTED" | "WITHDRAWN"
 ) {

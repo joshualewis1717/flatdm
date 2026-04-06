@@ -1,5 +1,4 @@
 'use server'
-import { APPLICATION_EXPIRY_TIME } from "../const";
 import {
   getListingById,
   getActiveApplication,
@@ -93,11 +92,7 @@ export async function updateApplicationStatus(
 ) {
   return runService(async () => {
     const user = await withRole("LANDLORD");
-    const expiry =
-      status === "APPROVED"
-        ? new Date(Date.now() + APPLICATION_EXPIRY_TIME)
-        : undefined;
-    await updateApplicationStatusAsLandlordQuery(applicationId, user.id, status, expiry);
+    await updateApplicationStatusAsLandlordQuery(applicationId, user.id, status);
   });
 }
 
