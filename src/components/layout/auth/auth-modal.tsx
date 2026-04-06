@@ -16,6 +16,7 @@ type AuthFormState = {
   lastName: string;
   email: string;
   password: string;
+  confirmPassword: string;
   username: string;
   role: RegisterRole;
 };
@@ -25,6 +26,7 @@ const initialFormState: AuthFormState = {
   lastName: "",
   email: "",
   password: "",
+  confirmPassword: "",
   username: "",
   role: "CONSULTANT",
 };
@@ -58,6 +60,12 @@ export default function AuthModal({
   async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+
+    if (authMode === "register" && formState.password !== formState.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     setIsSubmitting(true);
 
     if (authMode === "register") {
@@ -108,7 +116,8 @@ export default function AuthModal({
   //password validation
   const passwordHas2Numbers = (formState.password.match(/\d/g) || []).length >= 2;
   const passwordHasSpecialChar = /[!@#$%^&*(),.?":{}|<>£{}]/.test(formState.password);
-  const passwordValid = formState.password.length >= 8 && passwordHas2Numbers && passwordHasSpecialChar;
+  const passwordsMatch = formState.password === formState.confirmPassword;
+  const passwordValid = formState.password.length >= 8 && passwordHas2Numbers && passwordHasSpecialChar && passwordsMatch;
 
   //just a few tailwind string classes that are reusable and got a lil long
   const formInput: string = "h-12 w-full rounded-2xl border border-border/80 bg-card/70 px-4 text-sm text-foreground outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
@@ -303,6 +312,30 @@ export default function AuthModal({
 
               {authMode === "register" ? (
                 <div className="space-y-2">
+                  <label
+                    htmlFor="auth-confirm-password"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Confirm Password
+                  </label>
+                  <input
+                    id="auth-confirm-password"
+                    name="confirmPassword"
+                    type="password"
+                    minLength={8}
+                    required
+                    value={formState.confirmPassword ?? ""}
+                    onChange={(event) =>
+                      updateField("confirmPassword", event.target.value)
+                    }
+                    className={formInput}
+                    placeholder="Re-enter your password"
+                  />
+                </div>
+              ) : null}
+
+              {authMode === "register" ? (
+                <div className="space-y-2">
                   {formState.password && (
                     <div className="">
                       <div className="mb-1 flex items-center gap-2">
@@ -323,6 +356,13 @@ export default function AuthModal({
                         {passwordHasSpecialChar ? <Check className="text-green-500 w-4 h-4" /> : <X className="text-red-500 w-4 h-4"/>}
                         <p className={"text-sm" + (passwordHasSpecialChar ? "text-green-500" : "text-red-500")}>
                           Password must contain at least 1 special character.
+                        </p>
+                      </div>
+
+                      <div className="mb-1 flex items-center gap-2">
+                        {passwordsMatch ? <Check className="text-green-500 w-4 h-4" /> : <X className="text-red-500 w-4 h-4"/>}
+                        <p className={"text-sm" + (passwordsMatch ? "text-green-500" : "text-red-500")}>
+                          Passwords must match.
                         </p>
                       </div>
                     </div>
