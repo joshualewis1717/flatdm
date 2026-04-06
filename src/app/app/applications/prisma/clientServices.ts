@@ -13,7 +13,9 @@ import {
   isListingOwnedByLandlord,
 } from "./rawQueries";
 import { mapApplicantApplication, mapLandlordApplication } from "./mappers";
-import { runService, withRole } from "@/app/app/clientService/prismaUtils";
+import { runService, withRole } from "@/app/app/clientService/prisma/prismaUtils";
+import { MINIMUM_APPLICATION_WINDOW } from "./const";
+import { startOfDay } from "date-fns";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -32,8 +34,14 @@ export async function submitApplication(
     const user = await withRole("CONSULTANT");
     const now = new Date();
 
-    if (moveInDate <= now) throw new Error("Move-in must be in the future.");
-    if (moveOutDate && moveOutDate <= moveInDate) throw new Error("Move-out must be after move-in.");
+    const moveIn = new Date(moveInDate);
+
+    const difference =(startOfDay(moveIn).getTime() - startOfDay(now).getTime()) /(24 * 60 * 60 * 1000);// normalise to days
+
+    if (difference < MINIMUM_APPLICATION_WINDOW) {
+      throw new Error(`Move-in must be at least ${MINIMUM_APPLICATION_WINDOW} days from today.`);
+    }
+    if (moveOutDate && startOfDay(moveOutDate).getTime() <= startOfDay(moveInDate).getTime()) throw new Error("Move-out must be after move-in.");
 
     const [listing, existingApp, occupant] = await Promise.all([
       getListingById(listingId),

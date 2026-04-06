@@ -13,6 +13,10 @@ export async function getActiveApplication(listingId: number, userId: number) {
       listingId,
       userId,
       status: { in: ["PENDING", "APPROVED"] },
+      OR: [// expired dates do not count as active even if their status is pending or approved.
+        { expiryDate: null },
+        { expiryDate: { gte: new Date() } },
+      ],
     },
   });
 }
@@ -58,7 +62,7 @@ export async function deleteApplicationQuery(applicationId: number, userId: numb
 }
 
 
-export async function updateApplicationStatusAsLandlordQuer(applicationId: number, landlordId: number,  status: "APPROVED" | "REJECTED") {
+export async function updateApplicationStatusAsLandlordQuery(applicationId: number, landlordId: number,  status: "APPROVED" | "REJECTED") {
    // check if application exists
   const application = await prisma.propertyApplication.findUnique({
     where: { id: applicationId },

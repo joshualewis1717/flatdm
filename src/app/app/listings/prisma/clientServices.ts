@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 import {PropertyListingForm } from "../types";
 import { queryPropertiesForLandlord, queryListingById, queryListingsForLandlord, querySoftDeleteListing, queryCreateProperty, queryCreateListing,} from "./rawQueries";
 import { mapToExistingProperty, mapToListingDetail, mapToMyPropertyListing } from "./mappers";
-import { runService, withRole } from "../../clientService/prismaUtils";
+import { runService, withRole } from "../../clientService/prisma/prismaUtils";
+import { startOfDay } from "date-fns";
 
 /************ validation **********/
 
@@ -26,8 +27,8 @@ function validateListingInput(data: PropertyListingForm) {
   if (rooms < bedrooms + bathrooms)
     throw new Error("Total rooms must be at least the sum of bedrooms and bathrooms");
 
-  if (availableFrom < new Date())
-    throw new Error("Available from date cannot be in the past");
+  if (startOfDay(availableFrom).getTime() < startOfDay(Date.now()).getTime())
+  throw new Error("Available from date cannot be in the past");
 
   if (amenities.some((a) => a.distance !== null && a.distance < 0))
     throw new Error("Amenity distance cannot be negative");
