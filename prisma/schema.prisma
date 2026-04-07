@@ -189,6 +189,11 @@ model Conversation {
   userA User @relation("ConversationUserA", fields: [userAId], references: [id])
   userB User @relation("ConversationUserB", fields: [userBId], references: [id])
 
+  isDeletedA Boolean   @default(false)
+  isDeletedB Boolean   @default(false)
+  deletedAtA DateTime?
+  deletedAtB DateTime?
+
   messages Message[]
 }
 
