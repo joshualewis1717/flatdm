@@ -6,6 +6,7 @@ import { getExistingApplication, submitApplication } from "../../prisma/clientSe
 import { useSessionContext } from "@/components/shared/app-frame";
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { getListingById } from "@/app/app/listings/prisma/clientServices";
+import { getListingTitle } from "@/app/app/logic/listing";
 
 
 // page where consultants can submit an application form for a specific listing
@@ -32,7 +33,8 @@ export default function ApplicationForm({ listingId, applicationId}: SubmitAppli
     message: "",
   });
   const [specifyMoveOut, setSpecifyMoveOut] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);// for submit button
+  const [pageLoading, setPageLoading] = useState(false)
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const {isConsultant, firstName, lastName, email} = useSessionContext();
@@ -84,7 +86,7 @@ export default function ApplicationForm({ listingId, applicationId}: SubmitAppli
     async function fetchCreateModeDetails(){
       if (!isConsultant || !firstName || !lastName || isViewMode || !listingId) return;
     
-      setLoading(true)
+      setPageLoading(true)
       setForm((prev) => ({
         ...prev,
         firstName: firstName ?? "",
@@ -95,10 +97,10 @@ export default function ApplicationForm({ listingId, applicationId}: SubmitAppli
       const {result, error} = await getListingById(listingId.toString())
       if (error) setError(error)
       if(result){
-        const listingTitle = result.flatNumber + result.buildingName
+        const listingTitle = getListingTitle(result.buildingName, result.flatNumber)
         setTitle(listingTitle)
       }
-      setLoading(false)
+      setPageLoading(false)
   }
   fetchCreateModeDetails();
   }, [isConsultant]);
@@ -109,7 +111,7 @@ export default function ApplicationForm({ listingId, applicationId}: SubmitAppli
     async function fetchApplicationDetails(){
       if (!applicationId || !isViewMode) return
 
-      setLoading(true);
+      setPageLoading(true);
       const {result, error} = await getExistingApplication(applicationId)
       if (error) setError(error);
       if(result){
@@ -130,19 +132,18 @@ export default function ApplicationForm({ listingId, applicationId}: SubmitAppli
     
           const listingDetails = await getListingById(result.listingId.toString())// we need to also fetch building name, hence also fetch listing
           if (listingDetails.result){
-            setTitle(listingDetails.result.flatNumber + listingDetails.result.buildingName)
+            setTitle(getListingTitle(listingDetails.result.buildingName, listingDetails.result.flatNumber))
           }
     
       }
 
       setReadOnly(true)
+      setPageLoading(false)
 
     }
-    setLoading(false)
 
     fetchApplicationDetails();
   }, [applicationId])// only do it when application id changes
-
   
   if (success) {
     return (
@@ -157,128 +158,141 @@ export default function ApplicationForm({ listingId, applicationId}: SubmitAppli
   return (
     <div className="max-w-3xl mx-auto p-6 sm:p-8 space-y-6">
       <h1 className="font-bold text-5xl text-center">Submit Application</h1>
-      <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8 space-y-4">
-        <div className="flex gap-x-2">
-          <p className="text-red-500">*</p>
-          <p className="text-xs text-white/50">indicates required fields</p>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/*TODO: make name be read only */}
-          <InputField
-            label="First Name"
-            name="firstName"
-            value={form.firstName}
-            onChange={handleChange}
-            placeholder="enter first name"
-            required
-            readOnly={true}
-          />
+      {pageLoading && (
+        <h2 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight">
+          Loading...
+        </h2>
+      )}
+      {!pageLoading && (
+        <>
 
-          <InputField
-            label="Last Name"
-            name="lastName"
-            value={form.lastName}
-            onChange={handleChange}
-            placeholder="enter last name"
-            required
-            readOnly={true}
-          />
-
-          <InputField
-            label="Email"
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            placeholder="enter email address"
-            required
-            readOnly={readOnly}
-          />
-
-          <InputField
-            label="Phonenumber"
-            name="phoneNumber"
-            type="tel"
-            value={form.phoneNumber}
-            onValueChange={(val) =>
-              setForm((prev) => ({
-                ...prev,
-                phoneNumber: val,
-              }))
-            }
-            required
-            readOnly={readOnly}
-          />
-
-          <InputField
-            label="Intended Move-in Date"
-            type="date"
-            name="moveInDate"
-            value={form.moveInDate}
-            onDateChange={(date) => setForm({ ...form, moveInDate: date ?? null })}
-            placeholder="dd/mm/yyyy"
-            required
-            readOnly={readOnly}
-          />
-
-             {/* Optional move-out */}
-          <div className="flex flex-col space-y-2">
-            <label className="flex items-center gap-2 text-sm text-white/70">
-              <input
-                type="checkbox"
-                checked={specifyMoveOut}
-                onChange={() => setSpecifyMoveOut((prev) => !prev)}
-                className="accent-primary"
-                readOnly={readOnly}
-              />
-              Specify expected move-out date
-            </label>
-
-            {specifyMoveOut && (
+          <h2 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight">
+                  {title}
+          </h2>
+          <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8 space-y-4">
+            <div className="flex gap-x-2">
+              <p className="text-red-500">*</p>
+              <p className="text-xs text-white/50">indicates required fields</p>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/*TODO: make name be read only */}
               <InputField
-                label="Expected Move-out Date"
-                type="date"
-                name="moveOutDate"
-                value={form.moveOutDate}
-                onDateChange={(date) => setForm({ ...form, moveOutDate: date ?? null })}
+                label="First Name"
+                name="firstName"
+                value={form.firstName}
+                onChange={handleChange}
+                placeholder="enter first name"
+                required
+                readOnly={true}
+              />
+
+              <InputField
+                label="Last Name"
+                name="lastName"
+                value={form.lastName}
+                onChange={handleChange}
+                placeholder="enter last name"
+                required
+                readOnly={true}
+              />
+
+              <InputField
+                label="Email"
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="enter email address"
+                required
                 readOnly={readOnly}
               />
-            )}
-          </div>
 
-          <InputField
-            label="Optional Message?"
-            type="textarea"
-            name="message"
-            value={form.message}
-            onChange={handleChange}
-            placeholder="please enter any optional info that you want to tell landlord..."
-            readOnly={readOnly}
-          />
+              <InputField
+                label="Phonenumber"
+                name="phoneNumber"
+                type="tel"
+                value={form.phoneNumber}
+                onValueChange={(val) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    phoneNumber: val,
+                  }))
+                }
+                required
+                readOnly={readOnly}
+              />
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
+              <InputField
+                label="Intended Move-in Date"
+                type="date"
+                name="moveInDate"
+                value={form.moveInDate}
+                onDateChange={(date) => setForm({ ...form, moveInDate: date ?? null })}
+                placeholder="dd/mm/yyyy"
+                required
+                readOnly={readOnly}
+              />
 
-          <div className="flex gap-4 pt-2">
-            <button
-              type="button"
-              onClick={() => window.history.back()}
-              className="flex-1 rounded-2xl bg-black/70 text-white py-3 font-semibold hover:bg-black/80"
-            >
-              Back
-            </button>
+                {/* Optional move-out */}
+              <div className="flex flex-col space-y-2">
+                <label className="flex items-center gap-2 text-sm text-white/70">
+                  <input
+                    type="checkbox"
+                    checked={specifyMoveOut}
+                    onChange={() => setSpecifyMoveOut((prev) => !prev)}
+                    className="accent-primary"
+                    readOnly={readOnly}
+                  />
+                  Specify expected move-out date
+                </label>
 
-            {!readOnly && (
-               <button
-                type="submit"
-                disabled={loading || readOnly}
-                className="flex-1 rounded-2xl bg-primary text-black py-3 font-semibold hover:bg-green-400 disabled:opacity-50"
-              >
-               {loading ? "Submitting…" : "Submit"}
-             </button>
-            )}
-          </div>
-        </form>
-      </section>
+                {specifyMoveOut && (
+                  <InputField
+                    label="Expected Move-out Date"
+                    type="date"
+                    name="moveOutDate"
+                    value={form.moveOutDate}
+                    onDateChange={(date) => setForm({ ...form, moveOutDate: date ?? null })}
+                    readOnly={readOnly}
+                  />
+                )}
+              </div>
+
+              <InputField
+                label="Optional Message?"
+                type="textarea"
+                name="message"
+                value={form.message}
+                onChange={handleChange}
+                placeholder="please enter any optional info that you want to tell landlord..."
+                readOnly={readOnly}
+              />
+
+              {error && <p className="text-sm text-red-400">{error}</p>}
+
+              <div className="flex gap-4 pt-2">
+                <button
+                  type="button"
+                  onClick={() => window.history.back()}
+                  className="flex-1 rounded-2xl bg-black/70 text-white py-3 font-semibold hover:bg-black/80"
+                >
+                  Back
+                </button>
+
+                {!readOnly && (
+                  <button
+                    type="submit"
+                    disabled={loading || readOnly}
+                    className="flex-1 rounded-2xl bg-primary text-black py-3 font-semibold hover:bg-green-400 disabled:opacity-50"
+                  >
+                  {loading ? "Submitting…" : "Submit"}
+                </button>
+                )}
+              </div>
+            </form>
+          </section>
+        </>
+      )}
     </div>
   );
 }

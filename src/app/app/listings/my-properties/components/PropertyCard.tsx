@@ -6,6 +6,7 @@ import OccupantCard from './OccupantCard';
 import { useRouter } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MyPropertyListingData, OccupantUI,} from '../../types';
+import { getListingTitle } from '@/app/app/logic/listing';
 // property card to show property + whether it is full or empty, and also of total occupants allowed + current number of occupants
 type Props = {
     property:  MyPropertyListingData;// our property listing + all of it's data including occupants in question
@@ -79,9 +80,7 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
               {}
             </div>
             <div className="text-[12px] text-white/45 mt-0.5 truncate">
-              {property.propertyListing.buildingName}{/* only show flat number if it's not the whole property */}
-              {property.propertyListing.flatNumber !== 'WHOLE_PROPERTY' &&
-              ' ' + property.propertyListing.flatNumber}
+              {getListingTitle(property.propertyListing.buildingName, property.propertyListing.flatNumber)}
             </div>
           </div>
   

@@ -33,7 +33,7 @@ export default function ApplicantCard({ application,onAction, }: props) {
   
           {/* Row 1: listing info + dates */}
           <div className="flex items-start justify-between gap-3">
-            <ListingInfo name={application.listingName} address={application.listingAddress} rent={application.rent} />
+            <ListingInfo buildingName={application.buildingName} flatNumber={application.flatNumber} address={application.listingAddress} rent={application.rent} />
             <DateColumn submittedDate={application.submittedDate} lastUpdated={application.lastUpdatedDate} />
           </div>
   

@@ -6,6 +6,7 @@ import PropertyStatsGrid from "../UI/PropertyStatsGrid";
 import RoommateProfileList from "../UI/RoomateProfileList";
 import AmenityList from "../UI/AmenityList";
 import { getListingById } from "../../../prisma/clientServices";
+import { getListingTitle } from "@/app/app/logic/listing";
 // Panel to display the static listing specific data in full
 
 type ListingInfoPanelProps = {
@@ -39,7 +40,7 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
     landlordName, amenities, } = data;
 
   const shared = maxOccupants > 1;// derive shared from max occupants
-  const headline = flatNumber ? `Flat ${flatNumber}  -  ${buildingName}` : buildingName;// our title
+  const headline = getListingTitle(buildingName, flatNumber)
   const addressLine = `${streetName}, ${city}, ${postcode}`;
 
   // combine thumbnail + images for the slider, thumbnail first

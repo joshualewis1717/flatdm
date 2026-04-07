@@ -30,7 +30,7 @@ export default function ConfirmedCard({ app }: props) {
   
               {/* Row 1: listing info + dates */}
               <div className="flex items-start justify-between gap-3">
-                <ListingInfo name={app.listingName} address={app.listingAddress} rent={app.rent} />
+                <ListingInfo buildingName={app.buildingName} flatNumber={app.flatNumber} address={app.listingAddress} rent={app.rent} />
                 <DateColumn submittedDate={app.submittedDate} lastUpdated={app.lastUpdatedDate} />
               </div>
   
