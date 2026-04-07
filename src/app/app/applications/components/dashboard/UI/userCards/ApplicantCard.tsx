@@ -5,6 +5,7 @@ import ExpiryCountdown from "../generic/ExpiryCountdown";
 import ListingInfo from "../generic/ListingInfo";
 import ProfileButton from "../profile/ProfileButton";
 import { Application } from "../../../../types";
+import ViewListingButton from "../generic/ViewListingButton";
 
 // cards that was produced by applicants, landlords will be seeing these cards and interacting with them
 type props={
@@ -47,10 +48,7 @@ export default function ApplicantCard({ application,onAction, }: props) {
   
           {/* Row 4: footer */}
           <CardFooter>
-            <button className="flex items-center gap-1.5 text-[11px] text-white/35 hover:text-white transition-colors font-medium">
-              <ArrowUpRight className="w-3.5 h-3.5" />
-              View listing
-            </button>
+           <ViewListingButton applicationId={application.id}/>
   
             <div className="flex items-center gap-2">
               {application.status === 'PENDING' && (

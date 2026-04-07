@@ -204,3 +204,13 @@ export async function isListingOwnedByLandlord(  listingId: number,userId: numbe
 
   return !!listing; // boolean
 }
+
+// function to get the listing Id from application id
+export async function getListingIdFromApplicationQuery(applicationId: number) {
+  return prisma.propertyApplication.findUnique({
+    where: { id: applicationId },
+    select: {
+      listingId: true,
+    },
+  });
+}

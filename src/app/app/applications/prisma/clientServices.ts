@@ -11,6 +11,7 @@ import {
   updateApplicationStatusAsLandlordQuery,
   updateApplicationStatusAsConsultantQuery,
   isListingOwnedByLandlord,
+  getListingIdFromApplicationQuery,
 } from "./rawQueries";
 import { mapApplicantApplication, mapLandlordApplication } from "./mappers";
 import { runService, withRole } from "@/app/app/clientService/prisma/prismaUtils";
@@ -124,5 +125,17 @@ export async function landlordOwnsListing(listingId: number) {
     const user = await withRole("LANDLORD");
 
     return await isListingOwnedByLandlord(listingId, user.id);
+  });
+}
+
+export async function getListingIdFromApplication(applicationId: number) {
+  return runService(async () => {
+    const listing = await getListingIdFromApplicationQuery(applicationId);
+
+    if (!listing) {
+      throw new Error("Listing is not found");
+    }
+
+    return listing.listingId;
   });
 }
