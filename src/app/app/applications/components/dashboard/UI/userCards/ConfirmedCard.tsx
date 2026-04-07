@@ -7,6 +7,7 @@ import ListingInfo from "../generic/ListingInfo";
 import ProfileButton from "../profile/ProfileButton";
 import { Application } from "../../../../types";
 import ViewListingButton from "../generic/ViewListingButton";
+import ViewApplicationButton from "../generic/ViewApplicationButton";
 
 type props={
     app: Application;
@@ -53,6 +54,7 @@ export default function ConfirmedCard({ app }: props) {
               {/* Row 4: footer */}
               <CardFooter>
                 <ViewListingButton applicationId={app.id}/>
+                <ViewApplicationButton applicationId={app.id}/>
               </CardFooter>
   
             </div>

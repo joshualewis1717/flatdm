@@ -6,6 +6,7 @@ import ListingInfo from "../generic/ListingInfo";
 import ProfileButton from "../profile/ProfileButton";
 import { Application } from "../../../../types";
 import ViewListingButton from "../generic/ViewListingButton";
+import ViewApplicationButton from "../generic/ViewApplicationButton";
 
 // cards that was produced by applicants, landlords will be seeing these cards and interacting with them
 type props={
@@ -49,6 +50,7 @@ export default function ApplicantCard({ application,onAction, }: props) {
           {/* Row 4: footer */}
           <CardFooter>
            <ViewListingButton applicationId={application.id}/>
+           <ViewApplicationButton applicationId={application.id}/>
   
             <div className="flex items-center gap-2">
               {application.status === 'PENDING' && (

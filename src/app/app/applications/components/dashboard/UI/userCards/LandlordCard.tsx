@@ -5,6 +5,7 @@ import ListingInfo from "../generic/ListingInfo";
 import ProfileButton from "../profile/ProfileButton";
 import { Application } from "../../../../types";
 import ViewListingButton from "../generic/ViewListingButton";
+import ViewApplicationButton from "../generic/ViewApplicationButton";
 // card which is viewable to applicant, to quickly see their current applications and what actions they can perform on it
 // produced by landlords
 type props={
@@ -50,12 +51,7 @@ export default function LandlordCard({ app, onAction,}: props) {
         <CardFooter>
           <div className="flex items-center gap-4">
             <ViewListingButton applicationId={app.id}/>
-            {app.status === 'PENDING' && (
-              <button className="flex items-center gap-1.5 text-[11px] text-white/35 hover:text-[#c9fb00] transition-colors font-medium">
-                <FileText className="w-3.5 h-3.5" />
-                View application
-              </button>
-            )}
+            <ViewApplicationButton applicationId={app.id}/>
           </div>
 
           {app.status === 'PENDING' && (

@@ -99,6 +99,8 @@ export async function createListing(data: PropertyListingForm) {
           city: city ?? "",
           postcode: postcode ?? "",
           landlordId: user.id,
+          lat: 1.2,//TODO derive this later
+          lng: 1.2,
           amenities: {
             create: amenities.map(({ name, type, distance }) => ({
               name, type, distance: distance ?? null,
