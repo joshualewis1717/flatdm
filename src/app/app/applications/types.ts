@@ -3,6 +3,10 @@ import { ApplicationStatus } from "@prisma/client";
 export type ApplicationForm={
     moveInDate: Date | null,
     moveOutDate: Date | null,
+    firstName: string,
+    lastName: string,
+    email: string,
+    phoneNumber: string,
 }
 
 export type Application = {
