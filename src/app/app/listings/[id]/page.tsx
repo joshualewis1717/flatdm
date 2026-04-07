@@ -8,6 +8,8 @@ import ListingInfoPanel from "../components/viewListing/layout/ListingInfoPanel"
 export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
+  if (!id) return null;
+
   return (
     <div className="space-y-6">
        <div className="flex flex-col lg:flex-row gap-6">

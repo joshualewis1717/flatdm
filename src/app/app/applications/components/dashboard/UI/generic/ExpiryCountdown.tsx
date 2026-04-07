@@ -7,6 +7,7 @@ type props={
 }
 
 export default function ExpiryCountdown({ expiryDate }:props) {
+    if (!expiryDate) return null;
     const days = daysUntilDate(expiryDate);
     const urgent = days <= 3;// if it's urget we want seperate styling
     return (
