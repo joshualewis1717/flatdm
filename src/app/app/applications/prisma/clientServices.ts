@@ -12,12 +12,14 @@ import {
   updateApplicationStatusAsConsultantQuery,
   isListingOwnedByLandlord,
   getListingIdFromApplicationQuery,
+  getApplicationIfAuthorised,
 } from "./rawQueries";
 import { mapApplicantApplication, mapLandlordApplication } from "./mappers";
 import { runService, withRole } from "@/app/app/clientService/prisma/prismaUtils";
 import { MINIMUM_APPLICATION_WINDOW } from "./const";
 import { startOfDay } from "date-fns";
 import { isValidPhoneNumber } from 'libphonenumber-js';
+import { auth } from "@/lib/auth";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -78,6 +80,19 @@ export async function submitApplication(
       email: email.trim(), phone: phoneNumber.trim(), message: message?.trim()});
   });
 }
+
+export async function getExistingApplication(applicationId: number){
+  return runService(async ()=>{
+    const session = await auth();
+    if (!session) throw new Error('session expired')
+    const userId = session.user.id
+  if (!userId) throw new Error("could not find user")
+  const application = getApplicationIfAuthorised(applicationId, Number(userId))
+  if (!application) throw new Error("could not fetch application details or unauthorised access")
+  return application
+  })
+}
+
 
 // get applications for a specific applicant
 

@@ -17,6 +17,23 @@ export async function getListingById(listingId: number) {
   });
 }
 
+// function to only show application if the owner/ listing owner of the application is trying to access it
+export async function getApplicationIfAuthorised(applicationId: number, userId: number) {
+  return prisma.propertyApplication.findFirst({
+    where: {
+      id: applicationId,
+      OR: [
+        { userId }, // applicant
+        { listing: { landlordId: userId } }, // landlord
+      ],
+    },
+    include: {
+      listing: true, // include landlord relation if needed
+      user: true,// also include user details
+    },
+  });
+}
+
 export async function getActiveApplication(listingId: number, userId: number) {
   return prisma.propertyApplication.findFirst({
     where: {

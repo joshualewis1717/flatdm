@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -15,11 +15,15 @@ type DatePickerProps = {
 export default function DatePicker({ value, onChange, placeholder = "dd/mm/yyyy", readOnly= false }: DatePickerProps) {
   const [date, setDate] = useState<Date | undefined>(value ?? undefined);
 
-  const handleSelect = (selectedDate: Date | undefined) => {
+  // sync when parent value changes
+  useEffect(() => {
+    setDate(value ?? undefined);
+  }, [value]);
+
+  function handleSelect(selectedDate: Date | undefined){
     setDate(selectedDate);
     onChange?.(selectedDate);
   };
-
   return (
     <Popover>
       <PopoverTrigger asChild>
