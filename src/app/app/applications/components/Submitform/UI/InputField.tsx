@@ -1,5 +1,6 @@
 import { InputFieldInput, RadioOption } from "../../../types";
 import DatePicker from "./DatePicker";
+import PhoneInputField from "./PhoneInputField";
 import RadioGroup from "./RadioGroup";
 import SelectBox from "./SelectBox";
 
@@ -18,11 +19,12 @@ type InputFieldProps = {
   onValueChange?: (value: string) => void;
   radioOptions?: RadioOption[];
   onRadioChange?: (value: string) => void;
+  readOnly?: boolean;
 };
 
 //TODO: pass required down into actual underlying input fields so that form can't be submitted without them
 export default function InputField({label,placeholder,required,type = "text",name,value, onChange,onDateChange,
-  onValueChange,options, radioOptions, onRadioChange}: InputFieldProps) {
+  onValueChange,options, radioOptions, onRadioChange, readOnly = false}: InputFieldProps) {
   const stringValue = typeof value === "string" ? value : "";
 
   return (
@@ -36,6 +38,7 @@ export default function InputField({label,placeholder,required,type = "text",nam
           value={value instanceof Date ? value : value ? new Date(value) : null}
           onChange={onDateChange}
           placeholder={placeholder}
+          readOnly={readOnly}
         />
       ) : type === "select" && options ? (
         <SelectBox
@@ -43,6 +46,7 @@ export default function InputField({label,placeholder,required,type = "text",nam
           onChange={(val) => onValueChange?.(val)}
           options={options}
           placeholder={placeholder}
+          readOnly={readOnly}
         />
       ) : type === "radio" && radioOptions ? (
         <RadioGroup
@@ -50,6 +54,16 @@ export default function InputField({label,placeholder,required,type = "text",nam
           options={radioOptions}
           value={stringValue || null}
           onChange={(val) => onRadioChange?.(val)}
+          readOnly={readOnly}
+        />
+      ): type === "tel" ? (
+        <PhoneInputField
+          label={label}
+          name={name}
+          value={stringValue}
+          required={type === "required"}
+          onValueChange={onValueChange}// underlying component needs the handler to use strings
+          readOnly={readOnly}
         />
       ) : type == 'textarea' ? (
         <textarea
@@ -59,6 +73,7 @@ export default function InputField({label,placeholder,required,type = "text",nam
           placeholder={placeholder}
           className="rounded-md bg-white/[0.05] border border-white/10 p-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
           rows={4}
+          readOnly={readOnly}
         />
       ) : (
         <input
@@ -68,6 +83,7 @@ export default function InputField({label,placeholder,required,type = "text",nam
           onChange={onChange}
           placeholder={placeholder}
           className="rounded-md bg-white/[0.05] border border-white/10 p-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-primary"
+          readOnly={readOnly}
         />
       )}
     </div>

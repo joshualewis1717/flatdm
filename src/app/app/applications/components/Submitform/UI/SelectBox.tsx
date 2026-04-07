@@ -6,11 +6,12 @@ type SelectBoxProps = {
   onChange: (value: string) => void;
   options: { label: string; value: string }[];
   placeholder?: string;
+  readOnly?: boolean
 };
 
-export default function SelectBox({ value, onChange, options, placeholder = "Select..." }: SelectBoxProps) {
+export default function SelectBox({ value, onChange, options, placeholder = "Select...", readOnly = false }: SelectBoxProps) {
   return (
-    <Listbox value={value} onChange={onChange}>
+    <Listbox value={value} onChange={onChange} disabled={readOnly}>
       <div className="relative">
         <ListboxButton className="w-full rounded-md bg-white/[0.05] border border-white/10 p-3 text-white text-left focus:outline-none focus:ring-2 focus:ring-primary">
           {options.find((o) => o.value === value)?.label || placeholder}

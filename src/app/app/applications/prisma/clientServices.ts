@@ -17,6 +17,7 @@ import { mapApplicantApplication, mapLandlordApplication } from "./mappers";
 import { runService, withRole } from "@/app/app/clientService/prisma/prismaUtils";
 import { MINIMUM_APPLICATION_WINDOW } from "./const";
 import { startOfDay } from "date-fns";
+import { isValidPhoneNumber } from 'libphonenumber-js';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,7 +30,10 @@ type LandlordApplication = ReturnType<typeof mapLandlordApplication>;
 export async function submitApplication(
   listingId: number,
   moveInDate: Date,
-  moveOutDate: Date | null
+  moveOutDate: Date | null,
+  phoneNumber: string,
+  email: string,
+  message: string = ''
 ) {
   return runService(async () => {
     const user = await withRole("CONSULTANT");
@@ -38,6 +42,15 @@ export async function submitApplication(
     const moveIn = new Date(moveInDate);
 
     const difference =(startOfDay(moveIn).getTime() - startOfDay(now).getTime()) /(24 * 60 * 60 * 1000);// normalise to days
+
+
+    if (!moveInDate || !email || !phoneNumber) {
+      throw  new Error("One or more of the required fields are empty");
+    }
+
+    if (!isValidPhoneNumber(phoneNumber)){
+      throw new Error("invalid phone number format")
+    }
 
     if (difference < MINIMUM_APPLICATION_WINDOW) {
       throw new Error(`Move-in must be at least ${MINIMUM_APPLICATION_WINDOW} days from today.`);
@@ -61,7 +74,8 @@ export async function submitApplication(
     const count = await countOccupantsAtDate(listingId, moveInDate);
     if (count >= listing.maxOccupants) throw new Error("Listing full at that time.");
 
-    await createApplicationQuery({ listingId, userId: user.id, moveInDate, moveOutDate });
+    await createApplicationQuery({ listingId, userId: user.id, moveInDate, moveOutDate, 
+      email: email.trim(), phone: phoneNumber.trim(), message: message?.trim()});
   });
 }
 

@@ -9,9 +9,10 @@ type DatePickerProps = {
   value?: Date | null;
   onChange?: (date: Date | undefined) => void;
   placeholder?: string;
+  readOnly?: boolean
 };
 
-export default function DatePicker({ value, onChange, placeholder = "dd/mm/yyyy" }: DatePickerProps) {
+export default function DatePicker({ value, onChange, placeholder = "dd/mm/yyyy", readOnly= false }: DatePickerProps) {
   const [date, setDate] = useState<Date | undefined>(value ?? undefined);
 
   const handleSelect = (selectedDate: Date | undefined) => {
@@ -36,6 +37,7 @@ export default function DatePicker({ value, onChange, placeholder = "dd/mm/yyyy"
           selected={date}
           onSelect={handleSelect}
           className="text-white"
+          readOnly={readOnly}
         />
       </PopoverContent>
     </Popover>

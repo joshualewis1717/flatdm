@@ -7,6 +7,7 @@ export type ApplicationForm={
     lastName: string,
     email: string,
     phoneNumber: string,
+    message?: string,// any optional message user wants to say to landlord
 }
 
 export type Application = {

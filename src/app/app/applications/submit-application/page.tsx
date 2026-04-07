@@ -1,9 +1,10 @@
 'use client'
-import {useState } from "react";
+import {useEffect, useState } from "react";
 import { ApplicationForm } from "../types";
 import InputField from "../components/Submitform/UI/InputField";
 import { submitApplication } from "../prisma/clientServices";
 import { useSessionContext } from "@/components/shared/app-frame";
+import { isValidPhoneNumber } from 'libphonenumber-js';
 
 
 // page where consultants can submit an application form for a specific listing
@@ -12,7 +13,7 @@ type SubmitApplicationPageProps = {
   listingId: number;// id of the lisitng that this application procress applies towards
 };
 
-export default function SubmitApplicationPage({ listingId = 20 }: SubmitApplicationPageProps) {
+export default function SubmitApplicationPage({ listingId = 2 }: SubmitApplicationPageProps) {
   const [form, setForm] = useState<ApplicationForm>({
     moveInDate: null,
     moveOutDate: null,
@@ -20,12 +21,13 @@ export default function SubmitApplicationPage({ listingId = 20 }: SubmitApplicat
     lastName: "",
     email: "",
     phoneNumber: "",
+    message: "",
   });
   const [specifyMoveOut, setSpecifyMoveOut] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const {isConsultant} = useSessionContext();
+  const {isConsultant, firstName, lastName, email} = useSessionContext();
 
   async function handleSubmit(e: React.SubmitEvent){
     e.preventDefault();
@@ -36,12 +38,14 @@ export default function SubmitApplicationPage({ listingId = 20 }: SubmitApplicat
       return;
     }
 
+    if (!isValidPhoneNumber(form.phoneNumber)){
+      setError("invalid phone number format")
+      return
+    }
+
     setLoading(true);
-    const { error } = await submitApplication(
-      listingId,
-      form.moveInDate,
-      specifyMoveOut ? form.moveOutDate : null
-    );
+    const { error } = await submitApplication( listingId, form.moveInDate, specifyMoveOut ? form.moveOutDate : null,
+      form.phoneNumber, form.email, form.message);
     setLoading(false);
 
     if (error) {
@@ -61,6 +65,21 @@ export default function SubmitApplicationPage({ listingId = 20 }: SubmitApplicat
     }));
   }
 
+  useEffect(() => {
+    // for now, assume we are in create application mode, hence only consultants can submit and populate data
+    async function populateName(){
+      if (!isConsultant || !firstName || !lastName) return;
+    
+      setForm((prev) => ({
+        ...prev,
+        firstName: firstName ?? "",
+        lastName: lastName ?? "",
+        email: email ?? "",
+      }));
+  }
+  populateName();
+  }, [isConsultant]);
+
 
   if (success) {
     return (
@@ -72,7 +91,7 @@ export default function SubmitApplicationPage({ listingId = 20 }: SubmitApplicat
   }
 
 
-  if (!isConsultant || !listingId) return null;
+  if (!listingId) return null;
 
   return (
     <div className="max-w-3xl mx-auto p-6 sm:p-8 space-y-6">
@@ -83,6 +102,7 @@ export default function SubmitApplicationPage({ listingId = 20 }: SubmitApplicat
           <p className="text-xs text-white/50">indicates required fields</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/*TODO: make name be read only */}
           <InputField
             label="First Name"
             name="firstName"
@@ -90,6 +110,7 @@ export default function SubmitApplicationPage({ listingId = 20 }: SubmitApplicat
             onChange={handleChange}
             placeholder="enter first name"
             required
+            readOnly={true}
           />
 
           <InputField
@@ -99,11 +120,13 @@ export default function SubmitApplicationPage({ listingId = 20 }: SubmitApplicat
             onChange={handleChange}
             placeholder="enter last name"
             required
+            readOnly={true}
           />
 
           <InputField
             label="Email"
             name="email"
+            type="email"
             value={form.email}
             onChange={handleChange}
             placeholder="enter email address"
@@ -113,9 +136,14 @@ export default function SubmitApplicationPage({ listingId = 20 }: SubmitApplicat
           <InputField
             label="Phonenumber"
             name="phoneNumber"
+            type="tel"
             value={form.phoneNumber}
-            onChange={handleChange}
-            placeholder="please enter phoneNumber"
+            onValueChange={(val) =>
+              setForm((prev) => ({
+                ...prev,
+                phoneNumber: val,
+              }))
+            }
             required
           />
 
@@ -151,6 +179,15 @@ export default function SubmitApplicationPage({ listingId = 20 }: SubmitApplicat
               />
             )}
           </div>
+
+          <InputField
+            label="Optional Message?"
+            type="textarea"
+            name="message"
+            value={form.message}
+            onChange={handleChange}
+            placeholder="please enter any optional info that you wan to tell landlord..."
+          />
 
           {error && <p className="text-sm text-red-400">{error}</p>}
 

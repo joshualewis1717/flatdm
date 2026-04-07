@@ -1,6 +1,16 @@
 import { prisma } from "@/lib/prisma";
 import { APPLICATION_EXPIRY_TIME } from "../const";
 // raw prisma queries for applications
+
+type SubmitApplication = {
+  listingId: number
+  userId: number;
+  moveInDate: Date,
+  moveOutDate: Date | null,
+  email?: string,
+  message?: string,
+  phone?: string;
+}
 export async function getListingById(listingId: number) {
   return prisma.propertyListing.findUnique({
     where: { id: listingId, isDeleted: false },
@@ -40,12 +50,8 @@ export async function countOccupantsAtDate(
   });
 }
 
-export async function createApplicationQuery(data: {
-  listingId: number;
-  userId: number;
-  moveInDate: Date;
-  moveOutDate: Date | null;
-}) {
+
+export async function createApplicationQuery(data: SubmitApplication) {
   return prisma.propertyApplication.create({
     data: {
       ...data,
