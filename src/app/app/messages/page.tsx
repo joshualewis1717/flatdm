@@ -8,10 +8,16 @@ export default async function MessagesPage() {
 
   const conversations = await prisma.conversation.findMany({
     where: {
-      OR: [
-        { userAId: userId },
-        { userBId: userId },
-      ],
+      OR:[
+        {
+          userAId: userId,
+          isDeletedA: false
+        },
+        {
+          userBId: userId,
+          isDeletedB: false
+        }
+      ]
     },
     include: {
       userA: true,

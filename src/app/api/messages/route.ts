@@ -13,12 +13,26 @@ async function getUserId() {
 }
 
 async function getConversation(conversationId: number, userId: number) {
-  return prisma.conversation.findFirst({
-    where: {
-      id: conversationId,
-      OR: [{ userAId: userId }, { userBId: userId }],
-    },
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
   });
+
+  if (!conversation) {
+    return null;
+  }
+
+  const isUserA = conversation.userAId === userId;
+  const isUserB = conversation.userBId === userId;
+
+  if (!isUserA && !isUserB) {
+    return null;
+  }
+
+  if ((isUserA && conversation.isDeletedA) || (isUserB && conversation.isDeletedB)) {
+    return null;
+  }
+
+  return conversation;
 }
 
 export async function POST(req: NextRequest) {

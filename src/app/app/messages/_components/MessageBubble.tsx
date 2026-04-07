@@ -4,7 +4,7 @@ import { formatTimestampChat } from "./helperFunctions";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
 
-type Props = {
+type parameters = {
   message: Message & {
     showDaySeparator?: boolean;
     dayLabel?: string;
@@ -12,7 +12,7 @@ type Props = {
   handleDeleteMessage: (messageId: number) => void;
 };
 
-export default function MessageBubble({ message, handleDeleteMessage }: Props){
+export default function MessageBubble({ message, handleDeleteMessage }: parameters){
     return (
         <div>
             <div key={message.id}>
@@ -51,7 +51,7 @@ export default function MessageBubble({ message, handleDeleteMessage }: Props){
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => handleDeleteMessage(message.id)}>
-                                    Delete message
+                                    Delete Message
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
