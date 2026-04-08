@@ -135,7 +135,6 @@ model PropertyListing {
   description String
 
   rent          Int
-  availableFrom DateTime
 
   lat Float
   lng Float
