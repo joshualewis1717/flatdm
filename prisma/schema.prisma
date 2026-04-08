@@ -118,8 +118,8 @@ model PropertyListing {
   rent          Int
   availableFrom DateTime
 
-  lat Float?
-  lng Float?
+  lat Float
+  lng Float
   coords Unsupported("geometry(Point, 4326)")? // PostGIS
 
   // rental rules
