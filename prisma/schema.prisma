@@ -1,5 +1,7 @@
 generator client {
   provider = "prisma-client-js"
+  // only if your Prisma version/docs still require it
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
@@ -60,11 +62,15 @@ model Profile {
   user User @relation(fields: [userId], references: [id])
 }
 
+// Demo note: we know storing image blobs directly in the database is usually bad practice for a real production setup.
+// This is only for demonstration purposes, in a real environment we would move image storage to object storage/CDN and keep only references here.
 model ListingImage {
-  id  Int    @id @default(autoincrement())
-  url String
+  id       Int    @id @default(autoincrement())
+  fileName String?
+  mimeType String
+  sizeBytes Int
+  data     Bytes
 
-  // Marks whether this image is the thumbnail
   isThumbnail Boolean @default(false)
 
   listingId Int
@@ -84,7 +90,7 @@ model Property {
 
   lat Float
   lng Float
-  //location Geometry(Point, 4326) // PostGIS geometry type for geospatial queries
+  coords Unsupported("geometry(Point, 4326)")? // PostGIS
 
   landlordId Int
   landlord   User @relation(fields: [landlordId], references: [id])
@@ -114,7 +120,7 @@ model PropertyListing {
 
   lat Float?
   lng Float?
-  //location Geometry(Point, 4326)? // PostGIS geometry type for geospatial queries
+  coords Unsupported("geometry(Point, 4326)")? // PostGIS
 
   // rental rules
   maxOccupants Int // e.g. withRoomates boolean or whatnot is derived from this
