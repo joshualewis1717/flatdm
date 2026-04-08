@@ -12,10 +12,10 @@ import { MyPropertyListingData, OccupantUI } from '../types';
 import { getListingsForLandlord, deleteListing } from '../prisma/clientServices';
 import { useSessionContext } from '@/components/shared/app-frame';
 
-
 export default function Page() {
   const router = useRouter();
-  const {isLandlord} = useSessionContext()
+  const { isLandlord } = useSessionContext();
+
   const [listings, setListings] = useState<MyPropertyListingData[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -42,7 +42,6 @@ export default function Page() {
     fetchListings();
   }, []);
 
-  
   //  filter by address and also sort by most occupants, least occupants, empty first, full first
   const filtered = useMemo(() => {
     let list = listings.filter((listing) => {
@@ -119,14 +118,41 @@ export default function Page() {
     setDeleteLoading(false);
   }
 
+  // function to allow landlords to delete a occupant:
+  function handleRemoveOccupant(occupantId: number) {
+    setListings(prev =>
+      prev.map(listing => {
+        // update both lists in case if we want for landlords to alsod elete upcoming applicants in future
+        const updatedCurrent = listing.currentOccupants.filter(
+          o => o.id !== occupantId
+        );
+
+        const updatedUpcoming = listing.upcomingOccupants.filter(
+          o => o.id !== occupantId
+        );
+
+        return {
+          ...listing,
+          currentOccupants: updatedCurrent,
+          upcomingOccupants: updatedUpcoming,
+          propertyListing: {
+            ...listing.propertyListing,
+            currentOccupants: updatedCurrent.length, // keep count in sync
+          },
+        };
+      })
+    );
+  }
+
   // use effect to redirect user if they are not a landlord
   useEffect(() => {
-  if (!isLandlord) {
-    router.push('/login');
-  }
-}, [isLandlord, router]);
+    if (!isLandlord) {
+      router.push('/login');
+    }
+  }, [isLandlord, router]);
 
   if (!isLandlord) return null;
+
   if (loading)
     return (
       <p className="text-sm text-white/40 p-8">
@@ -247,6 +273,7 @@ export default function Page() {
             occupant={modal.occupant}
             property={modal.property}
             onClose={() => setModal(null)}
+            onRemove={handleRemoveOccupant}
           />
         )}
       </div>

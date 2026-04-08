@@ -218,3 +218,43 @@ export async function getListingIdFromApplication(applicationId: number) {
     return listing.listingId;
   });
 }
+
+
+// function to remove an occupant (we set move out into the past so it is treated as if it 
+// was soft deleted, and our system will not return the occupant for anything.)
+export async function removeOccupant(occupantId: number) {
+  return runService(async () => {
+    const user = await withRole("LANDLORD");
+
+    // 1. Get occupant + listing ownership check
+    const occupant = await prisma.occupant.findUnique({
+      where: { id: occupantId },
+      include: {
+        listing: {
+          select: { landlordId: true },
+        },
+      },
+    });
+
+    if (!occupant) throw new Error("Occupant not found");
+
+    if (occupant.listing.landlordId !== user.id) {
+      throw new Error("Forbidden");
+    }
+
+    // landlord is not allowed to remove upcoming/ future occupants only current ones
+    if (occupant.moveIn > new Date()){
+      throw new Error("cannot remove upcoming occupants")
+    }
+
+    //  to remove occuapnt, we set move out to be current date, since all our logic counts active occupants as move out > current
+    // (hence if move out < current, we treat it as soft deletion)
+    await prisma.occupant.update({
+      where: { id: occupantId },
+      data: {
+        moveOut: new Date(), 
+      },
+    });
+    return true
+  });
+}
