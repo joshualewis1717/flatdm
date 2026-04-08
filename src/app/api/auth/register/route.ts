@@ -18,8 +18,24 @@ export async function POST(req: Request) {
     if (!firstName || !lastName || !username || !email || !password) 
       return NextResponse.json({ success: false, error: "All fields are required" }, { status: 400 });
     
-    if (typeof password !== "string" || password.length < 8) 
-      return NextResponse.json({ success: false, error: "password must be at least 8 characters" }, { status: 400 });
+    if (typeof password !== "string" || password.length < 8)
+      return NextResponse.json(
+        { success: false, error: "Password must be at least 8 characters long." },
+        { status: 400 }
+      );
+
+    if ((password.match(/\d/g) || []).length < 2) {                                                                    
+      return NextResponse.json(                                                                                        
+        { success: false, error: "Password must contain at least 2 numbers." },                                        
+        { status: 400 }                                                                                                
+      );                                                                                                               
+    }    
+    
+    if (!/[!@#$%^&*(),.?":{}|<>£]/.test(password))
+      return NextResponse.json(
+        { success: false, error: "Password must contain at least 1 special character." },
+        { status: 400 }
+      );
     
     const selectedRole: Role = ALLOWED_ROLES.includes(role) && typeof role === "string" ? (role as Role) : Role.CONSULTANT;
 
