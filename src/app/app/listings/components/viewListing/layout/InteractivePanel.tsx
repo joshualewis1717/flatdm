@@ -57,7 +57,7 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
 
         {isLandlord &&  landlordIsOwner &&  (
            <button className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
-           onClick={()=>router.push('/app/listings/new')}>{/* pass in id so it can rehydrate the info with the listing info*/}
+           onClick={()=>router.push(`/app/listings/edit/${listingId}`)}>{/* pass in id so it can rehydrate the info with the listing info*/}
            Edit Listing
          </button>
         )}

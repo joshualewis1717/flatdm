@@ -83,6 +83,7 @@ export function mapToListingDetail(listing: NonNullable<Awaited<ReturnType<typeo
   const images = listing.images.filter((img) => !img.isThumbnail).map((img) => img.url);
 
   return {
+    propertyId: listing.propertyId,
     id: listing.id,
     flatNumber: listing.flatNumber ?? null,
     description: listing.description,
@@ -109,7 +110,7 @@ export function mapToListingDetail(listing: NonNullable<Awaited<ReturnType<typeo
 // function to map property listing data to the data format that the my property listing page expects
 export function mapToMyPropertyListing(
   listing: Awaited<ReturnType<typeof queryListingsForLandlord>>[number]
-): MyPropertyListingData {
+): MyPropertyListingData {// give the type property id if we need it for the page.
   const thumbnail = listing.images.find((img) => img.isThumbnail);
   const now = new Date();
 

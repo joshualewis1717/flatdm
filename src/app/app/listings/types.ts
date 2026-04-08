@@ -96,6 +96,7 @@ export type ExistingProperty = {
 
 /**** Listing info data client side type wrapper */
 export type ListingInfoData = {
+  propertyId?: number;// id of the building itself
   id: number;// listing id
   buildingName: string;
   flatNumber: string | null;
