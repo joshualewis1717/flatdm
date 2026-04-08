@@ -1,5 +1,4 @@
 'use server'
-import { APPLICATION_EXPIRY_TIME } from "../const";
 import {
   getListingById,
   getActiveApplication,
@@ -11,9 +10,13 @@ import {
   getApplicationsForLandlordQuery,
   updateApplicationStatusAsLandlordQuery,
   updateApplicationStatusAsConsultantQuery,
+  isListingOwnedByLandlord,
+  getListingIdFromApplicationQuery,
 } from "./rawQueries";
 import { mapApplicantApplication, mapLandlordApplication } from "./mappers";
-import { runService, withRole } from "@/app/app/clientService/prismaUtils";
+import { runService, withRole } from "@/app/app/clientService/prisma/prismaUtils";
+import { MINIMUM_APPLICATION_WINDOW } from "./const";
+import { startOfDay } from "date-fns";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -32,8 +35,14 @@ export async function submitApplication(
     const user = await withRole("CONSULTANT");
     const now = new Date();
 
-    if (moveInDate <= now) throw new Error("Move-in must be in the future.");
-    if (moveOutDate && moveOutDate <= moveInDate) throw new Error("Move-out must be after move-in.");
+    const moveIn = new Date(moveInDate);
+
+    const difference =(startOfDay(moveIn).getTime() - startOfDay(now).getTime()) /(24 * 60 * 60 * 1000);// normalise to days
+
+    if (difference < MINIMUM_APPLICATION_WINDOW) {
+      throw new Error(`Move-in must be at least ${MINIMUM_APPLICATION_WINDOW} days from today.`);
+    }
+    if (moveOutDate && startOfDay(moveOutDate).getTime() <= startOfDay(moveInDate).getTime()) throw new Error("Move-out must be after move-in.");
 
     const [listing, existingApp, occupant] = await Promise.all([
       getListingById(listingId),
@@ -92,24 +101,41 @@ export async function updateApplicationStatus(
 ) {
   return runService(async () => {
     const user = await withRole("LANDLORD");
-    const expiry =
-      status === "APPROVED"
-        ? new Date(Date.now() + APPLICATION_EXPIRY_TIME)
-        : undefined;
-    await updateApplicationStatusAsLandlordQuery(applicationId, user.id, status, expiry);
+    await updateApplicationStatusAsLandlordQuery(applicationId, user.id, status);
   });
 }
 
 // Consultant response
 
 // TODO: extend with a WITHDRAWN status option
-export async function respondToOffer(applicationId: number, accept: boolean) {
+export async function respondToOffer(applicationId: number, status: 'CONFIRMED' | 'REJECTED' | 'WITHDRAWN') {
   return runService(async () => {
     const user = await withRole("CONSULTANT");
     await updateApplicationStatusAsConsultantQuery(
       applicationId,
       user.id,
-      accept ? "CONFIRMED" : "REJECTED"
+      status
     );
+  });
+}
+
+
+export async function landlordOwnsListing(listingId: number) {
+  return runService(async () => {
+    const user = await withRole("LANDLORD");
+
+    return await isListingOwnedByLandlord(listingId, user.id);
+  });
+}
+
+export async function getListingIdFromApplication(applicationId: number) {
+  return runService(async () => {
+    const listing = await getListingIdFromApplicationQuery(applicationId);
+
+    if (!listing) {
+      throw new Error("Listing is not found");
+    }
+
+    return listing.listingId;
   });
 }

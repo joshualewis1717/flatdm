@@ -18,13 +18,14 @@ export type ProfilePageData = {
     properties: number;
     unreadMessages: number;
     reviews: number;
+    averageReview: number | null;
     reports: number;
     rentalHistory: number;
   };
 };
 
 export async function getProfilePageData(userId: number): Promise<ProfilePageData | null> {
-  const [user, unreadMessages] = await Promise.all([
+  const [user, unreadMessages, reviewAggregate] = await Promise.all([
     prisma.user.findFirst({
       where: { id: userId, isDeleted: false },
       select: {
@@ -61,6 +62,15 @@ export async function getProfilePageData(userId: number): Promise<ProfilePageDat
         },
       },
     }),
+    prisma.review.aggregate({
+      where: {
+        targetUserId: userId,
+        isDeleted: false,
+      },
+      _avg: {
+        rating: true,
+      },
+    }),
   ]);
 
   if (!user) return null;
@@ -81,6 +91,7 @@ export async function getProfilePageData(userId: number): Promise<ProfilePageDat
       properties: user._count.properties,
       unreadMessages,
       reviews: user._count.reviewsReceived,
+      averageReview: reviewAggregate._avg.rating ?? null,
       reports: user._count.reportsMade,
       rentalHistory: user._count.occupants,
     },

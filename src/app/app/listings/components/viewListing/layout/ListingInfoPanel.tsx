@@ -14,7 +14,7 @@ type ListingInfoPanelProps = {
 
 type ListingData = NonNullable<Awaited<ReturnType<typeof getListingById>>["result"]>;
 
-export default function ListingInfoPanel({ listingId = '5' }: ListingInfoPanelProps) {
+export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
   const [data, setData] = useState<ListingData | null>(null);
   const [loading, setLoading] = useState(true);
 

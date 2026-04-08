@@ -26,6 +26,18 @@ const headers: Record<string, { title: string; description: string }> = {
     title: "Profile",
     description: "Keep your account details current and track the activity that matters for your role.",
   },
+  "/app/profile/edit": {
+    title: "Edit profile",
+    description: "Update your personal details and keep your profile current.",
+  },
+  "/app/reviews": {
+    title: "Reviews",
+    description: "Track incoming reviews, leave feedback, and build trust across the platform.",
+  },
+  "/app/reviews/new": {
+    title: "Leave a review",
+    description: "Share feedback about another user or listing.",
+  },
   "/app/reports": {
     title: "Reports",
     description: "Monitor flagged content, review details, and take action to keep the marketplace healthy.",
@@ -36,9 +48,13 @@ const headers: Record<string, { title: string; description: string }> = {
 export default function Header({ onMenuClick } : { onMenuClick: () => void; }) {
   const pathname = usePathname();
   const meta =
-    pathname.startsWith("/app/profile/")
-      ? headers["/app/profile"]
-      : headers[pathname] ?? headers["/app"];
+    pathname.startsWith("/app/profile/edit")
+      ? headers["/app/profile/edit"]
+      : pathname.startsWith("/app/profile/")
+        ? headers["/app/profile"]
+      : pathname.startsWith("/app/reviews/new")
+        ? headers["/app/reviews/new"]
+        : headers[pathname] ?? headers["/app"];
 
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-background/80 backdrop-blur-xl">

@@ -82,8 +82,9 @@ model Property {
   city       String
   postcode   String
 
-  lat Float?
-  lng Float?
+  lat Float
+  lng Float
+  //location Geometry(Point, 4326) // PostGIS geometry type for geospatial queries
 
   landlordId Int
   landlord   User @relation(fields: [landlordId], references: [id])
@@ -110,6 +111,10 @@ model PropertyListing {
 
   rent          Int
   availableFrom DateTime
+
+  lat Float?
+  lng Float?
+  //location Geometry(Point, 4326)? // PostGIS geometry type for geospatial queries
 
   // rental rules
   maxOccupants Int // e.g. withRoomates boolean or whatnot is derived from this
@@ -143,6 +148,10 @@ model PropertyListing {
 
 model PropertyApplication {
   id Int @id @default(autoincrement())
+
+  email      String?
+  phone      String?
+  message    String?
 
   moveInDate  DateTime
   moveOutDate DateTime?
@@ -188,6 +197,11 @@ model Conversation {
 
   userA User @relation("ConversationUserA", fields: [userAId], references: [id])
   userB User @relation("ConversationUserB", fields: [userBId], references: [id])
+
+  isDeletedA Boolean   @default(false)
+  isDeletedB Boolean   @default(false)
+  deletedAtA DateTime?
+  deletedAtB DateTime?
 
   messages Message[]
 }
