@@ -28,7 +28,7 @@ export default function OccupantCard({occupant,onClick,}:props ) {
 
       <div className="flex-1 min-w-0">
         <div className="text-[13px] font-medium text-white truncate">
-          {'example real name'}
+          {occupant.name}
         </div>
 
         <span

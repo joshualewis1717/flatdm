@@ -32,7 +32,7 @@ export default function OccupantModal({occupant,property,onClose,}: props) {
         <div className="flex items-start justify-between gap-3 mb-5">
           <div className="flex-1">
             <div className="text-[18px] font-semibold text-white">
-              {'example name'}
+              {occupant.name}
             </div>
             <div className="text-[12px] text-white/45 mt-0.5">
               {property.buildingName} · {property.streetName}
@@ -61,15 +61,27 @@ export default function OccupantModal({occupant,property,onClose,}: props) {
         {/* Date rows */}
         <div className="flex flex-col gap-2.5">
           {isApplicant ? (
-            <div className="flex items-center justify-between bg-[#323232] border border-white/[0.08] rounded-[10px] px-3.5 py-3">
-              <div className="flex items-center gap-1.5 text-[12px] text-white/45">
-                <Calendar />
-                Expected Move-in
+            <>
+              <div className="flex items-center justify-between bg-[#323232] border border-white/[0.08] rounded-[10px] px-3.5 py-3">
+                <div className="flex items-center gap-1.5 text-[12px] text-white/45">
+                  <Calendar />
+                  Expected Move-in
+                </div>
+                <div className="font-mono text-[13px] font-medium text-[#c9fb00]">
+                  {occupant.moveInDate.toLocaleDateString()}
+                </div>
               </div>
-              <div className="font-mono text-[13px] font-medium text-[#c9fb00]">
-                {occupant.moveInDate.toLocaleDateString()}
+
+              <div className="flex items-center justify-between bg-[#323232] border border-white/[0.08] rounded-[10px] px-3.5 py-3">
+                <div className="flex items-center gap-1.5 text-[12px] text-white/45">
+                  <Calendar />
+                  Expected Move-out
+                </div>
+                <div className="font-mono text-[13px] font-medium text-[#c9fb00]">
+                  {occupant.moveOutDate?.toLocaleDateString() ?? 'N/A'}
+                </div>
               </div>
-            </div>
+            </>
           ) : (
             <>
               <div className="flex items-center justify-between bg-[#323232] border border-white/[0.08] rounded-[10px] px-3.5 py-3">

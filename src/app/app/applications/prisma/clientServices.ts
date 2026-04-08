@@ -20,6 +20,7 @@ import { MINIMUM_APPLICATION_WINDOW } from "./const";
 import { startOfDay } from "date-fns";
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -77,9 +78,29 @@ export async function submitApplication(
     if (existingApp) throw new Error("Already applied.");
 
     // stop user from applying to when listing is full at their intended move in time.
-    const count = await countOccupantsAtDate(listingId, moveInDate);
-    if (count >= listing.maxOccupants) {
-      throw new Error("Listing full at that time.");
+    const overlappingOccupants = await prisma.occupant.count({
+      where: {
+        listingId,
+    
+        AND: [
+          {
+            moveIn: {
+              lt: moveOutDate ?? new Date("9999-12-31"),// if move out date is null, assume they will stay
+              // there for an infinite amount of time for this check
+            },
+          },
+          {
+            OR: [
+              { moveOut: null },
+              { moveOut: { gt: moveInDate } },
+            ],
+          },
+        ],
+      },
+    });
+    
+    if (overlappingOccupants >= listing.maxOccupants) {
+      throw new Error("Listing is full for the selected date range.");
     }
 
     // Prevent user from applying to current listing if they are an occupant of that specific listing

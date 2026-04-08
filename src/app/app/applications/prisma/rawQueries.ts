@@ -153,10 +153,9 @@ export async function updateApplicationStatusAsLandlordQuery(applicationId: numb
   });
 }
 
-export async function updateApplicationStatusAsConsultantQuery(applicationId: number,userId: number,status: "CONFIRMED" | "REJECTED" | "WITHDRAWN"
-) {
+export async function updateApplicationStatusAsConsultantQuery( applicationId: number, userId: number, status: "CONFIRMED" | "REJECTED" | "WITHDRAWN") {
   return prisma.$transaction(async (tx) => {
-    //  Get application
+    // 1. Get application
     const application = await tx.propertyApplication.findUnique({
       where: { id: applicationId },
       select: {
@@ -169,28 +168,67 @@ export async function updateApplicationStatusAsConsultantQuery(applicationId: nu
 
     if (!application) throw new Error("Application not found");
 
-    //  Auth check
+    // 2. Auth check
     if (application.userId !== userId) {
       throw new Error("Forbidden");
     }
 
-    //  Update current application
+    // 3. Update current application
     const updated = await tx.propertyApplication.update({
       where: { id: applicationId },
       data: { status },
     });
 
-    // If user clicked confirmed, all other applications are withdrawn
+    // 4. Only proceed if confirmed
     if (status === "CONFIRMED") {
-      
+      const listingId = application.listingId;
+
+      const moveIn = application.moveInDate;
+      const moveOut = application.moveOutDate ?? new Date("9999-12-31");
+
+      // 5. Get listing capacity
+      const listing = await tx.propertyListing.findUnique({
+        where: { id: listingId },
+        select: { maxOccupants: true },
+      });
+
+      if (!listing) throw new Error("Listing not found");
+
+      // 6. Check overlapping occupants.
+      const overlappingOccupants = await tx.occupant.count({
+        where: {
+          listingId,
+
+          AND: [
+            {
+              moveIn: {
+                lt: moveOut,
+              },
+            },
+            {
+              OR: [
+                { moveOut: null },
+                { moveOut: { gt: moveIn } },
+              ],
+            },
+          ],
+        },
+      });
+
+      // 7. Prevent overbooking
+      if (overlappingOccupants >= listing.maxOccupants) {
+        throw new Error("Listing became full. Cannot confirm.");
+      }
+
+      // 8. Create occupant
       await createOccupantTx(tx, {
-        userId: application.userId,
-        listingId: application.listingId,
-        moveIn: application.moveInDate,
+        userId,
+        listingId,
+        moveIn,
         moveOut: application.moveOutDate,
       });
 
-      //  Withdraw other applications that user has
+      // 9. Withdraw other applications by same user
       await tx.propertyApplication.updateMany({
         where: {
           userId,
@@ -204,46 +242,38 @@ export async function updateApplicationStatusAsConsultantQuery(applicationId: nu
         },
       });
 
-
-      // check if listing is now full
-      const listing = await tx.propertyListing.findUnique({
-        where: { id: application.listingId },
-        select: { maxOccupants: true },
-      });
-    
-
-      const count = await tx.occupant.count({
+      // 10. Auto-reject overlapping applications for this listing
+      await tx.propertyApplication.updateMany({
         where: {
-          listingId: application.listingId,
-          moveIn: { lte: application.moveInDate },
-          OR: [
-            { moveOut: null },
-            { moveOut: { gt: application.moveInDate } },
+          listingId,
+          id: { not: applicationId },
+          status: {
+            in: ["PENDING", "APPROVED"],
+          },
+
+          AND: [
+            {
+              moveInDate: {
+                lt: moveOut,
+              },
+            },
+            {
+              OR: [
+                { moveOutDate: null },
+                { moveOutDate: { gt: moveIn } },
+              ],
+            },
           ],
         },
+        data: {
+          status: "REJECTED",
+        },
       });
-    
-      // If full reject all OTHER applications for this listing
-      if (count >= listing!.maxOccupants) {
-        await tx.propertyApplication.updateMany({
-          where: {
-            listingId: application.listingId,
-            id: { not: applicationId },
-            status: {
-              in: ["PENDING", "APPROVED"],
-            },
-          },
-          data: {
-            status: "REJECTED",
-          },
-        });
-      }
     }
 
     return updated;
   });
 }
-
 
 export async function getApplicationsForApplicantQuery(userId: number) {
   return prisma.propertyApplication.findMany({
