@@ -28,7 +28,6 @@ type ApplicantApplication = ReturnType<typeof mapApplicantApplication>;
 type LandlordApplication = ReturnType<typeof mapLandlordApplication>;
 
 // Create application
-
 export async function submitApplication(
   listingId: number,
   moveInDate: Date,
@@ -43,41 +42,71 @@ export async function submitApplication(
 
     const moveIn = new Date(moveInDate);
 
-    const difference =(startOfDay(moveIn).getTime() - startOfDay(now).getTime()) /(24 * 60 * 60 * 1000);// normalise to days
-
+    const difference =
+      (startOfDay(moveIn).getTime() - startOfDay(now).getTime()) /
+      (24 * 60 * 60 * 1000);
 
     if (!moveInDate || !email || !phoneNumber) {
-      throw  new Error("One or more of the required fields are empty");
+      throw new Error("One or more of the required fields are empty");
     }
 
-    if (!isValidPhoneNumber(phoneNumber)){
-      throw new Error("invalid phone number format")
+    if (!isValidPhoneNumber(phoneNumber)) {
+      throw new Error("invalid phone number format");
     }
 
     if (difference < MINIMUM_APPLICATION_WINDOW) {
-      throw new Error(`Move-in must be at least ${MINIMUM_APPLICATION_WINDOW} days from today.`);
+      throw new Error(
+        `Move-in must be at least ${MINIMUM_APPLICATION_WINDOW} days from today.`
+      );
     }
-    if (moveOutDate && startOfDay(moveOutDate).getTime() <= startOfDay(moveInDate).getTime()) throw new Error("Move-out must be after move-in.");
 
-    const [listing, existingApp, occupant] = await Promise.all([
+    if (
+      moveOutDate &&
+      startOfDay(moveOutDate).getTime() <= startOfDay(moveInDate).getTime()
+    ) {
+      throw new Error("Move-out must be after move-in.");
+    }
+
+    const [listing, existingApp, existingOccupant] = await Promise.all([
       getListingById(listingId),
       getActiveApplication(listingId, user.id),
       getOccupant(listingId, user.id),
     ]);
 
-    if (!listing)     throw new Error("Listing not found.");
-    if (existingApp)  throw new Error("Already applied.");
+    if (!listing) throw new Error("Listing not found.");
+    if (existingApp) throw new Error("Already applied.");
 
-    if (occupant) {
-      const stillOccupying = !occupant.moveOut || occupant.moveOut > now;
-      if (stillOccupying) throw new Error("Already occupying.");
+    // stop user from applying to when listing is full at their intended move in time.
+    const count = await countOccupantsAtDate(listingId, moveInDate);
+    if (count >= listing.maxOccupants) {
+      throw new Error("Listing full at that time.");
     }
 
-    const count = await countOccupantsAtDate(listingId, moveInDate);
-    if (count >= listing.maxOccupants) throw new Error("Listing full at that time.");
+    // Prevent user from applying to current listing if they are an occupant of that specific listing
+    // and their move in time is < than their move out time
+    if (existingOccupant) {
+      const existingMoveOut = existingOccupant.moveOut;
 
-    await createApplicationQuery({ listingId, userId: user.id, moveInDate, moveOutDate, 
-      email: email.trim(), phone: phoneNumber.trim(), message: message?.trim()});
+      const overlaps =
+        existingMoveOut === null || // still living there
+        moveInDate <= existingMoveOut; // overlap
+
+      if (overlaps) {
+        throw new Error(
+          "You are already an occupant for this listing during that time."
+        );
+      }
+    }
+
+    await createApplicationQuery({
+      listingId,
+      userId: user.id,
+      moveInDate,
+      moveOutDate,
+      email: email.trim(),
+      phone: phoneNumber.trim(),
+      message: message?.trim(),
+    });
   });
 }
 
