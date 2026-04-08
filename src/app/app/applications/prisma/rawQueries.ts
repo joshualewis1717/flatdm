@@ -203,6 +203,41 @@ export async function updateApplicationStatusAsConsultantQuery(applicationId: nu
           status: "WITHDRAWN",
         },
       });
+
+
+      // check if listing is now full
+      const listing = await tx.propertyListing.findUnique({
+        where: { id: application.listingId },
+        select: { maxOccupants: true },
+      });
+    
+
+      const count = await tx.occupant.count({
+        where: {
+          listingId: application.listingId,
+          moveIn: { lte: application.moveInDate },
+          OR: [
+            { moveOut: null },
+            { moveOut: { gt: application.moveInDate } },
+          ],
+        },
+      });
+    
+      // If full reject all OTHER applications for this listing
+      if (count >= listing!.maxOccupants) {
+        await tx.propertyApplication.updateMany({
+          where: {
+            listingId: application.listingId,
+            id: { not: applicationId },
+            status: {
+              in: ["PENDING", "APPROVED"],
+            },
+          },
+          data: {
+            status: "REJECTED",
+          },
+        });
+      }
     }
 
     return updated;
