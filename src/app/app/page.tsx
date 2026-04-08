@@ -2,6 +2,26 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
+import {getAllReports} from '@/app/app/reports/db_access'
+
+
+// get numbers for consultant page
+const reports = await getAllReports();
+let resolvedCount = 0;
+let activeCount = 0;
+
+for (let i = 0; i < reports.length; i++){
+  const rep = reports[i];
+  if (rep.status == "RESOLVED"){
+    resolvedCount++;
+  }
+  else if (rep.status == "UNDER_REVIEW" || rep.status == "OPEN"){
+    activeCount++;
+  }
+  else{
+    console.log("error: " + rep.status + " is not a valid report status");
+  }
+}
 
 //fake stats for now - will integrate real ones in a future iteration when we have more data flowing in.
 const roleContent = {
@@ -31,8 +51,8 @@ const roleContent = {
     primaryCta: { href: "/app/reports", label: "Open report queue" },
     secondaryCta: { href: "/app/reports/users", label: "View All Users" },
     metrics: [
-      { label: "Flagged items", value: "04" },
-      { label: "At-risk threads", value: "02" },
+      { label: "Reports", value: activeCount},
+      { label: "Resolved Issues", value:  resolvedCount},
     ],
   },
 } as const;

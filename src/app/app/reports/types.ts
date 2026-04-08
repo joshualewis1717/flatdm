@@ -78,7 +78,7 @@ type Property = {
   landlordId: number;
 }
 
-type Status = "Under Review" | "Resolved - No Action" | "Action Taken";
+type Status = "OPEN" | "UNDER_REVIEW" | "RESOLVED";
 
 
 type FilterSearchProps = {

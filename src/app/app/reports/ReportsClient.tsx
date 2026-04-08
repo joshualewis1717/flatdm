@@ -2,17 +2,41 @@
 "use client";
 import React, { useMemo, useState } from "react";
 import ReportOverviewItem from "@/components/shared/ReportOverviewItem";
-import {Report, Status} from '@/app/app/reports/types'
+import {Report, Status, User} from '@/app/app/reports/types'
 import { prisma } from "@/lib/prisma";
 import { getReportsFilteredSorted } from "./db_access";
 
 
-export default function ReportsClient({ initialReports }: { initialReports: Report[] }) {
+async function getUserById({users, userId} : {users: User[], userId : number}){
+  console.log(users);
+  console.log(userId);
+  for (let i = 0; i < users.length; i++){
+    if (users[i].id == userId){
+      console.log("found " + users[i])
+      return users[i];
+    }
+  }
+  console.log("user with id " + userId + " not found");
+  return undefined;
+}
+
+async function getUsers({users, reports} : {users:User[], reports:Report[]}){
+  const ret = [];
+
+  for (let i = 0; i < reports.length; i++){
+    ret.push([getUserById(reports[i].reporterID), getUserById(reports[i].targetUserId)]);
+  }
+
+  return ret;
+}
+
+export default function ReportsClient({ initialReports, users }: {initialReports: Report[], users: User[]}) {
 
   console.log("received")
   console.log(initialReports)
 
   const [viewableReports, setViewableReports] = useState(initialReports);
+  // const [viewableUsers, setViewableUsers] = useState(getUsers({users, reports:initialReports}));
 
   // parse dates lazily when needed
   const [selectedStatuses, setSelectedStatuses] = useState<Record<Status, boolean>>({
@@ -36,6 +60,7 @@ export default function ReportsClient({ initialReports }: { initialReports: Repo
   async function handleApplyFilters() {
     const resultReports = await getReportsFilteredSorted({selectedStatuses:workingStatuses, sortField:workingSortField, sortDirection:workingSortDirection});
     setViewableReports(resultReports);
+    // setViewableUsers( getUsers({users, resultReports}) );
 
     return;
   }
@@ -111,15 +136,41 @@ export default function ReportsClient({ initialReports }: { initialReports: Repo
         </div>
       </div>
 
+      {/* <div className="flex flex-col gap-2 py-[3%]">
+        {viewableReports.length === 0 ? (
+          <div>No reports match the selected filters.</div>
+        ) : (
+          {
+            for (let i = 0; )
+            viewableReports.map(report => (
+            <ReportOverviewItem key={report.id} report={report} />
+          ))
+          }
+
+        )}
+      </div> */}
       <div className="flex flex-col gap-2 py-[3%]">
         {viewableReports.length === 0 ? (
           <div>No reports match the selected filters.</div>
         ) : (
-          viewableReports.map(report => (
-            <ReportOverviewItem key={report.id} report={report} />
-          ))
+          (() => {
+            const items = [];
+            for (let i = 0; i < viewableReports.length; i++) {
+              const report = viewableReports[i];
+              // const users =
+              const targetUser = getUserById({users:users, userId:report.reporterId});
+              const reporter = getUserById({users:users, userId:report.targetUserId});
+              console.log("target");
+              console.log(targetUser);
+              console.log("reporter");
+              console.log(reporter);
+              items.push( <ReportOverviewItem key={report.id} report={report} reporter={reporter} targetUser={targetUser} />);
+            }
+            return items;
+          })()
         )}
       </div>
+
     </div>
   );
 }

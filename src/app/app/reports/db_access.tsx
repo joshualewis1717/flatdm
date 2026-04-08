@@ -161,6 +161,16 @@ export async function getReportsFilteredSorted({selectedStatuses, sortField, sor
     // return reports;
 }
 
+export async function getUser({userId} : any){
+    const user = await prisma.user.findFirst({
+        where: { id: userId }
+    });
+
+    return user;
+}
+
+
+
 
 export async function getAllReports(){
     const reports = await prisma.report.findMany();
