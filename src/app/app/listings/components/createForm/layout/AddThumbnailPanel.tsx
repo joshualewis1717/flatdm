@@ -1,5 +1,7 @@
 'use client'
 import { ImagePlus, X } from "lucide-react";
+import { useRef } from "react";
+
 // thumbnail panel for landlord to add a thumnail image to their listings
 type AddThumbnailPanelProps = {
   thumbnail: string | null;
@@ -7,10 +9,19 @@ type AddThumbnailPanelProps = {
   onRemove: () => void;
 };
 
-
 export default function AddThumbnailPanel({ thumbnail, onSet, onRemove }: AddThumbnailPanelProps) {
-  // In production, replace this with a real file upload handler
-  const handleAdd = () => onSet("https://via.placeholder.com/600x400");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // function to allow user to add in thumnail into panel
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => onSet(reader.result as string);
+    reader.readAsDataURL(file);
+    // reset so selecting the same file again still fires onChange
+    e.target.value = "";
+  }
 
   return (
     <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 space-y-4">
@@ -26,15 +37,24 @@ export default function AddThumbnailPanel({ thumbnail, onSet, onRemove }: AddThu
         </div>
       </div>
 
+      {/* invisible input tag that we use only for logic (we style it differently*/}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
       {thumbnail ? (
         <div className="relative w-full max-w-sm">
-          {/* Preview */}
+            {/* Preview */}
           <img
             src={thumbnail}
             alt="Thumbnail preview"
             className="w-full rounded-xl object-cover aspect-video border border-white/10"
           />
-          {/* Remove button */}
+            {/* Remove button */}
           <button
             type="button"
             onClick={onRemove}
@@ -48,7 +68,7 @@ export default function AddThumbnailPanel({ thumbnail, onSet, onRemove }: AddThu
       ) : (// add button
         <button
           type="button"
-          onClick={handleAdd}
+          onClick={() => inputRef.current?.click()}
           className="flex items-center gap-2 rounded-xl border border-dashed border-white/20 bg-white/[0.02] px-5 py-4 text-sm text-white/50 hover:border-white/40 hover:text-white/70 transition w-full sm:w-auto"
         >
           <ImagePlus className="w-4 h-4" />
