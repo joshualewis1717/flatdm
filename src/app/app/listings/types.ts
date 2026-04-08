@@ -105,7 +105,7 @@ export type ListingInfoData = {
   landlordName: string;
   description: string;
   rent: number;
-  availableFrom: Date;
+  availableFrom: Date | null;
   totalRooms: number;
   bedrooms: number;
   bathrooms: number;
@@ -137,7 +137,7 @@ export type PropertyListingUI = {
   lastUpdated: Date;
   thumbnail: string | null;
   images?: string[];
-  availableFrom: Date;
+  availableFrom: Date | null;
   maxOccupants: number;
   currentOccupants: number;
 };

@@ -141,7 +141,10 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
   
               <div className="flex items-center gap-1.5 text-[12px] text-[#c9fb00]">
                 <Calendar className="w-4 h-4" />
-                {'easliest availability: ' + property.propertyListing.availableFrom.toLocaleString()}
+                earliest availability:{' '}
+                {property.propertyListing.availableFrom
+                  ? property.propertyListing.availableFrom.toLocaleString()
+                  : 'N/A'}
               </div>
             </div>
   

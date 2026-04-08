@@ -53,11 +53,6 @@ export default function NewListingsPage() {
     }));
   };
 
-  // handler specifically for date input to keep it in sync with form state (a tiny deviation of logic from handle change)
-  function handleDateChange(date: Date | undefined){
-    setForm((prev) => ({ ...prev, availableFrom: date ?? prev.availableFrom }));
-  };
-
   // function to handle when a user selects a property from the property selector component, we autofill in the information
   function handlePropertySelect(property: ExistingProperty | null) {
     setSelectedProperty(property);
@@ -302,7 +297,6 @@ export default function NewListingsPage() {
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 space-y-4">
           <h2 className="text-lg font-semibold text-white">Pricing & Availability</h2>
           <InputField label="Rent per person (£)" type="number" name="rent" value={String(form.rent)} required onChange={handleChange} placeholder="Rent per person per month" />
-          <InputField label="Available From" type="date" name="availableFrom" value={form.availableFrom ?? null} required onDateChange={handleDateChange} placeholder="Earliest availability" />
           <InputField label="Minimum Stay (months)" type="number" name="minStay" value={String(form.minStay)} onChange={handleChange} placeholder="Minimum stay duration" />
         </section>
 

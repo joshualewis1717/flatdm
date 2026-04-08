@@ -12,7 +12,7 @@ function validateListingInput(data: PropertyListingForm) {
   const {
     buildingName, streetName, city, postcode,
     rooms, bedrooms, bathrooms, area, rent, maxOccupants, minStay,
-    availableFrom, amenities = [],
+    amenities = [],
   } = data;
 
   if (!buildingName && !streetName && !city && !postcode)
@@ -26,9 +26,6 @@ function validateListingInput(data: PropertyListingForm) {
 
   if (rooms < bedrooms + bathrooms)
     throw new Error("Total rooms must be at least the sum of bedrooms and bathrooms");
-
-  if (startOfDay(availableFrom).getTime() < startOfDay(Date.now()).getTime())
-  throw new Error("Available from date cannot be in the past");
 
   if (amenities.some((a) => a.distance !== null && a.distance < 0))
     throw new Error("Amenity distance cannot be negative");
@@ -72,7 +69,7 @@ export async function createListing(data: PropertyListingForm) {
     await prisma.$transaction(async (tx) => {// we use transaction to make sure that everything happens in one go e.g.
       // do not want to create a property without a listing and vice versa
       const { selectedPropertyId, buildingName, streetName, city, postcode, amenities = [],
-        flatNumber, description, rent, availableFrom, rooms, bedrooms, bathrooms, area, maxOccupants, minStay,
+        flatNumber, description, rent, rooms, bedrooms, bathrooms, area, maxOccupants, minStay,
       } = data;
 
       let propertyId: number;
@@ -112,7 +109,7 @@ export async function createListing(data: PropertyListingForm) {
 
       await queryCreateListing(tx, {
         flatNumber: flatNumber || "WHOLE_PROPERTY", // we give it whole property in DB to enforce uniqueness
-        description, rent, availableFrom,
+        description, rent, availableFrom: new Date(),
         rooms, bedrooms, bathrooms, area, maxOccupants, minStay,
         propertyId,
         landlordId: user.id,

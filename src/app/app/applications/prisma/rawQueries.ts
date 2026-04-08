@@ -60,10 +60,17 @@ export async function getActiveApplication(listingId: number, userId: number) {
 
 export async function getOccupant(listingId: number, userId: number) {
   return prisma.occupant.findFirst({
-    where: { listingId, userId },
+    where: { listingId, userId,
+        // Only return if still active
+        OR: [
+          { moveOut: null },
+          { moveOut: { gt:  new Date()} },
+        ],
+     },
   });
 }
 
+// function to count all occupants that would be active in a specific date
 export async function countOccupantsAtDate(
   listingId: number,
   moveInDate: Date
@@ -73,6 +80,22 @@ export async function countOccupantsAtDate(
       listingId,
       moveIn: { lte: moveInDate },
       OR: [{ moveOut: null }, { moveOut: { gt: moveInDate } }],
+    },
+  });
+}
+
+// function to count all currently active occupantss
+export async function countCurrentOccupants(listingId: number) {
+  const now = new Date();
+
+  return prisma.occupant.count({
+    where: {
+      listingId,
+      moveIn: { lte: now },
+      OR: [
+        { moveOut: null },
+        { moveOut: { gt: now } },
+      ],
     },
   });
 }

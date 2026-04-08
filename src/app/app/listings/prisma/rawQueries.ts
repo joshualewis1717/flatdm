@@ -29,6 +29,14 @@ export async function queryListingById(listingId: number) {
           landlord: { select: { username: true } },
         },
       },
+      occupants: {
+        where: {// also include occpants to calculate when list is available
+          OR: [
+            { moveOut: null },
+            { moveOut: { gt: new Date() } },
+          ],
+        },
+      },
     },
   });
 }
