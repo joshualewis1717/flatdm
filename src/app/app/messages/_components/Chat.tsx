@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, ReactNode } from "react";
+import { useState, useMemo, ReactNode } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -13,7 +13,7 @@ import { formatDayLabelChat, isSameDay, useScrollToBottom } from "./helperFuncti
 import { sendMessageRequest, deleteMessageRequest } from "./chat-api-requests";
 import MessageBubble from "./MessageBubble";
 
-type Props = {
+type parameters = {
   activeConversation?: Conversation;
   addMessage: (conversationId: number, message: Message) => void;
   replaceMessage: (conversationId: number,tempId: number, savedMessage: Message) => void;
@@ -22,7 +22,7 @@ type Props = {
   mobileInboxTrigger?: ReactNode;
 };
 
-export default function Chat({activeConversation,addMessage,replaceMessage,removeMessage,deleteMessage,mobileInboxTrigger}: Props) {
+export default function Chat({activeConversation,addMessage,replaceMessage,removeMessage,deleteMessage,mobileInboxTrigger}: parameters) {
     const [input, setInput] = useState("");
     const bottomRef = useScrollToBottom(activeConversation?.messages.length);
 
