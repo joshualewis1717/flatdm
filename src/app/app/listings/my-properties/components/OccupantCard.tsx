@@ -9,8 +9,7 @@ type props={
   
 }
 export default function OccupantCard({occupant,onClick,}:props ) {
-  const isApplicant = occupant.moveInDate.getTime() > Date.now();
-  const consultant = occupant.userId
+  const isUpcomingOccupant = occupant.moveInDate.getTime() > Date.now();
 
   return (
     <button
@@ -19,7 +18,7 @@ export default function OccupantCard({occupant,onClick,}:props ) {
         flex items-center gap-2.5 bg-[#323232] rounded-[10px] px-3 py-2.5 text-left
         border transition-all duration-150 hover:-translate-y-px
         ${
-          isApplicant
+          isUpcomingOccupant
             ? 'border-[rgba(201,251,0,0.15)] hover:border-[rgba(201,251,0,0.35)] hover:bg-[#383838]'
             : 'border-white/[0.08] hover:border-white/20 hover:bg-[#383838]'
         }
@@ -36,13 +35,13 @@ export default function OccupantCard({occupant,onClick,}:props ) {
           className={`
             text-[10px] px-1.5 py-0.5 rounded font-semibold tracking-wide mt-0.5 inline-block
             ${
-              isApplicant
+              isUpcomingOccupant
                 ? 'bg-[rgba(201,251,0,0.12)] text-[#c9fb00]'
                 : 'bg-white/[0.07] text-white/45'
             }
           `}
         >
-          {isApplicant ? 'Applicant' : 'Occupant'}
+          {isUpcomingOccupant ? 'Applicant' : 'Occupant'}{/* display them as confirmed applicants */}
         </span>
       </div>
     </button>

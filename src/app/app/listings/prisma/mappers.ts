@@ -72,26 +72,32 @@ export function mapToListingDetail(listing: NonNullable<Awaited<ReturnType<typeo
 
 // function to map property listing data to the data format that the my property listing page expects
 export function mapToMyPropertyListing(
-    listing: Awaited<ReturnType<typeof queryListingsForLandlord>>[number]
-  ): MyPropertyListingData {
-    const thumbnail = listing.images.find((img) => img.isThumbnail);
-  
-    return {
-      propertyListing: {
-        id: listing.id,
-        buildingName: listing.property.title,
-        flatNumber: listing.flatNumber ?? null,
-        streetName: listing.property.streetName,
-        city: listing.property.city,
-        postcode: listing.property.postcode,
-        createdAt: listing.createdAt,
-        lastUpdated: listing.updatedAt,
-        thumbnail: thumbnail?.url ?? null,
-        images: listing.images.map((img) => img.url),
-        availableFrom: listing.availableFrom,
-        maxOccupants: listing.maxOccupants,
-        currentOccupants: listing.occupants.length,
-      },
-      occupants: listing.occupants.map(mapOccupantToUI),
-    };
-  }
+  listing: Awaited<ReturnType<typeof queryListingsForLandlord>>[number]
+): MyPropertyListingData {
+  const thumbnail = listing.images.find((img) => img.isThumbnail);
+  const now = new Date();
+
+  const allOccupants = listing.occupants.map(mapOccupantToUI);
+  const currentOccupants  = allOccupants.filter(o => o.moveInDate <= now);
+  const upcomingOccupants = allOccupants.filter(o => o.moveInDate > now);
+
+  return {
+    propertyListing: {
+      id: listing.id,
+      buildingName: listing.property.title,
+      flatNumber: listing.flatNumber ?? null,
+      streetName: listing.property.streetName,
+      city: listing.property.city,
+      postcode: listing.property.postcode,
+      createdAt: listing.createdAt,
+      lastUpdated: listing.updatedAt,
+      thumbnail: thumbnail?.url ?? null,
+      images: listing.images.map((img) => img.url),
+      availableFrom: listing.availableFrom,
+      maxOccupants: listing.maxOccupants,
+      currentOccupants: currentOccupants.length, // count for the pill/badge
+    },
+    currentOccupants,
+    upcomingOccupants,
+  };
+}

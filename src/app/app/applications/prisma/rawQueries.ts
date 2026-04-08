@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { APPLICATION_EXPIRY_TIME } from "../const";
+import { Occupant, Prisma } from "@prisma/client";
 // raw prisma queries for applications
 
+// args needed to submit an application
 type SubmitApplication = {
   listingId: number
   userId: number;
@@ -10,6 +12,14 @@ type SubmitApplication = {
   email?: string,
   message?: string,
   phone?: string;
+}
+
+// type/ args needed when trying to create an occupant
+type CreateOccupant={
+  userId: number,
+  listingId: number,
+  moveIn: Date,
+  moveOut: Date | null,
 }
 export async function getListingById(listingId: number) {
   return prisma.propertyListing.findUnique({
@@ -85,6 +95,21 @@ export async function deleteApplicationQuery(applicationId: number, userId: numb
 }
 
 
+// function to create an occupancy:
+
+async function createOccupantTx(tx: Prisma.TransactionClient,data: CreateOccupant) {
+  return tx.occupant.create({
+    data: {
+      userId: data.userId,
+      listingId: data.listingId,
+      moveIn: data.moveIn,
+      moveOut: data.moveOut ?? null,
+      createdAt: new Date(),
+      modifiedAt: new Date(),
+    },
+  })
+}
+
 export async function updateApplicationStatusAsLandlordQuery(applicationId: number, landlordId: number,  status: "APPROVED" | "REJECTED") {
    // check if application exists
   const application = await prisma.propertyApplication.findUnique({
@@ -131,35 +156,47 @@ export async function updateApplicationStatusAsLandlordQuery(applicationId: numb
 export async function updateApplicationStatusAsConsultantQuery(applicationId: number,userId: number,status: "CONFIRMED" | "REJECTED" | "WITHDRAWN"
 ) {
   return prisma.$transaction(async (tx) => {
-    // 1. Get application
+    //  Get application
     const application = await tx.propertyApplication.findUnique({
       where: { id: applicationId },
       select: {
         userId: true,
+        listingId: true,
+        moveInDate: true,
+        moveOutDate: true,
       },
     });
 
     if (!application) throw new Error("Application not found");
 
-    // 2. Auth check
+    //  Auth check
     if (application.userId !== userId) {
       throw new Error("Forbidden");
     }
 
-    // 3. Update current application
+    //  Update current application
     const updated = await tx.propertyApplication.update({
       where: { id: applicationId },
       data: { status },
     });
 
-    // 4. If user clicked confirmed, all other applications are withdrawn
+    // If user clicked confirmed, all other applications are withdrawn
     if (status === "CONFIRMED") {
+      
+      await createOccupantTx(tx, {
+        userId: application.userId,
+        listingId: application.listingId,
+        moveIn: application.moveInDate,
+        moveOut: application.moveOutDate,
+      });
+
+      //  Withdraw other applications that user has
       await tx.propertyApplication.updateMany({
         where: {
           userId,
           id: { not: applicationId },
           status: {
-            in: ["PENDING", "APPROVED"], // only active ones
+            in: ["PENDING", "APPROVED"],
           },
         },
         data: {

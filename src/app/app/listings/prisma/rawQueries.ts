@@ -34,15 +34,20 @@ export async function queryListingById(listingId: number) {
 }
 
 export async function queryListingsForLandlord(landlordId: number) {
+  const now = new Date();
   return prisma.propertyListing.findMany({
     where: { landlordId, isDeleted: false },
     include: {
       images: true,
       property: true,
       occupants: {
-        include: {
-          user: true,
+        where: {// do not include any expired occupancies e.g. when move out < current.Date()
+          OR: [
+            { moveOut: null },
+            { moveOut: { gte: now } },
+          ],
         },
+        include: { user: true },
       },
     },
   });

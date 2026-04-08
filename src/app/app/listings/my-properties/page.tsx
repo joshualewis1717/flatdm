@@ -42,6 +42,7 @@ export default function Page() {
     fetchListings();
   }, []);
 
+  
   //  filter by address and also sort by most occupants, least occupants, empty first, full first
   const filtered = useMemo(() => {
     let list = listings.filter((listing) => {
@@ -57,20 +58,21 @@ export default function Page() {
     });
 
     if (sortBy === 'most')
-      list = [...list].sort((a, b) => b.occupants.length - a.occupants.length);
-
+      list = [...list].sort((a, b) => b.currentOccupants.length - a.currentOccupants.length);
     else if (sortBy === 'least')
-      list = [...list].sort((a, b) => a.occupants.length - b.occupants.length);
-
+      list = [...list].sort((a, b) => a.currentOccupants.length - b.currentOccupants.length);
     else if (sortBy === 'empty')
-      list = [...list].sort((a) => (a.occupants.length === 0 ? -1 : 1));
-
+      list = [...list].sort((a) => (a.currentOccupants.length === 0 ? -1 : 1));
     else if (sortBy === 'full')
       list = [...list].sort(
         (a, b) =>
-          Number(b.occupants.length >= b.propertyListing.maxOccupants) -
-          Number(a.occupants.length >= a.propertyListing.maxOccupants)
+          Number(b.currentOccupants.length >= b.propertyListing.maxOccupants) -
+          Number(a.currentOccupants.length >= a.propertyListing.maxOccupants)
       );
+    else if (sortBy === 'most_upcoming')
+      list = [...list].sort((a, b) => b.upcomingOccupants.length - a.upcomingOccupants.length);
+    else if (sortBy === 'least_upcoming')
+      list = [...list].sort((a, b) => a.upcomingOccupants.length - b.upcomingOccupants.length);
 
     return list;
   }, [search, sortBy, listings]);
@@ -164,6 +166,8 @@ export default function Page() {
             <option value="least">Least Occupants</option>
             <option value="empty">Empty First</option>
             <option value="full">Full First</option>
+            <option value="most_upcoming">Most Upcoming Occupants</option>
+            <option value="least_upcoming">Least Upcoming Occupants</option>
           </FilterDropdown>
         </div>
 

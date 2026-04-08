@@ -21,7 +21,9 @@ type Props = {
 
 export default function PropertyCard({property,isExpanded,deleteMode,isSelected,onToggleSelect,onToggleExpand,onOccupantClick,}: Props) {
     const router = useRouter();
-    const count = property.occupants.length;
+    const {currentOccupants, upcomingOccupants} = property;
+    const count = property.currentOccupants.length; // current only
+    const upcomingCount = property.upcomingOccupants.length;
     const isFull = count >= property.propertyListing.maxOccupants;
     const isEmpty = count === 0;
     const freeSlots = property.propertyListing.maxOccupants - count;
@@ -96,6 +98,12 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
               <span className="text-white/45">/</span>
               {property.propertyListing.maxOccupants}
             </div>
+
+            {upcomingCount > 0 && (
+              <span className="text-[11px] text-[#c9fb00]/70 font-mono">
+                +{upcomingCount} upcoming
+              </span>
+            )}
   
             {/* View Button */}
             {!deleteMode && (
@@ -137,20 +145,32 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
               </div>
             </div>
   
-            {count > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {property.occupants.map((occ) => (
-                  <OccupantCard
-                    key={occ.id}
-                    occupant={occ}
-                    onClick={() => onOccupantClick(occ)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="text-[13px] text-white/45 py-3">
-                No occupants yet.
-              </p>
+             {/* Current occupants */}
+            {currentOccupants.length > 0 && (
+              <>
+                <p className="text-[11px] text-white/45 uppercase mb-2">Current</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-4">
+                  {currentOccupants.map((occ) => (
+                    <OccupantCard key={occ.id} occupant={occ} onClick={() => onOccupantClick(occ)} />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Upcoming occupants */}
+            {upcomingOccupants.length > 0 && (
+              <>
+                <p className="text-[11px] text-white/45 uppercase mb-2">Upcoming</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {upcomingOccupants.map((occ) => (
+                    <OccupantCard key={occ.id} occupant={occ} onClick={() => onOccupantClick(occ)} />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {count === 0 && (
+              <p className="text-[13px] text-white/45 py-3">No occupants yet.</p>
             )}
           </div>
         )}

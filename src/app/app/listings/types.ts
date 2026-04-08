@@ -145,7 +145,8 @@ export type PropertyListingUI = {
 /*** type wrapper for the data in my properties page */
 export type MyPropertyListingData = {
   propertyListing: PropertyListingUI;
-  occupants: OccupantUI[];
+  currentOccupants: OccupantUI[];   // moveIn <= now
+  upcomingOccupants: OccupantUI[];  // moveIn > now
 }
 
 /***** non prisma UI types */
