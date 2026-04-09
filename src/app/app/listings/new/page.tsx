@@ -1,8 +1,8 @@
 'use client'
-import ListingForm from "../components/createForm/LocationForm";
+import ListingForm from "../components/createForm/ListingForm";
 
 // /app/listings/new
-// No listingId → ListingForm renders in create mode
+// No if listing Id ListingForm renders the form in create mode
 export default function NewListingPage() {
   return <ListingForm />;
 }

@@ -283,6 +283,11 @@ model Report {
   reason      String
   description String?
   status      ReportStatus
+  assignedModeratorId Int?
+  severity OffenceSeverity? 
+  category ReportCategory?
+
+
   createdAt   DateTime     @default(now())
   modifiedAt  DateTime     @default(now()) @updatedAt
 
@@ -357,4 +362,19 @@ enum ReportStatus {
 enum ListingType {
   ENTIRE_PROPERTY
   ROOM
+}
+
+enum OffenceSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ReportCategory {
+  INAPPROPRIATE_CONTENT
+  FRAUD
+  HARASSMENT
+  FAKE_INFORMATION
+  IMPERSONATION
+  OTHER
 }

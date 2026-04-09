@@ -4,13 +4,12 @@ import { Amenity } from "@prisma/client";
 import { AmenityUI, ExistingProperty, ListingInfoData, MyPropertyListingData, OccupantUI, OccupantWithUser } from "../types";
 import { queryListingById, queryListingsForLandlord, queryPropertiesForLandlord } from "./rawQueries";
 
-type OccupancyEvent = {
-  date: Date;
-  delta: 1 | -1;
-};
-
 /********** helper functions ************/
 
+// function to convert images into an url
+function toImageUrl(img: { id: number }): string {
+  return `/api/images/${img.id}`;
+}
 
 export function getAvailableFrom(
   occupants: { moveIn: Date; moveOut: Date | null }[],
@@ -18,7 +17,7 @@ export function getAvailableFrom(
 ): Date | null {
   const now = new Date();
 
-  // Check if currently available
+   // Check if currently available
   const currentOccupants = occupants.filter(o =>
     o.moveIn <= now && (!o.moveOut || o.moveOut > now)
   ).length;
@@ -27,7 +26,7 @@ export function getAvailableFrom(
     return now;
   }
 
-  // Find the earliest move-out that frees a spot
+   // Find the earliest move-out that frees a spot
   const moveOuts = occupants
     .map(o => o.moveOut)
     .filter((d): d is Date => !!d && d > now)
@@ -40,18 +39,16 @@ export function getAvailableFrom(
   return moveOuts[0];
 }
 
-
 // function to map raw amenity type to amenity UI
 export function mapToAmenityUI(amenities: Amenity[]): AmenityUI[] {
-    return amenities.map((a) => ({
-      id: crypto.randomUUID(),
-      dbId: a.id,
-      name: a.name,
-      type: a.type,
-      distance: a.distance ?? -1, // remove this once we update schema
-    }));
-  }
-
+  return amenities.map((a) => ({
+    id: crypto.randomUUID(),
+    dbId: a.id,
+    name: a.name,
+    type: a.type,
+    distance: a.distance ?? -1, // remove this once we update schema
+  }));
+}
 
 // function to map an occupant from db to the occupantUI type
 function mapOccupantToUI(o: OccupantWithUser): OccupantUI {
@@ -64,8 +61,7 @@ function mapOccupantToUI(o: OccupantWithUser): OccupantUI {
   };
 }
 
-
-// map from raw property query result to the ExistingProperty type used in the UI for the property selector when creating a listing
+// map from raw property query result to the ExistingProperty type
 export function mapToExistingProperty(p: Awaited<ReturnType<typeof queryPropertiesForLandlord>>[number]): ExistingProperty {
   return {
     id: p.id,
@@ -79,8 +75,7 @@ export function mapToExistingProperty(p: Awaited<ReturnType<typeof queryProperti
 }
 
 export function mapToListingDetail(listing: NonNullable<Awaited<ReturnType<typeof queryListingById>>>): ListingInfoData {
-  const thumbnail = listing.images.find((img) => img.isThumbnail);
-  const images = listing.images.filter((img) => !img.isThumbnail).map((img) => img.url);
+  const thumbnailImg = listing.images.find((img) => img.isThumbnail);
 
   return {
     propertyId: listing.propertyId,
@@ -90,14 +85,14 @@ export function mapToListingDetail(listing: NonNullable<Awaited<ReturnType<typeo
     rent: listing.rent,
     area: listing.area,
     totalRooms: listing.rooms,
-    availableFrom: getAvailableFrom( listing.occupants, listing.maxOccupants),// dynamically calculate when list is available from
+    availableFrom: getAvailableFrom(listing.occupants, listing.maxOccupants),
     lastUpdated: listing.updatedAt,
     bedrooms: listing.bedrooms,
     bathrooms: listing.bathrooms,
     maxOccupants: listing.maxOccupants,
     minStay: listing.minStay,
-    thumbnail: thumbnail?.url ?? null,
-    images,
+    thumbnail: thumbnailImg ? toImageUrl(thumbnailImg) : null,
+    images: listing.images.filter((img) => !img.isThumbnail).map(toImageUrl),
     buildingName: listing.property.title,
     streetName: listing.property.streetName,
     city: listing.property.city,
@@ -107,11 +102,9 @@ export function mapToListingDetail(listing: NonNullable<Awaited<ReturnType<typeo
   };
 }
 
-// function to map property listing data to the data format that the my property listing page expects
-export function mapToMyPropertyListing(
-  listing: Awaited<ReturnType<typeof queryListingsForLandlord>>[number]
-): MyPropertyListingData {// give the type property id if we need it for the page.
-  const thumbnail = listing.images.find((img) => img.isThumbnail);
+// function to map property listing data to the data format that the my properties page expects
+export function mapToMyPropertyListing(listing: Awaited<ReturnType<typeof queryListingsForLandlord>>[number]): MyPropertyListingData {
+  const thumbnailImg = listing.images.find((img) => img.isThumbnail);
   const now = new Date();
 
   const allOccupants = listing.occupants.map(mapOccupantToUI);
@@ -128,11 +121,11 @@ export function mapToMyPropertyListing(
       postcode: listing.property.postcode,
       createdAt: listing.createdAt,
       lastUpdated: listing.updatedAt,
-      thumbnail: thumbnail?.url ?? null,
-      images: listing.images.map((img) => img.url),
+      thumbnail: thumbnailImg ? toImageUrl(thumbnailImg) : null,
+      images: listing.images.filter((img) => !img.isThumbnail).map(toImageUrl),
       availableFrom: getAvailableFrom(listing.occupants, listing.maxOccupants),
       maxOccupants: listing.maxOccupants,
-      currentOccupants: currentOccupants.length, // count for the pill/badge
+      currentOccupants: currentOccupants.length,
     },
     currentOccupants,
     upcomingOccupants,
