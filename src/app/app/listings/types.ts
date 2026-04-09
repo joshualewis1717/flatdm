@@ -206,13 +206,16 @@ export type ListingParameters = Record<string, unknown> & {
 
   furnished_level?: 'furnished' | 'unfurnished' | 'part_furnished';
 
-  distance_to_location?: number; // in km, for filtering by distance to a specific location (e.g. city center)
-  location_lat?: number; // for distance filtering
-  location_lng?: number; // for distance filtering
-
   transport_nearby?: boolean;
   healthcare_nearby?: boolean;
   recreation_nearby?: boolean;
+
+  //
+  //
+  // Distance Searching
+  distance_to_location?: number; // in km, for filtering by distance to a specific location (e.g. city center)
+  location_lat?: number; // for distance filtering
+  location_lng?: number; // for distance filtering
 
   //
   //
