@@ -1,11 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import {User, Report, Review, PropertyApplication, Property, PropertyListing, FilterSearchProps} from '@/app/app/reports/types';
+import {User, Report, Review, PropertyApplication, Property, PropertyListing, Status, Severity, Category, FilterSearchProps} from '@/app/app/reports/types';
 import {sendEmail} from '@/app/app/reports/sendEmail'
 import { use } from "react";
 import { isErrored } from "stream";
 import {ConfirmFunction} from '@/app/app/reports/types';
+import { Database, UnfoldHorizontal } from "lucide-react";
 
 // delete all properties (and all associated listings and applications) by a given landlord id
 async function rawDeletePropertiesByLandlord({landlordId} : {landlordId : number}){
@@ -119,6 +120,37 @@ export const addOffence: ConfirmFunction = async ({ user, text }) => {
     return;
 }
 
+// change the status of a report
+export async function changeReportStatus({reportId, newStatus}){
+    await prisma.report.update({
+        where: {id: reportId},
+        data: {status: newStatus}
+    });
+
+    return;
+}
+
+// assign a moderator to a report
+export async function assignModToReport({reportId, userId}){
+
+    // make sure the user is actually a moderator
+    const role = await prisma.user.findFirst({
+        where: {id: userId},
+        select: {role}
+    })
+
+    if (role === "CONSULTANT"){
+        await prisma.report.update({
+            where: { id: reportId },
+            data: { assignedModeratorId: userId },
+        });
+    }
+
+    return;
+}
+
+
+
 
 export async function deleteReport({report} : Report){
 
@@ -137,30 +169,60 @@ export async function deleteReport({report} : Report){
     return;
 }
 
-
-export async function getReportsFilteredSorted({selectedStatuses, sortField, sortDirection} : FilterSearchProps){
-    console.log("want")
-    console.log(selectedStatuses)
-    console.log(sortField)
-    console.log(sortDirection)
-
-    const statuses = [];
-
-    // process statuses from eg [OPEN: true, UNDER_REVIEW: false, RESOLVED: true] into eg [OPEN, RESOLVED]
-    if (selectedStatuses.OPEN){
-        statuses.push("OPEN")
+export async function getReport({reportId}: any){
+    if (reportId == undefined){
+        console.log("trying to get report with undefined id")
+        return undefined;
     }
-    if (selectedStatuses.UNDER_REVIEW){
-        statuses.push("UNDER_REVIEW")
-    }
-    if (selectedStatuses.RESOLVED){
-        statuses.push("RESOLVED")
-    }
+
+    const report = await prisma.report.findFirst({
+        where: {id: reportId}
+    })
+
+    return report;
+}
+
+
+export async function getReportsFilteredSorted({selectedStatuses, selectedSeverities, selectedCategories, sortField, sortDirection} : FilterSearchProps){
+
+    // const statuses = [];
+
+    // // process statuses from eg [OPEN: true, UNDER_REVIEW: false, RESOLVED: true] into eg [OPEN, RESOLVED]
+    // if (selectedStatuses.OPEN){
+    //     statuses.push("OPEN")
+    // }
+    // if (selectedStatuses.UNDER_REVIEW){
+    //     statuses.push("UNDER_REVIEW")
+    // }
+    // if (selectedStatuses.RESOLVED){
+    //     statuses.push("RESOLVED")
+    // }
+
+
+    const STATUSES = ["OPEN", "UNDER_REVIEW", "RESOLVED"];
+    const SEVERITIES = ["LOW", "MEDIUM", "HIGH"];
+    const CATEGORIES = ["INAPPROPRIATE_CONTENT", "FRAUD", "HARASSMENT", "FAKE_INFORMATION", "IMPERSONATION", "OTHER"]
+
+    // map to array containing only selected fields
+    const statuses: Status[] = STATUSES.filter(s => selectedStatuses[s]);
+    const severities: Severity[] = SEVERITIES.filter(s => selectedSeverities[s]);
+    const categories: Category[] = CATEGORIES.filter(c => selectedCategories[c]);
+
 
     // get reports that fit the requirements
+    // const reports = await prisma.report.findMany({
+    //   where: {status: {in: statuses}},
+    //   orderBy: {[sortField]: sortDirection}
+    // });
     const reports = await prisma.report.findMany({
-      where: {status: {in: statuses}},
-      orderBy: {[sortField]: sortDirection}
+        where: {
+            AND: [
+                {status: {in: statuses}},
+                {severity: {in: severities}},
+                {category: {in: categories}},
+            ]
+        },
+        orderBy: { [sortField]: sortDirection },
     });
 
     return reports;

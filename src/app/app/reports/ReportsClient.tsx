@@ -2,7 +2,7 @@
 "use client";
 import React, { useMemo, useState } from "react";
 import ReportOverviewItem from "@/components/shared/ReportOverviewItem";
-import {Report, Status, User} from '@/app/app/reports/types'
+import {Report, Status, User, Severity, Category} from '@/app/app/reports/types'
 import { prisma } from "@/lib/prisma";
 import { getReportsFilteredSorted } from "./db_access";
 
@@ -46,11 +46,29 @@ export default function ReportsClient({ initialReports, users }: {initialReports
     "RESOLVED": true,
   });
 
+  const [selectedSeverities, setSelectedSeverities] = useState<Record<Severity, boolean>>({
+    "LOW": true,
+    "MEDIUM": true,
+    "HIGH": true,
+  });
+
+  const [selectedCategories, setCatetgories] = useState<Record<Category, boolean>>({
+    "INAPPROPRIATE_CONTENT": true,
+    "FRAUD": true,
+    "HARASSMENT": true,
+    "FAKE_INFORMATION": true,
+    "IMPERSONATION": true,
+    "OTHER": true,
+  });
+
+
   const [sortField, setSortField] = useState<"modifiedAt" | "createdAt">("modifiedAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   // Local working copy so user can toggle controls before pressing Search
   const [workingStatuses, setWorkingStatuses] = useState(selectedStatuses);
+  const [workingSeverities, setWorkingSeverities] = useState(selectedSeverities);
+  const [workingCategories, setWorkingCategories] = useState(selectedCategories);
   const [workingSortField, setWorkingSortField] = useState(sortField);
   const [workingSortDirection, setWorkingSortDirection] = useState(sortDirection);
 
@@ -58,8 +76,16 @@ export default function ReportsClient({ initialReports, users }: {initialReports
     setWorkingStatuses(prev => ({ ...prev, [status]: !prev[status] }));
   }
 
+  function toggleSeverity(severity: Severity) {
+    setWorkingSeverities(prev => ({ ...prev, [severity]: !prev[severity] }));
+  }
+
+  function toggleCategory(category: Category) {
+    setWorkingCategories(prev => ({ ...prev, [category]: !prev[category] }));
+  }
+
   async function handleApplyFilters() {
-    const resultReports = await getReportsFilteredSorted({selectedStatuses:workingStatuses, sortField:workingSortField, sortDirection:workingSortDirection});
+    const resultReports = await getReportsFilteredSorted({selectedStatuses:workingStatuses, selectedSeverities:workingSeverities, selectedCategories:workingCategories, sortField:workingSortField, sortDirection:workingSortDirection});
     setViewableReports(resultReports);
     // setViewableUsers( getUsers({users, resultReports}) );
 
@@ -81,6 +107,36 @@ export default function ReportsClient({ initialReports, users }: {initialReports
                 className="w-4 h-4"
               />
               <span>{status}</span>
+            </label>
+          ))}
+        </fieldset>
+
+          <fieldset className="flex flex-col gap-2">
+          <legend className="font-semibold">Filter by severity</legend>
+          {(["LOW", "MEDIUM", "HIGH"] as Severity[]).map(severity => (
+            <label key={severity} className="inline-flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={workingSeverities[severity]}
+                onChange={() => toggleSeverity(severity)}
+                className="w-4 h-4"
+              />
+              <span>{severity}</span>
+            </label>
+          ))}
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-2">
+          <legend className="font-semibold">Filter by category</legend>
+          {(["INAPPROPRIATE_CONTENT","FRAUD","HARASSMENT","FAKE_INFORMATION","IMPERSONATION","OTHER"] as Category[]).map(category => (
+            <label key={category} className="inline-flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={workingCategories[category]}
+                onChange={() => toggleCategory(category)}
+                className="w-4 h-4"
+              />
+              <span>{category}</span>
             </label>
           ))}
         </fieldset>
@@ -120,14 +176,29 @@ export default function ReportsClient({ initialReports, users }: {initialReports
             <button
               onClick={() => {
                 // reset working controls to show all
-                const allTrue = {
+              setWorkingStatuses({
                   "OPEN": true,
                   "UNDER_REVIEW": true,
                   "RESOLVED": true,
-                } as Record<Status, boolean>;
-                setWorkingStatuses(allTrue);
+                });
+
+                setWorkingSeverities({
+                  "LOW": true,
+                  "MEDIUM": true,
+                  "HIGH": true,
+                });
+
+                setWorkingCategories({
+                  "INAPPROPRIATE_CONTENT": true,
+                  "FRAUD": true,
+                  "HARASSMENT": true,
+                  "FAKE_INFORMATION": true,
+                  "IMPERSONATION": true,
+                  "OTHER": true,
+                });
                 setWorkingSortField("modifiedAt");
                 setWorkingSortDirection("desc");
+                handleApplyFilters();
               }}
               className="border px-3 py-1 rounded"
             >

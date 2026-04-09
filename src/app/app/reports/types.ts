@@ -78,11 +78,19 @@ type Property = {
   landlordId: number;
 }
 
+
+// types for reports
+
 type Status = "OPEN" | "UNDER_REVIEW" | "RESOLVED";
 
+type Severity = "LOW" | "MEDIUM" | "HIGH";
+
+type Category = "FAKE_INFORMATION" | "IMPERSONATION" | "INAPPROPRIATE_BEHAVIOUR" | "OTHER";
 
 type FilterSearchProps = {
   selectedStatuses: Record<Status, boolean>;
+  selectedSeverity: Record<Severity, boolean>;
+  selectedCategory: Record<Category, boolean>;
   sortField: 'modifiedAt' | 'createdAt';
   sortDirection: 'asc' | 'desc';
 };
