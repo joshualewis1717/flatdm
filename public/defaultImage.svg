@@ -1,0 +1,15 @@
+<svg width="100%" viewBox="0 0 680 520" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- background stays the same -->
+  <rect x="0" y="0" width="680" height="520" fill="#d0d0d0"/>
+
+  <!-- shift everything down to try and see top -->
+  <g transform="translate(0, 100)">
+
+    <circle cx="510" cy="120" r="65" fill="#b0b0b0"/>
+
+    <polygon points="0,510 0,280 200,100 400,300 310,200 680,430 680,510" fill="#b0b0b0"/>
+
+  </g>
+
+</svg>

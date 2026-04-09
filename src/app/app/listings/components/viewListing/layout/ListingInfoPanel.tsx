@@ -45,7 +45,7 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
 
   // combine thumbnail + images for the slider, thumbnail first
   const sliderImages = [
-    ...(thumbnail ? [thumbnail] : []),// TO DO: use a place holder image if thumbnail is somehow empty
+    ...(thumbnail ? [thumbnail] : ['/defaultImage.svg']),
     ...(images ?? []),
   ];
 

@@ -80,7 +80,11 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
                 className="w-full h-full object-cover rounded-[10px]"
               />
             ) : (
-              <Image className="w-5 h-5 text-[#c9fb00]" />
+              <img
+              src="/defaultImage.svg"
+              alt="Default thumbnail"
+              className="w-full h-full object-cover opacity-70 rounded-[10px]"
+            />
             )}
           </div>
           
