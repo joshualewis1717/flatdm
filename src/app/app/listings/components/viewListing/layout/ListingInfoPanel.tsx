@@ -37,7 +37,7 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
     bedrooms, bathrooms, maxOccupants, minStay,
     area, totalRooms,  thumbnail, images,
     buildingName, streetName, city, postcode,
-    landlordName, amenities, availableFrom } = data;
+    landlordName, amenities, availableFrom, currentOccupants } = data;
 
   const shared = maxOccupants > 1;// derive shared from max occupants
   const headline = getListingTitle(buildingName, flatNumber)
@@ -47,21 +47,6 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
   const sliderImages = [
     ...(thumbnail ? [thumbnail] : []),// TO DO: use a place holder image if thumbnail is somehow empty
     ...(images ?? []),
-  ];
-
-  // hardcoded roommates for now, in real app this would come from our listing data (occupants relation)
-  const roommates = [
-    { id: 1, name: "Alice Johnson" },
-    { id: 2, name: "Bob Smith" },
-    { id: 3, name: "Charlie Lee" },
-    { id: 4, name: "Diana Chen" },
-    { id: 5, name: "Ethan Davis" },
-    { id: 6, name: "Fiona Garcia" },
-    { id: 7, name: "George Patel" },
-    { id: 8, name: "Hannah Nguyen" },
-    { id: 9, name: "Ian Martinez" },
-    { id: 10, name: "Julia Kim" },
-    { id: 11, name: "Kevin Brown" },
   ];
 
   const stats = [
@@ -118,8 +103,7 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
         <PropertyStatsGrid stats={stats} />
 
         <RoommateProfileList
-          roommates={roommates}
-          onShowMore={() => console.log("Open full roommate list")}
+          roomates={currentOccupants}
         />
 
         {/* Description */}
