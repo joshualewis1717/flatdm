@@ -56,6 +56,7 @@ export default function FiltersSheet({
         ), // (removes undefined key-value pairs)
       }));
     }
+    onOpenChange(false);
   }
 
   return (
