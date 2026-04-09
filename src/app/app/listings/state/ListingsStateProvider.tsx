@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   createContext,
   useContext,
   useEffect,
@@ -15,6 +16,28 @@ import type { ListingParameters } from "../types";
 
 const UNSAVED_CHANGES_MESSAGE =
   "You have unsaved listing progress. If you leave this page, your changes will be lost.";
+
+function hasMeaningfulValue(value: unknown) {
+  if (value === undefined || value === null) {
+    return false;
+  }
+
+  if (typeof value === "string") {
+    return value.trim().length > 0;
+  }
+
+  return true;
+}
+
+function getHasUnsavedChanges(params: ListingParameters) {
+  const {
+    changed: _changed,
+    page: _page,
+    ...rest
+  } = params;
+
+  return Object.values(rest).some(hasMeaningfulValue);
+}
 
 function isListingsPath(pathname: string) {
   return (
@@ -33,20 +56,35 @@ type ListingsState = {
 const ListingsStateContext = createContext<ListingsState | null>(null);
 
 export function ListingsStateProvider({ children }: { children: ReactNode }) {
-  const [listingParameters, setListingParameters] = useState<ListingParameters>({
+  const [listingParameters, setRawListingParameters] = useState<ListingParameters>({
     changed: false,
   });
-  // print changes for testing
-  useEffect(() => {
-    console.log(listingParameters);
-  }, [listingParameters]);
+
+  const setListingParameters: Dispatch<SetStateAction<ListingParameters>> = useCallback(
+    (nextState) => {
+      setRawListingParameters((prev) => {
+        const resolvedState =
+          typeof nextState === "function"
+            ? (nextState as (prevState: ListingParameters) => ListingParameters)(prev)
+            : nextState;
+
+        const hasUnsavedChanges = getHasUnsavedChanges(resolvedState);
+
+        return {
+          ...resolvedState,
+          changed: hasUnsavedChanges,
+        };
+      });
+    },
+    [],
+  );
 
 
   // Track unsaved changes based on the `changed` property in listingParameters
   const hasUnsavedChangesRef = useRef(false);
   useEffect(() => {
-    hasUnsavedChangesRef.current = listingParameters.changed === true;
-  }, [listingParameters.changed]);
+    hasUnsavedChangesRef.current = getHasUnsavedChanges(listingParameters);
+  }, [listingParameters]);
 
   // Warn users about unsaved changes when they try to leave the page or navigate away
   useEffect(() => {
