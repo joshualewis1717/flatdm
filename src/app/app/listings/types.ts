@@ -171,3 +171,57 @@ export type ListingReview = {
   listingId?: number | null;// which listing the review is for
   createdAt?: Date;
 };
+
+// Shared query/filter params state for listings pages.
+export type ListingParameters = Record<string, unknown> & {
+  //
+  //
+  // Meta parameter
+  changed: boolean;
+  
+  //
+  //
+  // Filters
+  search?: string;
+
+  rent_min?: number;
+  rent_max?: number;
+
+  available_from?: string | 'now'; // ISO date string
+
+  maxoccupants_max?: number; // 1 = no roomates, else = shared
+
+  minstay_max?: number; // minimum stay up to X months
+
+  bedrooms_min?: number;
+  bedrooms_max?: number;
+
+  bathrooms_min?: number;
+  bathrooms_max?: number;
+
+  area_min?: number;
+  area_max?: number;
+
+  has_photo?: boolean;
+
+  furnished_level?: 'furnished' | 'unfurnished' | 'part_furnished';
+
+  distance_to_location?: number; // in km, for filtering by distance to a specific location (e.g. city center)
+  location_lat?: number; // for distance filtering
+  location_lng?: number; // for distance filtering
+
+  transport_nearby?: boolean;
+  healthcare_nearby?: boolean;
+  recreation_nearby?: boolean;
+
+  //
+  //
+  // Sorting
+  sort_by?: 'rent' | 'available_from' | 'area' | 'created_at' | 'updated_at' | 'distance';
+  sort_order?: 'asc' | 'desc';
+
+  //
+  //
+  // Pagination
+  page?: number;
+};
