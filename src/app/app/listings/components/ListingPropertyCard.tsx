@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Bath, BedDouble, CalendarDays, ChevronLeft, ChevronRight, Clock3, Home, ImageIcon, MapPin, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -28,10 +29,10 @@ function getSharedLabel(maxOccupants: number) {
 
 type ListingPropertyCardProps = {
   listing: any;
-  onOpen: () => void;
+  href: string;
 };
 
-export default function ListingPropertyCard({ listing, onOpen }: ListingPropertyCardProps) {
+export default function ListingPropertyCard({ listing, href }: ListingPropertyCardProps) {
   const headline = listing.flatNumber ? `Flat ${listing.flatNumber}` : `Listing ${listing.id}`;
   const isAvailableNow = listing.availableFrom <= new Date();
   const imageUrls = useMemo(() => {
@@ -58,20 +59,13 @@ export default function ListingPropertyCard({ listing, onOpen }: ListingProperty
   };
 
   return (
-    <Card
-      tabIndex={0}
-      role="link"
+    <Link
+      href={href}
       aria-label={`Open ${headline}`}
-      onClick={onOpen}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onOpen();
-        }
-      }}
-      className="group cursor-pointer border border-white/10 bg-[#242424] p-0 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#c9fb00]/30 hover:shadow-[0_18px_50px_rgba(0,0,0,0.28)] focus-visible:border-[#c9fb00] focus-visible:outline-none"
+      className="group block cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9fb00] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]"
     >
-      <div className="flex flex-col overflow-hidden md:flex-row">
+      <Card className="border border-white/10 bg-[#242424] p-0 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#c9fb00]/30 hover:shadow-[0_18px_50px_rgba(0,0,0,0.28)]">
+        <div className="flex flex-col overflow-hidden md:flex-row">
         <div className="relative min-h-48 w-full shrink-0 overflow-hidden border-b border-white/8 bg-[#1c1c1c] md:h-auto md:w-65 md:border-b-0 md:border-r md:border-white/8">
           {hasImages ? (
             <img
@@ -94,18 +88,18 @@ export default function ListingPropertyCard({ listing, onOpen }: ListingProperty
                 type="button"
                 aria-label="Previous image"
                 onClick={showPreviousImage}
-                className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-black/45 p-1.5 text-white/85 transition-colors hover:bg-black/65"
+                className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-black/45 p-1.5 text-white/85 transition-colors hover:bg-black/65 cursor-pointer"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4 cursor-pointer" />
               </button>
 
               <button
                 type="button"
                 aria-label="Next image"
                 onClick={showNextImage}
-                className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-black/45 p-1.5 text-white/85 transition-colors hover:bg-black/65"
+                className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-black/45 p-1.5 text-white/85 transition-colors hover:bg-black/65 cursor-pointer"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 cursor-pointer" />
               </button>
 
               <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/10 bg-black/35 px-2 py-1 backdrop-blur-sm">
@@ -227,7 +221,8 @@ export default function ListingPropertyCard({ listing, onOpen }: ListingProperty
             <span>Listing #{listing.propertyId}</span>
           </div>
         </div>
-      </div>
-    </Card>
+        </div>
+      </Card>
+    </Link>
   );
 }

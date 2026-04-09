@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import SearchAndFilterPanel from "./components/SearchAndFilterPanel";
 import ListingPropertyCard from "./components/ListingPropertyCard";
@@ -12,7 +11,6 @@ import { queryWithFiltersSortingAndPages } from "./prisma/queryWithFiltersSortin
 
 export default function ListingsPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   const { listingParameters, setListingParameters } = useListingsState();
   const {
@@ -183,13 +181,13 @@ export default function ListingsPage() {
       ) : (
         <div className="space-y-4">
           {listings.map((listing) => {
-            const listingUrl = `listings/${listing.id}`;
+            const listingUrl = `/app/listings/${listing.id}`;
 
             return (
               <ListingPropertyCard
                 key={listing.id}
                 listing={listing}
-                onOpen={() => router.push(listingUrl)}
+                href={listingUrl}
               />
             );
           })}
