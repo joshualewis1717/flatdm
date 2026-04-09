@@ -251,10 +251,6 @@ export async function getReportsFilteredSorted({selectedStatuses, selectedSeveri
 
 
     // get reports that fit the requirements
-    // const reports = await prisma.report.findMany({
-    //   where: {status: {in: statuses}},
-    //   orderBy: {[sortField]: sortDirection}
-    // });
     try{
         const reports = await prisma.report.findMany({
             where: {
@@ -274,17 +270,26 @@ export async function getReportsFilteredSorted({selectedStatuses, selectedSeveri
     }
 }
 
+export async function getUsers(){
+    try{
+        const users = await prisma.user.findMany();
+        return users;
+    }
+    catch (error){
+        console.error("error occured: " + error.message);
+    }
+}
+
 export async function getUser({userId} : any){
     try{
         const user = await prisma.user.findFirst({
             where: { id: userId }
         });
+        return user;
     }
     catch (error){
         console.error("error occured: " + error.message);
     }
-
-    return user;
 }
 
 
