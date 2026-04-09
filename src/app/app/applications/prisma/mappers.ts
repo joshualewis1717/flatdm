@@ -10,8 +10,9 @@ export function mapApplicantApplication(a: Awaited<ReturnType<typeof getApplicat
       submittedDate: a.createdAt.toLocaleString(),
       lastUpdatedDate: a.updatedAt.toLocaleString(),
       rent: a.listing.rent,
-      listingName: a.listing.property.title,
-      listingAddress: `${a.listing.property.streetName}, ${a.listing.property.city}`,
+      buildingName: a.listing.property.title,
+      flatNumber: a.listing.flatNumber ?? undefined,
+      listingAddress: `${a.listing.property.streetName}, ${a.listing.property.city}, ${a.listing.property.postcode}`,
       landlordName: `${a.listing.property.landlord.firstName} ${a.listing.property.landlord.lastName}`,
       applicantName: `${a.user.firstName} ${a.user.lastName}`,
     };
@@ -26,8 +27,9 @@ export function mapApplicantApplication(a: Awaited<ReturnType<typeof getApplicat
       submittedDate: a.createdAt.toLocaleString(),
       lastUpdatedDate: a.updatedAt.toLocaleString(),
       rent: a.listing.rent,
-      listingName: a.listing.property.title,
-      listingAddress: `${a.listing.property.streetName}, ${a.listing.property.city}`,
+      buildingName: a.listing.property.title,
+      flatNumber: a.listing.flatNumber ?? undefined,
+      listingAddress: `${a.listing.property.streetName}, ${a.listing.property.city}, ${a.listing.property.postcode}`,
       applicantName: `${a.user.firstName} ${a.user.lastName}`,
     };
   }

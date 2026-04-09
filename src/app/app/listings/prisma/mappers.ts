@@ -4,6 +4,41 @@ import { Amenity } from "@prisma/client";
 import { AmenityUI, ExistingProperty, ListingInfoData, MyPropertyListingData, OccupantUI, OccupantWithUser } from "../types";
 import { queryListingById, queryListingsForLandlord, queryPropertiesForLandlord } from "./rawQueries";
 
+type OccupancyEvent = {
+  date: Date;
+  delta: 1 | -1;
+};
+
+/********** helper functions ************/
+
+
+export function getAvailableFrom(
+  occupants: { moveIn: Date; moveOut: Date | null }[],
+  maxOccupants: number
+): Date | null {
+  const now = new Date();
+
+  // Check if currently available
+  const currentOccupants = occupants.filter(o =>
+    o.moveIn <= now && (!o.moveOut || o.moveOut > now)
+  ).length;
+
+  if (currentOccupants < maxOccupants) {
+    return now;
+  }
+
+  // Find the earliest move-out that frees a spot
+  const moveOuts = occupants
+    .map(o => o.moveOut)
+    .filter((d): d is Date => !!d && d > now)
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  if (moveOuts.length === 0) {
+    return null; // fully occupied forever
+  }
+
+  return moveOuts[0];
+}
 
 
 // function to map raw amenity type to amenity UI
@@ -18,15 +53,16 @@ export function mapToAmenityUI(amenities: Amenity[]): AmenityUI[] {
   }
 
 
-  function mapOccupantToUI(o: OccupantWithUser): OccupantUI {
-    return {
-      id: o.id,
-      userId: o.userId,
-      name: `${o.user.firstName} ${o.user.lastName}`,
-      moveInDate: o.moveIn,
-      moveOutDate: o.moveOut,
-    };
-  }
+// function to map an occupant from db to the occupantUI type
+function mapOccupantToUI(o: OccupantWithUser): OccupantUI {
+  return {
+    id: o.id,
+    userId: o.userId,
+    name: `${o.user.firstName} ${o.user.lastName}`,
+    moveInDate: o.moveIn,
+    moveOutDate: o.moveOut,
+  };
+}
 
 
 // map from raw property query result to the ExistingProperty type used in the UI for the property selector when creating a listing
@@ -47,13 +83,14 @@ export function mapToListingDetail(listing: NonNullable<Awaited<ReturnType<typeo
   const images = listing.images.filter((img) => !img.isThumbnail).map((img) => img.url);
 
   return {
+    propertyId: listing.propertyId,
     id: listing.id,
     flatNumber: listing.flatNumber ?? null,
     description: listing.description,
     rent: listing.rent,
     area: listing.area,
     totalRooms: listing.rooms,
-    availableFrom: listing.availableFrom,
+    availableFrom: getAvailableFrom( listing.occupants, listing.maxOccupants),// dynamically calculate when list is available from
     lastUpdated: listing.updatedAt,
     bedrooms: listing.bedrooms,
     bathrooms: listing.bathrooms,
@@ -72,26 +109,32 @@ export function mapToListingDetail(listing: NonNullable<Awaited<ReturnType<typeo
 
 // function to map property listing data to the data format that the my property listing page expects
 export function mapToMyPropertyListing(
-    listing: Awaited<ReturnType<typeof queryListingsForLandlord>>[number]
-  ): MyPropertyListingData {
-    const thumbnail = listing.images.find((img) => img.isThumbnail);
-  
-    return {
-      propertyListing: {
-        id: listing.id,
-        buildingName: listing.property.title,
-        flatNumber: listing.flatNumber ?? null,
-        streetName: listing.property.streetName,
-        city: listing.property.city,
-        postcode: listing.property.postcode,
-        createdAt: listing.createdAt,
-        lastUpdated: listing.updatedAt,
-        thumbnail: thumbnail?.url ?? null,
-        images: listing.images.map((img) => img.url),
-        availableFrom: listing.availableFrom,
-        maxOccupants: listing.maxOccupants,
-        currentOccupants: listing.occupants.length,
-      },
-      occupants: listing.occupants.map(mapOccupantToUI),
-    };
-  }
+  listing: Awaited<ReturnType<typeof queryListingsForLandlord>>[number]
+): MyPropertyListingData {// give the type property id if we need it for the page.
+  const thumbnail = listing.images.find((img) => img.isThumbnail);
+  const now = new Date();
+
+  const allOccupants = listing.occupants.map(mapOccupantToUI);
+  const currentOccupants  = allOccupants.filter(o => o.moveInDate <= now);
+  const upcomingOccupants = allOccupants.filter(o => o.moveInDate > now);
+
+  return {
+    propertyListing: {
+      id: listing.id,
+      buildingName: listing.property.title,
+      flatNumber: listing.flatNumber ?? null,
+      streetName: listing.property.streetName,
+      city: listing.property.city,
+      postcode: listing.property.postcode,
+      createdAt: listing.createdAt,
+      lastUpdated: listing.updatedAt,
+      thumbnail: thumbnail?.url ?? null,
+      images: listing.images.map((img) => img.url),
+      availableFrom: getAvailableFrom(listing.occupants, listing.maxOccupants),
+      maxOccupants: listing.maxOccupants,
+      currentOccupants: currentOccupants.length, // count for the pill/badge
+    },
+    currentOccupants,
+    upcomingOccupants,
+  };
+}

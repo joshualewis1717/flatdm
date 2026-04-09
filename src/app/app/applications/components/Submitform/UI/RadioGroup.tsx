@@ -8,9 +8,10 @@ type RadioGroupProps<T extends string> = {
     options: RadioOption<T>[];
     value: T | null;
     onChange: (value: T) => void;
+    readOnly?: boolean
 };
   
-export default function RadioGroup<T extends string>({ name, options, value, onChange }: RadioGroupProps<T>) {
+export default function RadioGroup<T extends string>({ name, options, value, onChange, readOnly= false }: RadioGroupProps<T>) {
     return (
       <div className="flex gap-4 flex-wrap">
         {options.map((option) => (
@@ -22,6 +23,7 @@ export default function RadioGroup<T extends string>({ name, options, value, onC
               checked={value === option.value}
               onChange={() => onChange(option.value)}
               className="accent-primary"
+              readOnly={readOnly}
             />
             {option.label}
           </label>

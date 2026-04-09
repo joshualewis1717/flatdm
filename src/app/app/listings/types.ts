@@ -96,6 +96,7 @@ export type ExistingProperty = {
 
 /**** Listing info data client side type wrapper */
 export type ListingInfoData = {
+  propertyId?: number;// id of the building itself
   id: number;// listing id
   buildingName: string;
   flatNumber: string | null;
@@ -105,7 +106,7 @@ export type ListingInfoData = {
   landlordName: string;
   description: string;
   rent: number;
-  availableFrom: Date;
+  availableFrom: Date | null;
   totalRooms: number;
   bedrooms: number;
   bathrooms: number;
@@ -137,7 +138,7 @@ export type PropertyListingUI = {
   lastUpdated: Date;
   thumbnail: string | null;
   images?: string[];
-  availableFrom: Date;
+  availableFrom: Date | null;
   maxOccupants: number;
   currentOccupants: number;
 };
@@ -145,7 +146,8 @@ export type PropertyListingUI = {
 /*** type wrapper for the data in my properties page */
 export type MyPropertyListingData = {
   propertyListing: PropertyListingUI;
-  occupants: OccupantUI[];
+  currentOccupants: OccupantUI[];   // moveIn <= now
+  upcomingOccupants: OccupantUI[];  // moveIn > now
 }
 
 /***** non prisma UI types */

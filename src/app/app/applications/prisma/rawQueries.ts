@@ -1,9 +1,46 @@
 import { prisma } from "@/lib/prisma";
 import { APPLICATION_EXPIRY_TIME } from "../const";
+import { Occupant, Prisma } from "@prisma/client";
 // raw prisma queries for applications
+
+// args needed to submit an application
+type SubmitApplication = {
+  listingId: number
+  userId: number;
+  moveInDate: Date,
+  moveOutDate: Date | null,
+  email?: string,
+  message?: string,
+  phone?: string;
+}
+
+// type/ args needed when trying to create an occupant
+type CreateOccupant={
+  userId: number,
+  listingId: number,
+  moveIn: Date,
+  moveOut: Date | null,
+}
 export async function getListingById(listingId: number) {
   return prisma.propertyListing.findUnique({
     where: { id: listingId, isDeleted: false },
+  });
+}
+
+// function to only show application if the owner/ listing owner of the application is trying to access it
+export async function getApplicationIfAuthorised(applicationId: number, userId: number) {
+  return prisma.propertyApplication.findFirst({
+    where: {
+      id: applicationId,
+      OR: [
+        { userId }, // applicant
+        { listing: { landlordId: userId } }, // landlord
+      ],
+    },
+    include: {
+      listing: true, // include landlord relation if needed
+      user: true,// also include user details
+    },
   });
 }
 
@@ -23,10 +60,17 @@ export async function getActiveApplication(listingId: number, userId: number) {
 
 export async function getOccupant(listingId: number, userId: number) {
   return prisma.occupant.findFirst({
-    where: { listingId, userId },
+    where: { listingId, userId,
+        // Only return if still active
+        OR: [
+          { moveOut: null },
+          { moveOut: { gt:  new Date()} },
+        ],
+     },
   });
 }
 
+// function to count all occupants that would be active in a specific date
 export async function countOccupantsAtDate(
   listingId: number,
   moveInDate: Date
@@ -40,12 +84,24 @@ export async function countOccupantsAtDate(
   });
 }
 
-export async function createApplicationQuery(data: {
-  listingId: number;
-  userId: number;
-  moveInDate: Date;
-  moveOutDate: Date | null;
-}) {
+// function to count all currently active occupantss
+export async function countCurrentOccupants(listingId: number) {
+  const now = new Date();
+
+  return prisma.occupant.count({
+    where: {
+      listingId,
+      moveIn: { lte: now },
+      OR: [
+        { moveOut: null },
+        { moveOut: { gt: now } },
+      ],
+    },
+  });
+}
+
+
+export async function createApplicationQuery(data: SubmitApplication) {
   return prisma.propertyApplication.create({
     data: {
       ...data,
@@ -61,6 +117,21 @@ export async function deleteApplicationQuery(applicationId: number, userId: numb
   });
 }
 
+
+// function to create an occupancy:
+
+async function createOccupantTx(tx: Prisma.TransactionClient,data: CreateOccupant) {
+  return tx.occupant.create({
+    data: {
+      userId: data.userId,
+      listingId: data.listingId,
+      moveIn: data.moveIn,
+      moveOut: data.moveOut ?? null,
+      createdAt: new Date(),
+      modifiedAt: new Date(),
+    },
+  })
+}
 
 export async function updateApplicationStatusAsLandlordQuery(applicationId: number, landlordId: number,  status: "APPROVED" | "REJECTED") {
    // check if application exists
@@ -105,14 +176,16 @@ export async function updateApplicationStatusAsLandlordQuery(applicationId: numb
   });
 }
 
-export async function updateApplicationStatusAsConsultantQuery(applicationId: number,userId: number,status: "CONFIRMED" | "REJECTED" | "WITHDRAWN"
-) {
+export async function updateApplicationStatusAsConsultantQuery( applicationId: number, userId: number, status: "CONFIRMED" | "REJECTED" | "WITHDRAWN") {
   return prisma.$transaction(async (tx) => {
     // 1. Get application
     const application = await tx.propertyApplication.findUnique({
       where: { id: applicationId },
       select: {
         userId: true,
+        listingId: true,
+        moveInDate: true,
+        moveOutDate: true,
       },
     });
 
@@ -129,18 +202,94 @@ export async function updateApplicationStatusAsConsultantQuery(applicationId: nu
       data: { status },
     });
 
-    // 4. If user clicked confirmed, all other applications are withdrawn
+    // 4. Only proceed if confirmed
     if (status === "CONFIRMED") {
+      const listingId = application.listingId;
+
+      const moveIn = application.moveInDate;
+      const moveOut = application.moveOutDate ?? new Date("9999-12-31");
+
+      // 5. Get listing capacity
+      const listing = await tx.propertyListing.findUnique({
+        where: { id: listingId },
+        select: { maxOccupants: true },
+      });
+
+      if (!listing) throw new Error("Listing not found");
+
+      // 6. Check overlapping occupants.
+      const overlappingOccupants = await tx.occupant.count({
+        where: {
+          listingId,
+
+          AND: [
+            {
+              moveIn: {
+                lt: moveOut,
+              },
+            },
+            {
+              OR: [
+                { moveOut: null },
+                { moveOut: { gt: moveIn } },
+              ],
+            },
+          ],
+        },
+      });
+
+      // 7. Prevent overbooking
+      if (overlappingOccupants >= listing.maxOccupants) {
+        throw new Error("Listing became full. Cannot confirm.");
+      }
+
+      // 8. Create occupant
+      await createOccupantTx(tx, {
+        userId,
+        listingId,
+        moveIn,
+        moveOut: application.moveOutDate,
+      });
+
+      // 9. Withdraw other applications by same user
       await tx.propertyApplication.updateMany({
         where: {
           userId,
           id: { not: applicationId },
           status: {
-            in: ["PENDING", "APPROVED"], // only active ones
+            in: ["PENDING", "APPROVED"],
           },
         },
         data: {
           status: "WITHDRAWN",
+        },
+      });
+
+      // 10. Auto-reject overlapping applications for this listing
+      await tx.propertyApplication.updateMany({
+        where: {
+          listingId,
+          id: { not: applicationId },
+          status: {
+            in: ["PENDING", "APPROVED"],
+          },
+
+          AND: [
+            {
+              moveInDate: {
+                lt: moveOut,
+              },
+            },
+            {
+              OR: [
+                { moveOutDate: null },
+                { moveOutDate: { gt: moveIn } },
+              ],
+            },
+          ],
+        },
+        data: {
+          status: "REJECTED",
         },
       });
     }
@@ -148,7 +297,6 @@ export async function updateApplicationStatusAsConsultantQuery(applicationId: nu
     return updated;
   });
 }
-
 
 export async function getApplicationsForApplicantQuery(userId: number) {
   return prisma.propertyApplication.findMany({

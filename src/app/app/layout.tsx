@@ -19,7 +19,9 @@ export default async function AppLayout({
     <AppFrame
     // overwrite actual session for testing
       role={session.user.role as (Role | undefined)}
-      name={session.user.firstName}
+      firstName={session.user.firstName ?? null}
+      lastName={session.user.lastName ?? null}
+      email={session.user.email ?? null}
     >
       {children}
     </AppFrame>

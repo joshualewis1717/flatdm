@@ -25,7 +25,6 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
   ];
 
 
-
   // check if landlord owns the listing, if so, display edit button
   useEffect(()=>{
     async function checkLandlordOwnerShip(){
@@ -43,7 +42,7 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
         {isConsultant && (
           <>
             <button className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
-             onClick={()=>router.push('/app/applications/submit-application')}>
+             onClick={()=>router.push(`/app/applications/submit-application?listingId=${listingId}`)}>
             Apply Now {/* this button will need to use listingId to go to propery application page */}
             </button>
 
@@ -58,7 +57,7 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
 
         {isLandlord &&  landlordIsOwner &&  (
            <button className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
-           onClick={()=>router.push('/app/listings/new')}>{/* pass in id so it can rehydrate the info with the listing info*/}
+           onClick={()=>router.push(`/app/listings/edit/${listingId}`)}>{/* pass in id so it can rehydrate the info with the listing info*/}
            Edit Listing
          </button>
         )}

@@ -29,20 +29,33 @@ export async function queryListingById(listingId: number) {
           landlord: { select: { username: true } },
         },
       },
+      occupants: {
+        where: {// also include occpants to calculate when list is available
+          OR: [
+            { moveOut: null },
+            { moveOut: { gt: new Date() } },
+          ],
+        },
+      },
     },
   });
 }
 
 export async function queryListingsForLandlord(landlordId: number) {
+  const now = new Date();
   return prisma.propertyListing.findMany({
     where: { landlordId, isDeleted: false },
     include: {
       images: true,
       property: true,
       occupants: {
-        include: {
-          user: true,
+        where: {// do not include any expired occupancies e.g. when move out < current.Date()
+          OR: [
+            { moveOut: null },
+            { moveOut: { gte: now } },
+          ],
         },
+        include: { user: true },
       },
     },
   });

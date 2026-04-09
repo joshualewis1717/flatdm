@@ -6,6 +6,7 @@ import PropertyStatsGrid from "../UI/PropertyStatsGrid";
 import RoommateProfileList from "../UI/RoomateProfileList";
 import AmenityList from "../UI/AmenityList";
 import { getListingById } from "../../../prisma/clientServices";
+import { getListingTitle } from "@/app/app/logic/listing";
 // Panel to display the static listing specific data in full
 
 type ListingInfoPanelProps = {
@@ -36,10 +37,10 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
     bedrooms, bathrooms, maxOccupants, minStay,
     area, totalRooms,  thumbnail, images,
     buildingName, streetName, city, postcode,
-    landlordName, amenities, } = data;
+    landlordName, amenities, availableFrom } = data;
 
   const shared = maxOccupants > 1;// derive shared from max occupants
-  const headline = flatNumber ? `Flat ${flatNumber}  -  ${buildingName}` : buildingName;// our title
+  const headline = getListingTitle(buildingName, flatNumber)
   const addressLine = `${streetName}, ${city}, ${postcode}`;
 
   // combine thumbnail + images for the slider, thumbnail first
@@ -87,9 +88,15 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
             </h2>
             <p className="text-sm text-white/40">{addressLine}</p>
           </div>
-          <p className="text-xs text-white/50 mt-1 shrink-0">
-            last updated at: {lastUpdated.toLocaleDateString()}
-          </p>
+          
+          <div className="flex flex-col gap-1">
+            <p className="text-xs text-white/50 mt-1 shrink-0">
+              last updated at: {lastUpdated.toLocaleDateString()}
+            </p>
+            <p className="text-xs text-primary mt-1 shrink-0">
+              available from: {availableFrom? availableFrom.toLocaleDateString(): 'N/A'}
+            </p>
+          </div>
         </div>
 
         {/* Rent */}

@@ -7,11 +7,13 @@ export type ApplicationForm={
     lastName: string,
     email: string,
     phoneNumber: string,
+    message?: string,// any optional message user wants to say to landlord
 }
 
 export type Application = {
   id: number;
-  listingName: string;
+  buildingName: string;
+  flatNumber?: string;
   listingAddress: string;
   applicantName: string;
   applicantAvatar?: string;

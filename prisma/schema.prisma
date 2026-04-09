@@ -1,5 +1,7 @@
 generator client {
   provider = "prisma-client-js"
+  // only if your Prisma version/docs still require it
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
@@ -13,6 +15,7 @@ model User {
   firstName    String
   lastName     String
   email        String    @unique
+  emailVerified Boolean   @default(false)
   passwordHash String
   role         Role
   isDeleted    Boolean   @default(false)
@@ -21,6 +24,7 @@ model User {
   updatedAt    DateTime  @updatedAt
 
   profile Profile?
+  magicLinks MagicLink[]
 
   // Listings (landlord)
   properties Property[]
@@ -60,11 +64,32 @@ model Profile {
   user User @relation(fields: [userId], references: [id])
 }
 
-model ListingImage {
-  id  Int    @id @default(autoincrement())
-  url String
+model MagicLink {
+  id        Int             @id @default(autoincrement())
+  tokenHash String          @unique
+  type      MagicLinkType
+  email     String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime        @default(now())
 
-  // Marks whether this image is the thumbnail
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@index([email, type])
+  @@index([expiresAt])
+}
+
+// Demo note: we know storing image blobs directly in the database is usually bad practice for a real production setup.
+// This is only for demonstration purposes, in a real environment we would move image storage to object storage/CDN and keep only references here.
+model ListingImage {
+  id       Int    @id @default(autoincrement())
+  fileName String?
+  mimeType String
+  sizeBytes Int
+  data     Bytes
+
   isThumbnail Boolean @default(false)
 
   listingId Int
@@ -84,7 +109,7 @@ model Property {
 
   lat Float
   lng Float
-  //location Geometry(Point, 4326) // PostGIS geometry type for geospatial queries
+  coords Unsupported("geometry(Point, 4326)")? // PostGIS
 
   landlordId Int
   landlord   User @relation(fields: [landlordId], references: [id])
@@ -110,11 +135,10 @@ model PropertyListing {
   description String
 
   rent          Int
-  availableFrom DateTime
 
-  lat Float?
-  lng Float?
-  //location Geometry(Point, 4326)? // PostGIS geometry type for geospatial queries
+  lat Float
+  lng Float
+  coords Unsupported("geometry(Point, 4326)")? // PostGIS
 
   // rental rules
   maxOccupants Int // e.g. withRoomates boolean or whatnot is derived from this
@@ -184,7 +208,7 @@ model Occupant {
   user    User            @relation(fields: [userId], references: [id])
   listing PropertyListing @relation(fields: [listingId], references: [id])
 
-  @@unique([userId, listingId]) // prevents duplicate occupancy
+  @@unique([userId, listingId, moveIn]) // prevents duplicate occupancy
 }
 
 model Conversation {
@@ -317,6 +341,11 @@ enum RequestStatus {
   PENDING
   ACCEPTED
   REJECTED
+}
+
+enum MagicLinkType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
 }
 
 enum ReportStatus {

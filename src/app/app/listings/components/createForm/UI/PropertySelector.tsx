@@ -4,63 +4,74 @@ import { ChevronDown, Check, MapPin } from "lucide-react";
 import { ExistingProperty } from "../../../types";
 import { getPropertiesForLandlord } from "../../../prisma/clientServices";
 
-// Component for landlords to select from their previously used properties (buildings) when creating a new listing.
+// Component for landlords to select from their previously used properties (buildings) when creating or updating a listing
 type PropertySelectorProps = {
   onSelect: (property: ExistingProperty | null) => void;
+  // If provided (edit mode), pre-selects this property on mount 
+  initialPropertyId?: number;
 };
 
-type Mode = "idle" | "existing";// should it show the suggesstions or just be idle and do nothing
+type Mode = "idle" | "existing";
 
-export default function PropertySelector({ onSelect }: PropertySelectorProps) {
-  const [mode, setMode] = useState<Mode>("idle");
-  const [open, setOpen] = useState(false);// should it show the dropdown of suggestions or not
-  const [selected, setSelected] = useState<ExistingProperty | null>(null);// which property did it select
+export default function PropertySelector({ onSelect, initialPropertyId }: PropertySelectorProps) {
+  const [mode, setMode] = useState<Mode>(initialPropertyId ? "existing" : "idle");
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<ExistingProperty | null>(null);
   const [properties, setProperties] = useState<ExistingProperty[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // function to fetch the landlord properties from database
+   // function to fetch the landlord properties from database
   async function getLandlordProperties() {
     setLoading(true);
     const { result, error } = await getPropertiesForLandlord();
     if (error) {
       console.error("Failed to load properties", error);
     } else {
-      if (result)
-      setProperties(result.map(property => ({
-        ...property,
-        amenities: property.amenities.map(amenity => ({
-          ...amenity,
-          propertyId: property.id,
-        })),
-      })));
-    else setProperties([])
+      const mapped = result
+        ? result.map((property) => ({
+            ...property,
+            amenities: property.amenities.map((amenity) => ({
+              ...amenity,
+              propertyId: property.id,
+            })),
+          }))
+        : [];
+      setProperties(mapped);
+
+      // Auto-select the initial property once the list has loaded (edit mode)
+      if (initialPropertyId) {
+        const match = mapped.find((p) => p.id === initialPropertyId) ?? null;
+        setSelected(match);
+        // Do NOT call onSelect here — the parent already has the correct data
+        // from its own prefill fetch; we only want to reflect it visually.
+      }
     }
     setLoading(false);
   }
 
 
   // function to handle when user clicks the "use existing property" button, sets mode and fetches properties if we haven't already
-  async function handleExistingMode(){
+  function handleExistingMode() {
     setMode("existing");
     setSelected(null);
     onSelect(null);
 
     if (properties.length === 0) {
-       getLandlordProperties();
+      getLandlordProperties();
     }
-  };
+  }
 
   // function to handle when user clicks one of the existing properties from drop down
-  function chooseExisting(prop: ExistingProperty){
+  function chooseExisting(prop: ExistingProperty) {
     setSelected(prop);
     setOpen(false);
     onSelect(prop);
-  };
+  }
 
-  /******** use effects  */
+   /******** use effects  */
 
-  // fetch once on mount so it's ready when the user clicks
-  useEffect(() => {
+  // Fetch on mount so the list is ready immediately
+   useEffect(() => {
     getLandlordProperties();
   }, []);
 
@@ -89,7 +100,7 @@ export default function PropertySelector({ onSelect }: PropertySelectorProps) {
             disabled={loading}
             className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/70 hover:border-white/20 transition disabled:opacity-50"
           >
-            {/* show loading state whilst fetching from db, TODO: replace with an actual spinner */}
+              {/* show loading state whilst fetching from db, TODO: replace with an actual spinner */}
             {loading ? (
               <span className="text-white/40">Loading locations…</span>
             ) : selected ? (
@@ -99,7 +110,6 @@ export default function PropertySelector({ onSelect }: PropertySelectorProps) {
             ) : (
               <span>Select a location…</span>
             )}
-            
             {/* Chevron icon rotates when dropdown is open */}
             <ChevronDown className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`} />
           </button>
@@ -110,7 +120,6 @@ export default function PropertySelector({ onSelect }: PropertySelectorProps) {
                 <li className="px-4 py-3 text-sm text-white/40">No saved locations found.</li>
               ) : (
                 properties.map((prop) => (
-                  // each property option in the dropdown is a button, clicking it sets the selected property and closes the dropdown
                   <li key={prop.id}>
                     <button
                       type="button"
@@ -118,14 +127,14 @@ export default function PropertySelector({ onSelect }: PropertySelectorProps) {
                       className="w-full flex items-start justify-between px-4 py-3 text-sm hover:bg-white/[0.05] transition text-left"
                     >
                       <div>
-                        <p className="text-white font-medium">
-                          {prop.buildingName}
-                        </p>
+                        <p className="text-white font-medium">{prop.buildingName}</p>
                         <p className="text-white/40 text-xs mt-0.5">
                           {prop.streetName}, {prop.city}, {prop.postcode}
                         </p>
                       </div>
-                      {selected?.id === prop.id && <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />}
+                      {selected?.id === prop.id && (
+                        <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                      )}
                     </button>
                   </li>
                 ))

@@ -7,6 +7,7 @@ import ListingInfo from "../generic/ListingInfo";
 import ProfileButton from "../profile/ProfileButton";
 import { Application } from "../../../../types";
 import ViewListingButton from "../generic/ViewListingButton";
+import ViewApplicationButton from "../generic/ViewApplicationButton";
 
 type props={
     app: Application;
@@ -29,7 +30,7 @@ export default function ConfirmedCard({ app }: props) {
   
               {/* Row 1: listing info + dates */}
               <div className="flex items-start justify-between gap-3">
-                <ListingInfo name={app.listingName} address={app.listingAddress} rent={app.rent} />
+                <ListingInfo buildingName={app.buildingName} flatNumber={app.flatNumber} address={app.listingAddress} rent={app.rent} />
                 <DateColumn submittedDate={app.submittedDate} lastUpdated={app.lastUpdatedDate} />
               </div>
   
@@ -53,6 +54,7 @@ export default function ConfirmedCard({ app }: props) {
               {/* Row 4: footer */}
               <CardFooter>
                 <ViewListingButton applicationId={app.id}/>
+                <ViewApplicationButton applicationId={app.id}/>
               </CardFooter>
   
             </div>

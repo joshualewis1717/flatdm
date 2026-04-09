@@ -11,7 +11,10 @@ import Inbox from "./Inbox";
 import Chat from "./Chat";
 
 export default function MessagesClient({ conversations }: UserConversations) {
-  const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<number | null>(
+    conversations[0]?.id ?? null
+  );
+  
   const [search, setSearch] = useState("");
   const [allConversations, setAllConversations] = useState(conversations);
   const [isMobileInboxOpen, setIsMobileInboxOpen] = useState(false);
@@ -103,6 +106,30 @@ export default function MessagesClient({ conversations }: UserConversations) {
     });
   };
 
+  const deleteConversation = async (conversationId: number) => {
+    try {
+      const response = await fetch("/api/conversations", {
+        method: "DELETE",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ conversationId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete conversation");
+      }
+
+      setAllConversations((current) =>
+        current.filter((conversation) => conversation.id !== conversationId)
+      );
+
+      if (selectedConversation === conversationId) {
+        setSelectedConversation(null);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     setAllConversations(conversations);
   }, [conversations]);
@@ -154,6 +181,7 @@ export default function MessagesClient({ conversations }: UserConversations) {
           setSelectedConversation={setSelectedConversation}
           search={search}
           setSearch={setSearch}
+          deleteConversation={deleteConversation}
         />
       </div>
 
@@ -187,6 +215,7 @@ export default function MessagesClient({ conversations }: UserConversations) {
                     }}
                     search={search}
                     setSearch={setSearch}
+                    deleteConversation={deleteConversation}
                   />
                 </div>
               </SheetContent>

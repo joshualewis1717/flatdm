@@ -8,14 +8,18 @@ import { Role } from "@prisma/client";
 
 type AppFrameProps = {
   role?: Role;
-  name?: string | null;
+  firstName: string | null; 
+  lastName: string | null;
+  email: string| null;
   children: React.ReactNode;
 };
 
 
 type SessionContextType = {
   role?: Role;
-  name?: string | null;
+  firstName: string | null; 
+  lastName: string | null;
+  email: string| null;
 };
 
 // creating a context so that entire app can access role and name if needed:
@@ -32,15 +36,15 @@ export const useSessionContext = () => {
   return {...ctx,isConsultant, isLandlord, isModerator};
 };
 
-export function AppFrame({ role, name, children }: AppFrameProps) {
+export function AppFrame({ role, firstName, lastName, email, children }: AppFrameProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
-    <SessionContext.Provider value={{ role, name }}>
+    <SessionContext.Provider value={{ role, firstName, lastName, email }}>
       <div className="min-h-screen bg-[#1a1a1a] text-white">
         <div className="mx-auto flex min-h-screen w-full">
           <Menu
             role={role}
-            name={name}
+            name={firstName + ',' + lastName}
             open={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
           />

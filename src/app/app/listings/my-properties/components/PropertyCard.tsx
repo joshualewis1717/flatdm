@@ -6,6 +6,7 @@ import OccupantCard from './OccupantCard';
 import { useRouter } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MyPropertyListingData, OccupantUI,} from '../../types';
+import { getListingTitle } from '@/app/app/logic/listing';
 // property card to show property + whether it is full or empty, and also of total occupants allowed + current number of occupants
 type Props = {
     property:  MyPropertyListingData;// our property listing + all of it's data including occupants in question
@@ -20,7 +21,9 @@ type Props = {
 
 export default function PropertyCard({property,isExpanded,deleteMode,isSelected,onToggleSelect,onToggleExpand,onOccupantClick,}: Props) {
     const router = useRouter();
-    const count = property.occupants.length;
+    const {currentOccupants, upcomingOccupants} = property;
+    const count = property.currentOccupants.length; // current only
+    const upcomingCount = property.upcomingOccupants.length;
     const isFull = count >= property.propertyListing.maxOccupants;
     const isEmpty = count === 0;
     const freeSlots = property.propertyListing.maxOccupants - count;
@@ -79,9 +82,7 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
               {}
             </div>
             <div className="text-[12px] text-white/45 mt-0.5 truncate">
-              {property.propertyListing.buildingName}{/* only show flat number if it's not the whole property */}
-              {property.propertyListing.flatNumber !== 'WHOLE_PROPERTY' &&
-              ' ' + property.propertyListing.flatNumber}
+              {getListingTitle(property.propertyListing.buildingName, property.propertyListing.flatNumber)}
             </div>
           </div>
   
@@ -97,6 +98,12 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
               <span className="text-white/45">/</span>
               {property.propertyListing.maxOccupants}
             </div>
+
+            {upcomingCount > 0 && (
+              <span className="text-[11px] text-[#c9fb00]/70 font-mono">
+                +{upcomingCount} upcoming
+              </span>
+            )}
   
             {/* View Button */}
             {!deleteMode && (
@@ -134,24 +141,39 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
   
               <div className="flex items-center gap-1.5 text-[12px] text-[#c9fb00]">
                 <Calendar className="w-4 h-4" />
-                {'easliest availability: ' + property.propertyListing.availableFrom.toLocaleString()}
+                earliest availability:{' '}
+                {property.propertyListing.availableFrom
+                  ? property.propertyListing.availableFrom.toLocaleString()
+                  : 'N/A'}
               </div>
             </div>
   
-            {count > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {property.occupants.map((occ) => (
-                  <OccupantCard
-                    key={occ.id}
-                    occupant={occ}
-                    onClick={() => onOccupantClick(occ)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="text-[13px] text-white/45 py-3">
-                No occupants yet.
-              </p>
+             {/* Current occupants */}
+            {currentOccupants.length > 0 && (
+              <>
+                <p className="text-[11px] text-white/45 uppercase mb-2">Current</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-4">
+                  {currentOccupants.map((occ) => (
+                    <OccupantCard key={occ.id} occupant={occ} onClick={() => onOccupantClick(occ)} />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Upcoming occupants */}
+            {upcomingOccupants.length > 0 && (
+              <>
+                <p className="text-[11px] text-white/45 uppercase mb-2">Upcoming</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {upcomingOccupants.map((occ) => (
+                    <OccupantCard key={occ.id} occupant={occ} onClick={() => onOccupantClick(occ)} />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {count === 0 && (
+              <p className="text-[13px] text-white/45 py-3">No occupants yet.</p>
             )}
           </div>
         )}
