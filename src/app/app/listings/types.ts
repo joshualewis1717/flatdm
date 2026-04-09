@@ -67,7 +67,6 @@ export type PropertyListingForm = {
 
   description: string;
   rent: number; // per person per month (£)
-  availableFrom: Date;
 
   rooms: number;
   bedrooms: number;

@@ -20,7 +20,6 @@ const EMPTY_FORM: PropertyListingForm = {
   buildingName: "",
   description: "",
   rent: 0,
-  availableFrom: new Date(),
   rooms: 0,
   bedrooms: 0,
   bathrooms: 0,
@@ -112,7 +111,6 @@ export default function ListingForm({ listingId }: Props) {
           flatNumber,
           description: result.description,
           rent: result.rent,
-          availableFrom: new Date(),// TO DO: remove this
           rooms: result.totalRooms,
           bedrooms: result.bedrooms,
           bathrooms: result.bathrooms,
