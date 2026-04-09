@@ -36,6 +36,11 @@ export function ListingsStateProvider({ children }: { children: ReactNode }) {
   const [listingParameters, setListingParameters] = useState<ListingParameters>({
     changed: false,
   });
+  // print changes for testing
+  useEffect(() => {
+    console.log(listingParameters);
+  }, [listingParameters]);
+
 
   // Track unsaved changes based on the `changed` property in listingParameters
   const hasUnsavedChangesRef = useRef(false);

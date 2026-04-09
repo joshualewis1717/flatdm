@@ -193,7 +193,7 @@ export default function ListingsPage() {
                       </span>
                     </div>
 
-                    <div className="mt-4 grid gap-2 text-[12px] text-white/70 sm:grid-cols-3">
+                    <div className="mt-4 grid gap-2 text-[12px] text-white/70 grid-cols-3">
                       <div className="rounded-xl border border-white/8 bg-white/3 px-3 py-2">
                         <div className="flex items-center gap-1.5 text-white/45">
                           <BedDouble className="h-3.5 w-3.5 text-[#c9fb00]" />
