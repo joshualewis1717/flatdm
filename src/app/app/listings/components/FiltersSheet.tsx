@@ -49,12 +49,14 @@ export default function FiltersSheet({
   // Apply Draft Filters
   const applyFilters = () => {
     if (draftFilters != listingParameters) {
-      setListingParameters((prev) => ({
-        ...prev,
-        ...Object.fromEntries(
-          Object.entries(draftFilters).filter(([, value]) => value !== undefined)
-        ), // (removes undefined key-value pairs)
-      }));
+      console.log("CHANGING, df: ", draftFilters)
+      setListingParameters({
+        ...draftFilters,
+        page: listingParameters.page,
+        sort_by: listingParameters.sort_by,
+        sort_order: listingParameters.sort_order,
+        changed: listingParameters.changed,
+      });
     }
     onOpenChange(false);
   }
