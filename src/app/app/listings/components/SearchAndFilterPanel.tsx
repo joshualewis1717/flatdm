@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
-import SearchBar from "./SearchBar";
+import SearchBar from "./UI/SearchBar";
 import FiltersSheet from "./FiltersSheet";
 import { useListingsState } from "../state/ListingsStateProvider";
 

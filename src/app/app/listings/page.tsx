@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Bath, BedDouble, CalendarDays, Clock3, Home, ImageIcon, MapPin, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import SearchAndFilterPanel from "./components/SearchAndFilterPanel";
-import { getAllListings } from "./logic/clientServices/prisma";
+// import { getAllListings } from "./logic/clientServices/prisma";
 import { useListingsState } from "./state/ListingsStateProvider";
 
 type ListingsData = Awaited<ReturnType<typeof getAllListings>>;
@@ -89,8 +89,8 @@ export default function ListingsPage() {
 
   useEffect(() => {
     const loadListings = async () => {
-      const data = await getAllListings();
-      setListings(data ?? []);
+      // const data = await getAllListings();
+      // setListings(data ?? []);
     };
 
     loadListings();
