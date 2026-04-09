@@ -1,7 +1,7 @@
 'use server'
 import { prisma } from "@/lib/prisma";
 import { PropertyListingForm } from "../types";
-import { queryPropertiesForLandlord, queryListingById, queryListingsForLandlord, querySoftDeleteListing, queryCreateListing } from "./rawQueries";
+import { queryPropertiesForLandlord, queryListingById, queryListingsForLandlord, querySoftDeleteListing, queryCreateListing, queryLandlordByListingId } from "./rawQueries";
 import { mapToExistingProperty, mapToListingDetail, mapToMyPropertyListing } from "./mappers";
 import { runService, withRole } from "../../clientService/prisma/prismaUtils";
 import { landlordOwnsListing } from "../../applications/prisma/clientServices";
@@ -72,6 +72,14 @@ async function assertNoListingConflict(propertyId: number, flatNumber: string | 
 
 /************** getters **********/
 
+export async function getLandlordFromListing(listingId: number){
+  return runService(async ()=>{
+    if (!listingId) throw new Error("could not find listing")
+    const landlord = queryLandlordByListingId(listingId);
+    if (!landlord) throw new Error("landlord could not be found")
+    return landlord
+  })
+}
 export async function getPropertiesForLandlord() {
   return runService(async () => {
     const user = await withRole("LANDLORD");

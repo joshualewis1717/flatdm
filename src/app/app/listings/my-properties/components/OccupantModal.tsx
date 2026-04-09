@@ -4,6 +4,7 @@ import { removeOccupant } from '@/app/app/applications/prisma/clientServices';
 import { OccupantUI, PropertyListingUI } from '../../types';
 import { X, Calendar, SquareArrowRightEnter, SquareArrowRightExit } from 'lucide-react';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 // modal to show when a speciific user is expected to move in/ when they moved into a speciic property + when they are planning
 // to move out
@@ -20,6 +21,7 @@ export default function OccupantModal({occupant,property,onClose, onRemove}: pro
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false)
   const isApplicant = occupant.moveInDate.getTime() > Date.now();
+  const router = useRouter();
   // some sort of back end service to convert user id to actual user 
   
   // function to remove an occupant
@@ -79,6 +81,14 @@ export default function OccupantModal({occupant,property,onClose, onRemove}: pro
 
         {/* Date rows */}
         <div className="flex flex-col gap-2.5">
+
+        <button
+          onClick={() => router.push(`/app/profile/${occupant.userId}`)}
+          className="mt-5 w-full px-3 py-2 rounded-[10px] bg-[#c9fb00] text-black text-[13px] font-semibold hover:opacity-90 transition"
+        >
+          View Profile
+        </button>
+
           {isApplicant ? (
             <>
               <div className="flex items-center justify-between bg-[#323232] border border-white/[0.08] rounded-[10px] px-3.5 py-3">

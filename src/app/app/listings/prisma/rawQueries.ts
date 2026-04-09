@@ -18,6 +18,21 @@ export async function queryPropertiesForLandlord(landlordId: number) {
   });
 }
 
+// function to get landlord from listing id
+export async function queryLandlordByListingId(listingId: number) {
+  return prisma.propertyListing.findUnique({
+    where: { id: listingId },
+    select: {
+      landlord: {
+        select: {
+          id: true,
+          username: true,
+        },
+      },
+    },
+  });
+}
+
 export async function queryListingById(listingId: number) {
   return prisma.propertyListing.findUnique({
     where: { id: listingId, isDeleted: false },

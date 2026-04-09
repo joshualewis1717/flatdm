@@ -6,6 +6,7 @@ import { ListingReview} from "../../../types";
 import { useSessionContext } from "@/components/shared/app-frame";
 import { landlordOwnsListing } from "@/app/app/applications/prisma/clientServices";
 import { useEffect, useState } from "react";
+import { getLandlordFromListing } from "../../../prisma/clientServices";
 
 type InteractivePanelProps = {
   listingId: string;
@@ -15,6 +16,8 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
   const router = useRouter();
   // Mock data — replace with db fetch via listingId
   const {isConsultant, isLandlord} = useSessionContext();
+  const [landlordId, setLandlordId] = useState<number | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [landlordIsOwner, setLandlordIsOwner] = useState<boolean>(false);
   const totalReviews = 12;
   const averageRating = 5;
@@ -34,6 +37,21 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
     checkLandlordOwnerShip();
   }, [])
 
+  // get landlord Id for the message button
+  useEffect(()=>{
+    async function getLandlord(){
+      const {error, result} = await getLandlordFromListing(Number(listingId));
+      if (error){
+        setError(error)
+      }
+      if (result){
+        setLandlordId(result.landlord.id)
+      }
+
+    }
+
+    getLandlord();
+  })
   return (
     <aside className="flex flex-col gap-6 w-full h-full bg-white/[0.05] rounded-[1.5rem] py-6 px-6">
       {/* Apply + message landlord */}
@@ -48,7 +66,8 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
 
             <div className="flex flex-col items-center gap-1">
               <p className="text-sm text-white/50">Have questions?</p>
-              <button className="text-sm text-white/60 hover:text-white underline underline-offset-4 transition">
+              <button className="text-sm text-white/60 hover:text-white underline underline-offset-4 transition"
+              onClick={()=>router.push(`/app/profile/${landlordId}`)}>
                 Message landlord
               </button>
             </div>

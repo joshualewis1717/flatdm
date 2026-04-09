@@ -8,11 +8,13 @@ import ProfileButton from "../profile/ProfileButton";
 import { Application } from "../../../../types";
 import ViewListingButton from "../generic/ViewListingButton";
 import ViewApplicationButton from "../generic/ViewApplicationButton";
+import { useRouter } from "next/navigation";
 
 type props={
     app: Application;
 }
 export default function ConfirmedCard({ app }: props) {
+  const router = useRouter();
     return (
       <section className="space-y-5">
         <div className="space-y-3">
@@ -38,7 +40,9 @@ export default function ConfirmedCard({ app }: props) {
               <div className="flex items-center gap-3">
                 {app.landlordName && (
                   <div className="flex-1 min-w-0">
-                    <ProfileButton role="Landlord" username={app.landlordName} profileUrl={app.landlordAvatar} />
+                    <ProfileButton role="Landlord" username={app.landlordName} profileUrl={app.landlordAvatar}
+                     onClick={()=>router.push(`/app/profile/${app.landlordId}`)}// user can check out the corresponding applicant profile
+                     />
                   </div>
                 )}
               </div>
