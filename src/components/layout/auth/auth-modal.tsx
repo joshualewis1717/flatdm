@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { signIn } from "next-auth/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, SyntheticEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -35,24 +36,16 @@ export default function AuthModal({
   visible,
   authMode,
   onClose,
-  onModeChange,
 }: {
   visible: boolean;
   authMode: AuthMode;
   onClose: () => void;
-  onModeChange: (mode: AuthMode) => void;
 }) {
   const router = useRouter();
 
   const [formState, setFormState] = useState<AuthFormState>(() => ({ ...initialFormState }));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-
-  const switchAuthMode = (mode: AuthMode) => {
-    setError("");
-    setFormState((current) => ({ ...initialFormState, ...current }));
-    onModeChange(mode);
-  };
 
   const updateField = <K extends keyof AuthFormState>(field: K, value: AuthFormState[K]) =>
     setFormState((current) => ({ ...initialFormState, ...current, [field]: value }));
@@ -150,41 +143,39 @@ export default function AuthModal({
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={onClose}
+              <Link
+                href="/"
                 className="px-3 py-1 tracking-[0.22em] text-muted-foreground transition hover:text-foreground"
+                aria-label="Close authentication modal"
               >
                 <X />
-              </button>
+              </Link>
             </div>
 
           </CardHeader>
 
           <CardContent className="px-0 pb-0 pt-4">
             <div className="mb-6 grid grid-cols-2 rounded-2xl border border-border/70 bg-card/50 p-1">
-              <button
-                type="button"
-                onClick={() => switchAuthMode("login")}
-                className={`rounded-xl px-4 py-3 text-sm font-medium transition ${
+              <Link
+                href="/login"
+                className={`block w-full rounded-xl px-4 py-3 text-center text-sm font-medium transition ${
                   authMode === "login"
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Login
-              </button>
-              <button
-                type="button"
-                onClick={() => switchAuthMode("register")}
-                className={`rounded-xl px-4 py-3 text-sm font-medium transition ${
+              </Link>
+              <Link
+                href="/register"
+                className={`block w-full rounded-xl px-4 py-3 text-center text-sm font-medium transition ${
                   authMode === "register"
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Register
-              </button>
+              </Link>
             </div>
 
             {error ? (

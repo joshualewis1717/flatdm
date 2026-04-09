@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { signOut } from "next-auth/react";
 import { LogOut, User } from "lucide-react";
 import { Button } from "../ui/button";
 
@@ -13,13 +11,7 @@ export default function UserProfile({
   name: string | null | undefined;
   email?: string | null | undefined;
 }) {
-  const [isSigningOut, setIsSigningOut] = useState(false);
   const initial = (name ?? email ?? "U").slice(0, 1).toUpperCase();
-
-  async function handleSignOut() {
-    setIsSigningOut(true);
-    await signOut({ callbackUrl: "/login" });
-  }
 
   return (
     <div className="max-w-[380px] rounded-[28px] border border-white/10 bg-black/2 p-3">
@@ -39,9 +31,11 @@ export default function UserProfile({
                   Profile
                 </Link>
               </Button>
-              <Button variant="outline" size="sm" onClick={handleSignOut} disabled={isSigningOut}>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/logout">
                   <LogOut className="size-3.5" />
-                  {isSigningOut ? "Signing out..." : "Sign out"}
+                  Sign out
+                </Link>
               </Button>
             </div>
           </div>

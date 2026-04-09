@@ -1,12 +1,7 @@
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
-export default function Hero({
-    onLoginClick,
-    onRegisterClick,
-}:{
-    onLoginClick: () => void;
-    onRegisterClick: () => void;
-}) {
+export default function Hero() {
   return (
     <section className="space-y-6 text-center">
           <p className="mx-auto w-fit rounded-full border border-primary/50 bg-primary/10 px-4 py-1 text-xs font-medium uppercase tracking-[0.25em] text-primary">
@@ -19,16 +14,11 @@ export default function Hero({
             A platform for FDM consultants and landlords to manage accommodation during client placements.
           </p>
           <div className="flex justify-center gap-3 pt-2">
-            <Button size="lg" className="px-6" onClick={onRegisterClick}>
-              Create Account
+            <Button asChild size="lg" className="px-6">
+              <Link href="/register">Create Account</Link>
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="px-6"
-              onClick={onLoginClick}
-            >
-              Sign In
+            <Button asChild size="lg" variant="outline" className="px-6">
+              <Link href="/login">Sign In</Link>
             </Button>
           </div>
         </section>
