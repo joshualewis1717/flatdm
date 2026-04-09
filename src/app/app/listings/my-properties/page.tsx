@@ -11,6 +11,8 @@ import { useRouter } from 'next/navigation';
 import { MyPropertyListingData, OccupantUI } from '../types';
 import { getListingsForLandlord, deleteListing } from '../prisma/clientServices';
 import { useSessionContext } from '@/components/shared/app-frame';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import ErrorMessage from '@/components/shared/ErrorMessage';
 
 export default function Page() {
   const router = useRouter();
@@ -18,6 +20,7 @@ export default function Page() {
 
   const [listings, setListings] = useState<MyPropertyListingData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('default');
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -34,7 +37,7 @@ export default function Page() {
   useEffect(() => {
     async function fetchListings() {
       const { result, error } = await getListingsForLandlord();
-      if (error) console.error("Failed to fetch listings:", error);
+      if (error) setError(error);
       else setListings(result ?? []);
       setLoading(false);
     }
@@ -108,7 +111,7 @@ export default function Page() {
     const deletedIds = [...selectedIds].filter((_, i) => !results[i].error);
     const failedCount = results.filter(r => r.error).length;
 
-    if (failedCount > 0) console.error(`Failed to delete ${failedCount} listing(s).`);
+    if (failedCount > 0) setError(`Failed to delete ${failedCount} listing(s). Please try again.`);
 
     setListings((prev) =>
       prev.filter((l) => !deletedIds.includes(l.propertyListing.id))
@@ -154,11 +157,7 @@ export default function Page() {
   if (!isLandlord) return null;
 
   if (loading)
-    return (
-      <p className="text-sm text-white/40 p-8">
-        Loading properties…
-      </p>
-    );
+    return <LoadingSpinner text="Loading your properties…" />;
 
   return (
     <div className="min-h-screen bg-[#1e1e1e] text-white p-6">
@@ -181,6 +180,13 @@ export default function Page() {
             Add Property
           </button>
         </header>
+
+        {/* Delete/fetch error banner */}
+        {error && (
+          <div className="mb-4">
+            <ErrorMessage text={error} />
+          </div>
+        )}
 
         {/* SEARCH + FILTER */}
         <div className="flex gap-3 mb-5 flex-wrap">

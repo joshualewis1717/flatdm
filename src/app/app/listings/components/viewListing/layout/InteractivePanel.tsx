@@ -7,6 +7,8 @@ import { useSessionContext } from "@/components/shared/app-frame";
 import { landlordOwnsListing } from "@/app/app/applications/prisma/clientServices";
 import { useEffect, useState } from "react";
 import { getLandlordFromListing } from "../../../prisma/clientServices";
+import ErrorMessage from "@/components/shared/ErrorMessage";
+import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
 type InteractivePanelProps = {
   listingId: string;
@@ -19,6 +21,8 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
   const [landlordId, setLandlordId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [landlordIsOwner, setLandlordIsOwner] = useState<boolean>(false);
+  // single loading flag covers both fetches — panel is ready once both resolve
+  const [panelLoading, setPanelLoading] = useState(true);
   const totalReviews = 12;
   const averageRating = 5;
   const reviews: ListingReview[] = [
@@ -27,37 +31,44 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
     { id: 3, listingId: Number(listingId), rating: 5, comment: "Perfect for short stays.", createdAt: new Date(), reviewerId: 3, username: "Charlie" },
   ];
 
+  // run both fetches in parallel on mount.
+  useEffect(() => {
+    async function fetchPanelData() {
+      setPanelLoading(true);
 
-  // check if landlord owns the listing, if so, display edit button
-  useEffect(()=>{
-    async function checkLandlordOwnerShip(){
-      const {result} = await landlordOwnsListing(Number(listingId));
-      setLandlordIsOwner(result ?? false);
-    }
-    checkLandlordOwnerShip();
-  }, [])
+      // check if landlord owns the listing, if so, display edit button
+      const [ownershipResult, landlordResult] = await Promise.all([
+        landlordOwnsListing(Number(listingId)),
+        getLandlordFromListing(Number(listingId)),
+      ]);
 
-  // get landlord Id for the message button
-  useEffect(()=>{
-    async function getLandlord(){
-      const {error, result} = await getLandlordFromListing(Number(listingId));
-      if (error){
-        setError(error)
+      setLandlordIsOwner(ownershipResult.result ?? false);
+
+      if (landlordResult.error) {
+        setError(landlordResult.error);
       }
-      if (result){
-        setLandlordId(result.landlord.id)
+      if (landlordResult.result) {
+        setLandlordId(landlordResult.result.landlord.id);
       }
 
+      setPanelLoading(false);
     }
 
-    getLandlord();
-  })
+    fetchPanelData();
+  }, [listingId]);
+
   return (
     <aside className="flex flex-col gap-6 w-full h-full bg-white/[0.05] rounded-[1.5rem] py-6 px-6">
       {/* Apply + message landlord */}
       <div className="flex-1 flex flex-col gap-6 items-center justify-center">
-        
-        {isConsultant && (
+
+        {/* Loading state while ownership + landlord ID are being fetched */}
+        {panelLoading && <LoadingSpinner text="Loading listing actions…" />}
+
+        {/* Fetch error for landlord ID, shown inline so the rest of the panel still renders */}
+        {!panelLoading && error && <ErrorMessage text={error} />}
+
+        {!panelLoading && isConsultant && (
           <>
             <button className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
              onClick={()=>router.push(`/app/applications/submit-application?listingId=${listingId}`)}>
@@ -71,14 +82,14 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
                 Message landlord
               </button>
             </div>
-         </>
+          </>
         )}
 
-        {isLandlord &&  landlordIsOwner &&  (
-           <button className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
-           onClick={()=>router.push(`/app/listings/edit/${listingId}`)}>{/* pass in id so it can rehydrate the info with the listing info*/}
-           Edit Listing
-         </button>
+        {!panelLoading && isLandlord && landlordIsOwner && (
+          <button className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
+          onClick={()=>router.push(`/app/listings/edit/${listingId}`)}>{/* pass in id so it can rehydrate the info with the listing info*/}
+          Edit Listing
+        </button>
         )}
       </div>
 

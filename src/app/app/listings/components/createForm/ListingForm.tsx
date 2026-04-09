@@ -10,6 +10,9 @@ import PropertySelector from "./UI/PropertySelector";
 import { createListing, updateListing, getListingById } from "../../prisma/clientServices";
 import { useSessionContext } from "@/components/shared/app-frame";
 import { useRouter } from "next/navigation";
+import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ErrorMessage from "@/components/shared/ErrorMessage";
+import SuccessMessage from "@/components/shared/SuccessMessage";
 
 type Props = {
     /** If provided we are in edit mode: load existing listing and update on submit */
@@ -136,22 +139,20 @@ export default function ListingForm({ listingId }: Props) {
     if (!isLandlord) router.replace("/");
   }, [router, isLandlord]);
 
-  /****** success / error side-effects ********/
+  /****** success side-effect ********/
 
+  // we want for user to see success message first, and then reset form
   useEffect(() => {
     if (success) {
-      alert(isEditMode ? "Listing updated successfully!" : "Listing created successfully!");
-      if (!isEditMode) resetForm();
-      setTimeout(() => setSuccess(false), 2000);
+      const timer = setTimeout(() => {
+        if (!isEditMode) resetForm();
+        setSuccess(false);
+        router.push('/app/listings/my-properties')
+      }, 3000);
+  
+      return () => clearTimeout(timer);
     }
   }, [success]);
-
-  useEffect(() => {
-    if (error) {
-      alert(error);
-      setTimeout(() => setError(null), 2000);
-    }
-  }, [error]);
 
   /****** handlers ********/
 
@@ -181,10 +182,12 @@ export default function ListingForm({ listingId }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
     setLoading(true);
 
+    // thumbnail validation — was previously an alert, now surfaces inline via ErrorMessage
     if (!thumbnail) {
-      alert("Please add a thumbnail image before saving.");
+      setError("Please add a thumbnail image before saving.");
       setLoading(false);
       return;
     }
@@ -209,6 +212,7 @@ export default function ListingForm({ listingId }: Props) {
     }
 
     setLoading(false);
+    setError(null)
     setSuccess(true);
   }
 
@@ -254,8 +258,8 @@ export default function ListingForm({ listingId }: Props) {
 
   if (pageLoading) {
     return (
-      <div className="max-w-4xl mx-auto p-6 sm:p-8 text-center">
-        <p className="text-white/50 text-sm">Loading listing…</p>
+      <div className="max-w-4xl mx-auto p-6 sm:p-8">
+        <LoadingSpinner text={isEditMode ? "Loading listing details…" : "Preparing form…"} />
       </div>
     );
   }
@@ -353,7 +357,17 @@ export default function ListingForm({ listingId }: Props) {
           onUpdate={updateAmenity}
         />
 
-        {loading && <p className="text-sm text-white/50">Saving listing…</p>}
+        {/* Submit loading state */}
+        {loading && <LoadingSpinner text={isEditMode ? "Saving changes…" : "Creating listing…"} />}
+
+        {/* Form-level error, covers missing thumbnail, save failures, and image upload failures */}
+        {error && <ErrorMessage text={error} />}
+
+        {/* Success banner for both create and edit */}
+      {success && (
+        <SuccessMessage text= {isEditMode ? "Listing updated successfully!" : "Listing created successfully!"}
+        position="top"/>
+      )}
 
         <div className="flex gap-4">
           <button type="button" onClick={() => window.history.back()} className="flex-1 rounded-2xl bg-black/70 text-white py-3 font-semibold hover:bg-black/80">

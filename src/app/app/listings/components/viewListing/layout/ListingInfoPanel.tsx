@@ -7,6 +7,8 @@ import RoommateProfileList from "../UI/RoomateProfileList";
 import AmenityList from "../UI/AmenityList";
 import { getListingById } from "../../../prisma/clientServices";
 import { getListingTitle } from "@/app/app/logic/listing";
+import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ErrorMessage from "@/components/shared/ErrorMessage";
 // Panel to display the static listing specific data in full
 
 type ListingInfoPanelProps = {
@@ -18,11 +20,12 @@ type ListingData = NonNullable<Awaited<ReturnType<typeof getListingById>>["resul
 export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
   const [data, setData] = useState<ListingData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       const { result, error } = await getListingById(listingId);
-      if (error) console.error("Failed to fetch listing data:", error);
+      if (error) setError(error);
       else setData(result);
       setLoading(false);
     };
@@ -30,8 +33,9 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
     fetchData();
   }, [listingId]);
 
-  if (loading) return <p className="text-sm text-white/40 p-8">Loading listing…</p>;
-  if (!data)   return <p className="text-sm text-red-400 p-8">Listing not found.</p>;
+  if (loading) return <LoadingSpinner text="Loading listing details…" />;
+  if (error)   return <ErrorMessage text={error} />;
+  if (!data)   return <ErrorMessage text="This listing could not be found." />;
 
   const {  flatNumber, description, rent, lastUpdated,
     bedrooms, bathrooms, maxOccupants, minStay,
