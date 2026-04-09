@@ -203,7 +203,16 @@ export async function getPropertiesForLandlord(landlordId: number): Promise<Exis
 
   // function to get all listings
   export async function getAllListings() {
-    const listings = await prisma.propertyListing.findMany();
+    const listings = await prisma.propertyListing.findMany({
+      include: {
+        images: true,
+        property: {
+          include: {
+            amenities: true,
+          },
+        },
+      },
+    });
     
     return listings;
   }
