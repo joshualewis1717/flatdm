@@ -1,7 +1,9 @@
 'use client';
 
+import { removeOccupant } from '@/app/app/applications/prisma/clientServices';
 import { OccupantUI, PropertyListingUI } from '../../types';
 import { X, Calendar, SquareArrowRightEnter, SquareArrowRightExit } from 'lucide-react';
+import { useState } from 'react';
 
 // modal to show when a speciific user is expected to move in/ when they moved into a speciic property + when they are planning
 // to move out
@@ -11,12 +13,29 @@ type props={
     occupant: OccupantUI;// our conusltant
     property: PropertyListingUI;// the property in question
     onClose: () => void;// what to do when user clicks on modal
+    onRemove: (occupantId: number) => void;
 }
 
-export default function OccupantModal({occupant,property,onClose,}: props) {
+export default function OccupantModal({occupant,property,onClose, onRemove}: props) {
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false)
   const isApplicant = occupant.moveInDate.getTime() > Date.now();
   // some sort of back end service to convert user id to actual user 
-  const consultant =  occupant.userId
+  
+  // function to remove an occupant
+  async function handleRemoveOccupant(){
+    setError(null)
+    setLoading(true)
+    const {result, error } = await removeOccupant(occupant.id);
+    if (error){
+      setError(error)
+    }
+    if (result){
+      onRemove(occupant.id);
+      onClose();
+    }
+    setLoading(false)
+  }
 
   return (
     <div
@@ -106,7 +125,25 @@ export default function OccupantModal({occupant,property,onClose,}: props) {
             </>
           )}
         </div>
+
+        {!isApplicant && (// we only want landlord to delete current occuapnts, not future ones
+          <>
+            {error && (
+              <div className="mt-4 text-[12px] text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-[8px]">
+                {error}
+              </div>
+            )}
+            <button
+              onClick={handleRemoveOccupant}
+              disabled={loading}
+              className="mt-5 w-full px-3 py-2 rounded-[10px] bg-red-500 text-white text-[13px] font-semibold hover:opacity-90 disabled:opacity-40"
+            >
+              {loading ? 'Removing…' : 'Remove Occupant'}
+            </button>
+        </>
+        )}
       </div>
+    
 
       <style>{`
         @keyframes popIn {

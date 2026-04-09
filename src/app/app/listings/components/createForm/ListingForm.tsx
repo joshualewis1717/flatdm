@@ -3,16 +3,16 @@ import { useEffect, useState } from "react";
 import InputField from "@/app/app/applications/components/Submitform/UI/InputField";
 import { PropertyListingForm, ExistingProperty, AmenityUI } from "../../types";
 import { AmenityType } from "@prisma/client";
-import AddAmenitiesPanel from "../../components/createForm/layout/AddAmenityPanel";
-import AddImagesPanel from "../../components/createForm/layout/AddImagePanel";
-import AddThumbnailPanel from "../../components/createForm/layout/AddThumbnailPanel";
-import PropertySelector from "../../components/createForm/UI/PropertySelector";
+import AddAmenitiesPanel from "./layout/AddAmenityPanel";
+import AddImagesPanel from "./layout/AddImagePanel";
+import AddThumbnailPanel from "./layout/AddThumbnailPanel";
+import PropertySelector from "./UI/PropertySelector";
 import { createListing, updateListing, getListingById } from "../../prisma/clientServices";
 import { useSessionContext } from "@/components/shared/app-frame";
 import { useRouter } from "next/navigation";
 
 type Props = {
-  /** If provided → edit mode: load existing listing and update on submit */
+    /** If provided we are in edit mode: load existing listing and update on submit */
   listingId?: number;
 };
 
@@ -31,14 +31,57 @@ const EMPTY_FORM: PropertyListingForm = {
   thumbnail: "",
 };
 
+// function to upload images to db
+async function uploadImages( listingId: number, thumbnail: string | null,images: string[],removedImageIds: number[],) {
+  
+  //function to convert a url into a file
+  function dataUrlToFile(dataUrl: string, name: string): File {
+    const [header, base64] = dataUrl.split(",");
+    const mimeType = header.replace("data:", "").replace(";base64", "");// we use base 64
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    return new File([bytes], name, { type: mimeType });
+  }
+
+  // function to upload via our api route
+  async function upload(file: File, isThumbnail: boolean) {
+    const fd = new FormData();
+    fd.append("listingId", String(listingId));
+    fd.append("isThumbnail", String(isThumbnail));
+    fd.append("file", file);
+    const res = await fetch("/api/images/upload", { method: "POST", body: fd });// we use post since images can exceed
+    // the max url size, if we were using GET
+    if (!res.ok) throw new Error("Image upload failed");
+  }
+
+  // delete only explicitly removed images (used in editing mode)
+  for (const id of removedImageIds) {
+    await fetch(`/api/images/${id}`, { method: "DELETE" });
+  }
+
+  // replace thumbnail only if a new one was selected
+  if (thumbnail?.startsWith("data:")) {
+    await fetch(`/api/images/listing/${listingId}/thumbnail`, { method: "DELETE" });
+    await upload(dataUrlToFile(thumbnail, "thumbnail"), true);
+  }
+
+  // only upload new gallery images to db
+  for (let i = 0; i < images.length; i++) {
+    if (images[i].startsWith("data:")) {
+      await upload(dataUrlToFile(images[i], `image-${i}`), false);
+    }
+    // existing /api/images/{id} URLs are untouched
+  }
+}
+
 export default function ListingForm({ listingId }: Props) {
   const isEditMode = !!listingId;
 
   const [amenities, setAmenities] = useState<AmenityUI[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const [removedImageIds, setRemovedImageIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
-  const [pageLoading, setPageLoading] = useState(isEditMode); // show spinner while fetching in edit mode
+  const [pageLoading, setPageLoading] = useState(isEditMode);; // show spinner while fetching in edit mode
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const { isLandlord } = useSessionContext();
@@ -57,11 +100,7 @@ export default function ListingForm({ listingId }: Props) {
     async function fetchListing() {
       setPageLoading(true);
       const { result, error } = await getListingById(listingId!.toString());
-      if (error) {
-        setError(error);
-        setPageLoading(false);
-        return;
-      }
+      if (error) { setError(error); setPageLoading(false); return; }
       if (result) {
         const flatNumber = result.flatNumber === "WHOLE_PROPERTY" ? "" : (result.flatNumber ?? "");
         setForm({
@@ -73,7 +112,7 @@ export default function ListingForm({ listingId }: Props) {
           flatNumber,
           description: result.description,
           rent: result.rent,
-          availableFrom: new Date(), // ignored, will be removed from DB
+          availableFrom: new Date(),// TO DO: remove this
           rooms: result.totalRooms,
           bedrooms: result.bedrooms,
           bathrooms: result.bathrooms,
@@ -85,6 +124,7 @@ export default function ListingForm({ listingId }: Props) {
         setThumbnail(result.thumbnail ?? null);
         setImages(result.images ?? []);
         setAmenities(result.amenities ?? []);
+        setRemovedImageIds([]); // reset on load
       }
       setPageLoading(false);
     }
@@ -119,10 +159,7 @@ export default function ListingForm({ listingId }: Props) {
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, type, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === "number" ? Number(value) : value,
-    }));
+    setForm((prev) => ({ ...prev, [name]: type === "number" ? Number(value) : value }));
   }
 
   function handlePropertySelect(property: ExistingProperty | null) {
@@ -139,13 +176,7 @@ export default function ListingForm({ listingId }: Props) {
       }));
       setAmenities(property.hasExistingAmenities ? property.amenities : []);
     } else {
-      setForm((prev) => ({
-        ...prev,
-        selectedPropertyId: undefined,
-        streetName: "",
-        city: "",
-        postcode: "",
-      }));
+      setForm((prev) => ({ ...prev, selectedPropertyId: undefined, streetName: "", city: "", postcode: "" }));
       setAmenities([]);
     }
   }
@@ -160,27 +191,31 @@ export default function ListingForm({ listingId }: Props) {
       return;
     }
 
-    const payload = { ...form, thumbnail, images, amenities };
+    const payload = { ...form, thumbnail: "", images: [], amenities };
 
-    const { error } = isEditMode
+    const { error, result } = isEditMode
       ? await updateListing(listingId!, payload)
       : await createListing(payload);
 
+    if (error) {
+      setError(error);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const id = isEditMode ? listingId! : (result as { id: number }).id;
+      await uploadImages(id, thumbnail, images, removedImageIds);
+    } catch {
+      setError("Listing saved but image upload failed. Please re-edit to fix.");
+    }
+
     setLoading(false);
-    if (error) setError(error);
-    else setSuccess(true);
+    setSuccess(true);
   }
 
   function addAmenity() {
-    setAmenities((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        type: "OTHER" as AmenityType,
-        name: "",
-        distance: -1,
-      },
-    ]);
+    setAmenities((prev) => [...prev, { id: crypto.randomUUID(), type: "OTHER" as AmenityType, name: "", distance: -1 }]);
   }
 
   function updateAmenity<K extends keyof AmenityUI>(id: string, field: K, value: AmenityUI[K]) {
@@ -191,11 +226,17 @@ export default function ListingForm({ listingId }: Props) {
     setAmenities((prev) => prev.filter((a) => a.id !== id));
   }
 
-  function addImage() {
-    setImages((prev) => [...prev, "https://via.placeholder.com/150"]);
+  function addImage(dataUrl: string) {
+    setImages((prev) => [...prev, dataUrl]);
   }
 
   function removeImage(index: number) {
+    const url = images[index];
+    // if it's an existing DB image, extract the id and track it for deletion
+    const match = url.match(/\/api\/images\/(\d+)$/);
+    if (match) {
+      setRemovedImageIds((prev) => [...prev, Number(match[1])]);
+    }
     setImages((prev) => prev.filter((_, i) => i !== index));
   }
 
@@ -205,7 +246,7 @@ export default function ListingForm({ listingId }: Props) {
     setAmenities([]);
     setImages([]);
     setThumbnail(null);
-    // Force the PropertySelector to remount so its internal state clears too
+    setRemovedImageIds([]);
     setSelectorKey((k) => k + 1);
   }
 
@@ -221,8 +262,6 @@ export default function ListingForm({ listingId }: Props) {
     );
   }
 
-  /****** render ********/
-
   return (
     <div className="max-w-4xl mx-auto p-6 sm:p-8 space-y-6">
       <h1 className="font-bold text-5xl text-center">
@@ -236,7 +275,7 @@ export default function ListingForm({ listingId }: Props) {
 
       <form className="space-y-6" onSubmit={handleSubmit}>
 
-        {/* Property selector — shown in both modes */}
+          {/* Property selector, shown in both modes */}
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 space-y-4">
           <h2 className="text-lg font-semibold text-white">Location</h2>
           <p className="text-xs text-white/50">
@@ -252,53 +291,21 @@ export default function ListingForm({ listingId }: Props) {
           />
         </section>
 
+
         {/* Basic information */}
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 space-y-4">
           <h2 className="text-lg font-semibold text-white">Basic Information</h2>
-          <InputField
-            label="Building name"
-            name="buildingName"
-            value={form.buildingName}
-            required
-            onChange={handleChange}
-            placeholder="Mary Land Hotel"
-          />
+          <InputField label="Building name" name="buildingName" value={form.buildingName} required onChange={handleChange} placeholder="Mary Land Hotel" />
           <div className="space-y-1">
-            <InputField
-              label="Flat Number"
-              name="flatNumber"
-              value={form.flatNumber ?? ""}
-              onChange={handleChange}
-              placeholder="e.g. 4B (leave blank if entire building)"
-            />
-            <p className="text-xs text-white/40 pl-1">
-              Leave blank if this listing covers the entire building.
-            </p>
+            <InputField label="Flat Number" name="flatNumber" value={form.flatNumber ?? ""} onChange={handleChange} placeholder="e.g. 4B (leave blank if entire building)" />
+            <p className="text-xs text-white/40 pl-1">Leave blank if this listing covers the entire building.</p>
           </div>
-          <InputField
-            label="City"
-            name="city"
-            value={form.city ?? ""}
-            onChange={handleChange}
-            placeholder="e.g. London"
-          />
-          <InputField
-            label="Street name"
-            name="streetName"
-            value={form.streetName ?? ""}
-            onChange={handleChange}
-            placeholder="e.g. 250 Baker Street"
-          />
-          <InputField
-            label="Postcode"
-            name="postcode"
-            value={form.postcode ?? ""}
-            onChange={handleChange}
-            placeholder="e.g. JK5 6DB"
-          />
+          <InputField label="City" name="city" value={form.city ?? ""} onChange={handleChange} placeholder="e.g. London" />
+          <InputField label="Street name" name="streetName" value={form.streetName ?? ""} onChange={handleChange} placeholder="e.g. 250 Baker Street" />
+          <InputField label="Postcode" name="postcode" value={form.postcode ?? ""} onChange={handleChange} placeholder="e.g. JK5 6DB" />
         </section>
 
-        {/* Property details */}
+         {/* Property details */}
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 space-y-4">
           <h2 className="text-lg font-semibold text-white">Property Details</h2>
           <div className="grid grid-cols-2 gap-4">
@@ -307,17 +314,8 @@ export default function ListingForm({ listingId }: Props) {
             <InputField label="Bathrooms" type="number" name="bathrooms" value={String(form.bathrooms)} required onChange={handleChange} placeholder="Number of bathrooms" />
             <InputField label="Area (m²)" type="number" name="area" value={String(form.area)} required onChange={handleChange} placeholder="Floor area in m²" />
           </div>
-
           <div className="space-y-2">
-            <InputField
-              label="Max Occupants"
-              type="number"
-              name="maxOccupants"
-              value={String(form.maxOccupants)}
-              required
-              onChange={handleChange}
-              placeholder="Max number of occupants"
-            />
+            <InputField label="Max Occupants" type="number" name="maxOccupants" value={String(form.maxOccupants)} required onChange={handleChange} placeholder="Max number of occupants" />
             {form.maxOccupants > 1 && (
               <div className="flex gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
                 <span className="mt-0.5 shrink-0 text-amber-400">
@@ -341,7 +339,7 @@ export default function ListingForm({ listingId }: Props) {
           <InputField label="Minimum Stay (months)" type="number" name="minStay" value={String(form.minStay)} onChange={handleChange} placeholder="Minimum stay duration" />
         </section>
 
-        {/* Description */}
+         {/* Description */}
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 space-y-4">
           <h2 className="text-lg font-semibold text-white">Description</h2>
           <InputField label="Description" name="description" type="textarea" value={form.description} onChange={handleChange} placeholder="Enter listing description" />
@@ -360,18 +358,10 @@ export default function ListingForm({ listingId }: Props) {
         {loading && <p className="text-sm text-white/50">Saving listing…</p>}
 
         <div className="flex gap-4">
-          <button
-            type="button"
-            onClick={() => window.history.back()}
-            className="flex-1 rounded-2xl bg-black/70 text-white py-3 font-semibold hover:bg-black/80"
-          >
+          <button type="button" onClick={() => window.history.back()} className="flex-1 rounded-2xl bg-black/70 text-white py-3 font-semibold hover:bg-black/80">
             Back
           </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex-1 rounded-2xl bg-primary text-primary-foreground py-3 font-semibold hover:bg-primary/80 disabled:opacity-50"
-          >
+          <button type="submit" disabled={loading} className="flex-1 rounded-2xl bg-primary text-primary-foreground py-3 font-semibold hover:bg-primary/80 disabled:opacity-50">
             {isEditMode ? "Save Changes" : "Save Listing"}
           </button>
         </div>

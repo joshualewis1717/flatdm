@@ -1,4 +1,4 @@
-import ListingForm from "../../components/createForm/LocationForm";
+import ListingForm from "../../components/createForm/ListingForm";
 
 // page where landlord can edit ther existing listings
 export default async function EditListingPage({

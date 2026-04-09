@@ -22,7 +22,13 @@ export async function queryListingById(listingId: number) {
   return prisma.propertyListing.findUnique({
     where: { id: listingId, isDeleted: false },
     include: {
-      images: true,
+      images: {// get the images data so we can serve them to user
+        select: {
+          id: true,           
+          isThumbnail: true,
+          mimeType: true,     //  needed for the API route to serve to user
+        },
+      },
       property: {
         include: {
           amenities: true,
@@ -36,6 +42,7 @@ export async function queryListingById(listingId: number) {
             { moveOut: { gt: new Date() } },
           ],
         },
+        include: { user: true }, //  needed for mapOccupantToUI in mapToListingDetail
       },
     },
   });
@@ -46,7 +53,13 @@ export async function queryListingsForLandlord(landlordId: number) {
   return prisma.propertyListing.findMany({
     where: { landlordId, isDeleted: false },
     include: {
-      images: true,
+      images: {
+        select: {
+          id: true,           
+          isThumbnail: true,
+          mimeType: true,     
+        },
+      },
       property: true,
       occupants: {
         where: {// do not include any expired occupancies e.g. when move out < current.Date()

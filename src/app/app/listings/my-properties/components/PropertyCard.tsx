@@ -70,12 +70,20 @@ export default function PropertyCard({property,isExpanded,deleteMode,isSelected,
            "
          />
           )}
-  
+
           {/* Thumbnail */}
-          <div className="w-10 h-10 bg-[rgba(201,251,0,0.12)] border border-[rgba(201,251,0,0.2)] rounded-[10px] flex items-center justify-center shrink-0 text-[17px]">
-            {thumbnail? thumbnail : <Image/>}
+          <div className="w-10 h-10 bg-[rgba(201,251,0,0.12)] border border-[rgba(201,251,0,0.2)] rounded-[10px] flex items-center justify-center shrink-0 overflow-hidden">
+            {thumbnail ? (
+              <img
+                src={thumbnail}
+                alt="Property thumbnail"
+                className="w-full h-full object-cover rounded-[10px]"
+              />
+            ) : (
+              <Image className="w-5 h-5 text-[#c9fb00]" />
+            )}
           </div>
-  
+          
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="text-[15px] font-semibold text-white truncate">
