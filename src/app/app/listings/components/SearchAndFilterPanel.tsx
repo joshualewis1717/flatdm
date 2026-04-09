@@ -27,7 +27,7 @@ const SORT_OPTIONS: Array<{
 ];
 
 function hasActiveFilters(listingParameters: ListingParameters): boolean {
-  const { changed, sort_by, page, ...filtered } = listingParameters;
+  const { changed, sort_by, sort_order, page, ...filtered } = listingParameters;
   return Object.values(filtered).some((value) => value !== undefined);
 }
 
