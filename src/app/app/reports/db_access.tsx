@@ -147,18 +147,23 @@ export async function getReportsFilteredSorted({selectedStatuses, sortField, sor
     const statuses = [];
 
     // process statuses from eg [OPEN: true, UNDER_REVIEW: false, RESOLVED: true] into eg [OPEN, RESOLVED]
-    for (let i = 0; i < selectedStatuses.length; i++){
-        console.log("fsndfrgth")
-        console.log(selectedStatuses[i]);
-        statuses.push(selectedStatuses[i][0])
+    if (selectedStatuses.OPEN){
+        statuses.push("OPEN")
+    }
+    if (selectedStatuses.UNDER_REVIEW){
+        statuses.push("UNDER_REVIEW")
+    }
+    if (selectedStatuses.RESOLVED){
+        statuses.push("RESOLVED")
     }
 
-    // const reports = await prisma.report.findMany({
-    //   where: {status: {in: statuses}},
-    //   orderBy: {[sortField]: sortDirection}
-    // });
+    // get reports that fit the requirements
+    const reports = await prisma.report.findMany({
+      where: {status: {in: statuses}},
+      orderBy: {[sortField]: sortDirection}
+    });
 
-    // return reports;
+    return reports;
 }
 
 export async function getUser({userId} : any){

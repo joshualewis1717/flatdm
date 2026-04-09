@@ -36,6 +36,7 @@ export default function ReportsClient({ initialReports, users }: {initialReports
   console.log(initialReports)
 
   const [viewableReports, setViewableReports] = useState(initialReports);
+  console.log(viewableReports)
   // const [viewableUsers, setViewableUsers] = useState(getUsers({users, reports:initialReports}));
 
   // parse dates lazily when needed
@@ -150,21 +151,17 @@ export default function ReportsClient({ initialReports, users }: {initialReports
         )}
       </div> */}
       <div className="flex flex-col gap-2 py-[3%]">
-        {viewableReports.length === 0 ? (
+        {(viewableReports && viewableReports.length === 0) ? (
           <div>No reports match the selected filters.</div>
         ) : (
           (() => {
             const items = [];
-            for (let i = 0; i < viewableReports.length; i++) {
-              const report = viewableReports[i];
-              // const users =
-              const targetUser = getUserById({users:users, userId:report.reporterId});
-              const reporter = getUserById({users:users, userId:report.targetUserId});
-              console.log("target");
-              console.log(targetUser);
-              console.log("reporter");
-              console.log(reporter);
-              items.push( <ReportOverviewItem key={report.id} report={report} reporter={reporter} targetUser={targetUser} />);
+            const list = viewableReports || [];
+            for (let i = 0; i < list.length; i++) {
+              const report = list[i];
+              const targetUser = getUserById({ users, userId: report.reporterId });
+              const reporter = getUserById({ users, userId: report.targetUserId });
+              items.push(<ReportOverviewItem key={report.id} report={report} reporter={reporter} targetUser={targetUser} />);
             }
             return items;
           })()

@@ -8,7 +8,7 @@
 
 - USER LIST
     - [X] each user has 2 buttons: ban / add offence / issue warning
-    - [ ] if banned/offenced/warned send auto email
+    - [X] if banned/offenced/warned send auto email
     - [X] if banned automatically remove associated listings and withdraw all related property applications
 
 - REVIEWS

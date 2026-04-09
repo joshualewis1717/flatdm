@@ -21,12 +21,15 @@ export default function ReportOverviewItem( {report, reporter, targetUser} : {re
       report['status'] === 'OPEN' ? 'red' :
     'neutral';
 
+    // slice date from ugly 'Sat Apr 04 2026 08:50:27 GMT+0100 (British Summer Time)' to 'Sat Apr 04 2026 08:50'
+    const prettyDate = report['createdAt'].slice(0, 22)
+
     return(
         <section className="px-[7%]">
             <div className="bg-black/70 rounded-[0.5rem] grid-cols-[4fr_1fr] p-4 grid grid-cols-2 items-start gap-4">
                 <div className="flex flex-col gap-1">
                     <h1 className="text-white font-bold text-lg">[{report['id']}] {targetUser.username} : {report['reason']}</h1>
-                    <h2 className="italic text-gray-400">{`Submitted by ${reporter.username} at ${report['createdAt']}`}</h2>
+                    <h2 className="italic text-gray-400">{`Submitted by ${reporter.username} at ${prettyDate}`}</h2>
                     <Status theme={theme} text={report['status']} />
                 </div>
 
