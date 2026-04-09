@@ -26,6 +26,11 @@ const SORT_OPTIONS: Array<{
   { value: "closest", label: "Closest", sortBy: "distance", sortOrder: "asc" },
 ];
 
+function hasActiveFilters(listingParameters: ListingParameters): boolean {
+  const { changed, sort_by, page, ...filtered } = listingParameters;
+  return Object.values(filtered).some((value) => value !== undefined);
+}
+
 function getSortPresetValue(listingParameters: ListingParameters): string {
   const match = SORT_OPTIONS.find(
     (option) =>
@@ -93,7 +98,7 @@ export default function SearchAndFilterPanel() {
             </div>
 
             <div className="min-w-0 flex-1 sm:flex-none">
-              <FiltersButton onClick={() => setIsFilterOpen(true)} />
+              <FiltersButton onClick={() => setIsFilterOpen(true)} hasFilters={hasActiveFilters(listingParameters)} />
             </div>
           </div>
         </section>
@@ -145,11 +150,14 @@ function SortDropdown({
 }) {
   return (
     <div className="relative w-full sm:w-auto">
+      <span className="pointer-events-none absolute left-3 top-1.5 text-[9px] font-medium uppercase tracking-[0.08em] text-white z-5">
+        Sort
+      </span>
       <select
         aria-label="Sort listings"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-10.5 w-full cursor-pointer appearance-none rounded-[10px] border border-l-[0.5px] border-white/13 bg-[#2a2a2a]/70 px-3.5 py-0 pr-9 text-sm leading-none text-white/80 backdrop-blur-xl outline-none transition-colors hover:border-white/25 hover:text-white focus:border-[#c9fb00] sm:w-auto"
+        className="h-10.5 w-full cursor-pointer appearance-none rounded-[10px] border border-l-[0.5px] border-white/13 bg-[#2a2a2a]/70 pb-1.5 pl-2.75 pr-9 pt-3.5 text-sm leading-normal text-white/80 backdrop-blur-xl outline-none transition-colors hover:border-white/25 hover:text-white focus:border-[#c9fb00] sm:w-auto"
       >
         <option value="">Sort by</option>
         {SORT_OPTIONS.map((option) => (
@@ -163,15 +171,19 @@ function SortDropdown({
   );
 }
 
-function FiltersButton({ onClick }: { onClick: () => void }) {
+function FiltersButton({ onClick, hasFilters }: { onClick: () => void; hasFilters: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex w-full cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-white/13 bg-[#2a2a2a]/70 px-4 py-2.5 text-[13px] text-white/80 backdrop-blur-xl transition-colors hover:border-white/25 hover:bg-[#343434]/75 hover:text-white focus-visible:border-[#c9fb00] sm:w-auto"
+      className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 py-2.5 text-[13px] backdrop-blur-xl transition-colors sm:w-auto ${
+        hasFilters
+          ? "bg-[#c9fb00]/10 border-[#c9fb00]/25 hover:bg-[#c9fb00]/15 border-white/13 hover:border-white/25 hover:text-[#c9fb00]"
+          : "border-white/13 bg-[#2a2a2a]/70 text-white/80 hover:border-white/25 hover:bg-[#343434]/75 hover:text-white focus-visible:border-[#c9fb00]"
+      }`}
     >
-      <SlidersHorizontal className="h-4 w-4 text-white/70" />
-      Filters
+      <SlidersHorizontal className={`h-4 w-4 ${hasFilters ? "text-[#c9fb00]" : "text-white/70"}`} />
+      <span className={`${hasFilters? "text-[#c9fb00]" : ""}`}>Filters</span>
     </button>
   );
 }
