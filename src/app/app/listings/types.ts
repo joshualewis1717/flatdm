@@ -139,7 +139,7 @@ export type ListingParameters = Record<string, unknown> & {
   area_min?: number;
   area_max?: number;
 
-  hasphoto?: boolean;
+  has_photo?: boolean;
 
   furnished_level?: 'furnished' | 'unfurnished' | 'part_furnished';
 
