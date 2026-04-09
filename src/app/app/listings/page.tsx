@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import SearchAndFilterPanel from "./components/SearchAndFilterPanel";
 // import { getAllListings } from "./logic/clientServices/prisma";
 import { useListingsState } from "./state/ListingsStateProvider";
+import { queryAllListings } from "./prisma/rawQueries";
 
 type ListingsData = Awaited<ReturnType<typeof getAllListings>>;
 
@@ -89,8 +90,8 @@ export default function ListingsPage() {
 
   useEffect(() => {
     const loadListings = async () => {
-      // const data = await getAllListings();
-      // setListings(data ?? []);
+      const data = await queryAllListings();
+      setListings(data ?? []);
     };
 
     loadListings();
