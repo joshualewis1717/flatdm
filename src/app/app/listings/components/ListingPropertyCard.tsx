@@ -1,4 +1,5 @@
-import { Bath, BedDouble, CalendarDays, Clock3, Home, ImageIcon, MapPin, Users } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Bath, BedDouble, CalendarDays, ChevronLeft, ChevronRight, Clock3, Home, ImageIcon, MapPin, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 function formatCurrency(value: number) {
@@ -33,9 +34,28 @@ type ListingPropertyCardProps = {
 export default function ListingPropertyCard({ listing, onOpen }: ListingPropertyCardProps) {
   const headline = listing.flatNumber ? `Flat ${listing.flatNumber}` : `Listing ${listing.id}`;
   const isAvailableNow = listing.availableFrom <= new Date();
-  const thumbnail = listing.images.find((image: any) => image.isThumbnail) ?? listing.images[0] ?? null;
+  const imageUrls = useMemo(() => {
+    const images = Array.isArray(listing.images) ? listing.images : [];
+    const sorted = [...images].sort((a: any, b: any) => Number(b.isThumbnail) - Number(a.isThumbnail));
+    return sorted.map((image: any) => `/api/images/${image.id}`);
+  }, [listing.images]);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const hasImages = imageUrls.length > 0;
+  const hasMultipleImages = imageUrls.length > 1;
   const nearbyAmenities = listing.property.amenities.slice(0, 3);
   const area = (listing as { area?: number }).area;
+
+  const showPreviousImage = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setActiveImageIndex((prev) => (prev - 1 + imageUrls.length) % imageUrls.length);
+  };
+
+  const showNextImage = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setActiveImageIndex((prev) => (prev + 1) % imageUrls.length);
+  };
 
   return (
     <Card
@@ -53,9 +73,9 @@ export default function ListingPropertyCard({ listing, onOpen }: ListingProperty
     >
       <div className="flex flex-col overflow-hidden md:flex-row">
         <div className="relative min-h-48 w-full shrink-0 overflow-hidden border-b border-white/8 bg-[#1c1c1c] md:h-auto md:w-65 md:border-b-0 md:border-r md:border-white/8">
-          {thumbnail?.url ? (
+          {hasImages ? (
             <img
-              src={thumbnail.url}
+              src={imageUrls[activeImageIndex]}
               alt={headline}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             />
@@ -67,6 +87,46 @@ export default function ListingPropertyCard({ listing, onOpen }: ListingProperty
               </div>
             </div>
           )}
+
+          {hasMultipleImages ? (
+            <>
+              <button
+                type="button"
+                aria-label="Previous image"
+                onClick={showPreviousImage}
+                className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-black/45 p-1.5 text-white/85 transition-colors hover:bg-black/65"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              <button
+                type="button"
+                aria-label="Next image"
+                onClick={showNextImage}
+                className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-black/45 p-1.5 text-white/85 transition-colors hover:bg-black/65"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+
+              <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/10 bg-black/35 px-2 py-1 backdrop-blur-sm">
+                {imageUrls.map((_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    aria-label={`Go to image ${index + 1}`}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setActiveImageIndex(index);
+                    }}
+                    className={`h-1.5 w-1.5 rounded-full transition-colors ${
+                      index === activeImageIndex ? "bg-[#c9fb00]" : "bg-white/45"
+                    }`}
+                  />
+                ))}
+              </div>
+            </>
+          ) : null}
 
           <div className="absolute left-3 top-3 rounded-full border border-[#c9fb00]/25 bg-[#111111]/70 px-2.5 py-1 text-[11px] font-semibold text-[#c9fb00] backdrop-blur">
             {isAvailableNow ? "Available" : "Upcoming"}

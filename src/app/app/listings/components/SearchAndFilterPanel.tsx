@@ -91,6 +91,7 @@ export default function SearchAndFilterPanel() {
                       ...prev,
                       sort_by: selectedOption?.sortBy,
                       sort_order: selectedOption?.sortOrder,
+                      page: 1,
                     };
                   })
                 }

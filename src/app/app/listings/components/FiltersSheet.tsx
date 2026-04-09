@@ -52,7 +52,7 @@ export default function FiltersSheet({
       console.log("CHANGING, df: ", draftFilters)
       setListingParameters({
         ...draftFilters,
-        page: listingParameters.page,
+        page: 1,
         sort_by: listingParameters.sort_by,
         sort_order: listingParameters.sort_order,
         changed: listingParameters.changed,
