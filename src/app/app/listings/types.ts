@@ -182,8 +182,6 @@ export type ListingParameters = Record<string, unknown> & {
   //
   //
   // Filters
-  search?: string;
-
   rent_min?: number;
   rent_max?: number;
 
@@ -216,6 +214,7 @@ export type ListingParameters = Record<string, unknown> & {
   distance_to_location?: number; // in km, for filtering by distance to a specific location (e.g. city center)
   location_lat?: number; // for distance filtering
   location_lng?: number; // for distance filtering
+  search?: string;
 
   //
   //

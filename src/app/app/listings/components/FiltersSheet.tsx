@@ -58,7 +58,8 @@ export default function FiltersSheet({
         changed: listingParameters.changed,
         distance_to_location: listingParameters.distance_to_location,
         location_lat: listingParameters.location_lat,
-        location_lng: listingParameters.location_lng
+        location_lng: listingParameters.location_lng,
+        search: listingParameters.search,
       });
     }
     onOpenChange(false);
