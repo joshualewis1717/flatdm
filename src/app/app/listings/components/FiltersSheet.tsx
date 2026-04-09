@@ -63,7 +63,7 @@ export default function FiltersSheet({
       {/* (Outer) Sheet Content */}
       <SheetContent
         side="top"
-        className="w-screen max-w-none h-screen max-h-none inset-0 border-none"
+        className="w-screen max-w-none h-screen max-h-none inset-0 border-none gap-0"
       >
         <SheetHeader
           className="border-b border-zinc-700/60"
