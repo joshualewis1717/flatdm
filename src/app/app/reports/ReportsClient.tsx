@@ -1,45 +1,21 @@
-// app/reports/ReportsClient.tsx
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import ReportOverviewItem from "@/components/shared/ReportOverviewItem";
 import {Report, Status, User, Severity, Category} from '@/app/app/reports/types'
-import { prisma } from "@/lib/prisma";
 import { getReportsFilteredSorted } from "./db_access";
 
-
-async function getUserById({users, userId} : {users: User[], userId : number}){
-  console.log(users);
-  console.log(userId);
+function mapUsers({users}:{users: User[]}) {
+  const userMap: Record<number, User | undefined> = {};
   for (let i = 0; i < users.length; i++){
-    if (users[i].id == userId){
-      console.log("found " + users[i])
-      return users[i];
-    }
+    userMap[users[i].id] = users[i];
   }
-  console.log("user with id " + userId + " not found");
-  return undefined;
-}
-
-async function getUsers({users, reports} : {users:User[], reports:Report[]}){
-  const ret = [];
-
-  for (let i = 0; i < reports.length; i++){
-    ret.push([getUserById(reports[i].reporterID), getUserById(reports[i].targetUserId)]);
-  }
-
-  return ret;
+  return userMap;
 }
 
 export default function ReportsClient({ initialReports, users }: {initialReports: Report[], users: User[]}) {
+  const [viewableReports, setViewableReports] = useState<Report[]>(initialReports);
+  const userMap = mapUsers({users});
 
-  console.log("received")
-  console.log(initialReports)
-
-  const [viewableReports, setViewableReports] = useState(initialReports);
-  console.log(viewableReports)
-  // const [viewableUsers, setViewableUsers] = useState(getUsers({users, reports:initialReports}));
-
-  // parse dates lazily when needed
   const [selectedStatuses, setSelectedStatuses] = useState<Record<Status, boolean>>({
     "OPEN": true,
     "UNDER_REVIEW": true,
@@ -61,16 +37,24 @@ export default function ReportsClient({ initialReports, users }: {initialReports
     "OTHER": true,
   });
 
-
   const [sortField, setSortField] = useState<"modifiedAt" | "createdAt">("modifiedAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
-  // Local working copy so user can toggle controls before pressing Search
+  // working values for sorting and filtering
   const [workingStatuses, setWorkingStatuses] = useState(selectedStatuses);
   const [workingSeverities, setWorkingSeverities] = useState(selectedSeverities);
   const [workingCategories, setWorkingCategories] = useState(selectedCategories);
   const [workingSortField, setWorkingSortField] = useState(sortField);
   const [workingSortDirection, setWorkingSortDirection] = useState(sortDirection);
+
+  // pagination state
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+
+  useEffect(() => {
+    // reset to first page whenever the data set changes
+    setPage(1);
+  }, [viewableReports.length]);
 
   function toggleStatus(status: Status) {
     setWorkingStatuses(prev => ({ ...prev, [status]: !prev[status] }));
@@ -85,13 +69,32 @@ export default function ReportsClient({ initialReports, users }: {initialReports
   }
 
   async function handleApplyFilters() {
-    const resultReports = await getReportsFilteredSorted({selectedStatuses:workingStatuses, selectedSeverities:workingSeverities, selectedCategories:workingCategories, sortField:workingSortField, sortDirection:workingSortDirection});
+    const resultReports = await getReportsFilteredSorted({
+      selectedStatuses: workingStatuses,
+      selectedSeverities: workingSeverities,
+      selectedCategories: workingCategories,
+      sortField: workingSortField,
+      sortDirection: workingSortDirection
+    });
     setViewableReports(resultReports);
-    // setViewableUsers( getUsers({users, resultReports}) );
-
     return;
   }
 
+  // derived pagination values
+  const totalReports = viewableReports?.length || 0;
+  const totalPages = Math.max(1, Math.ceil(totalReports / pageSize));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+
+  const currentPageReports = useMemo(() => {
+    const start = (safePage - 1) * pageSize;
+    const end = start + pageSize;
+    return (viewableReports || []).slice(start, end);
+  }, [viewableReports, safePage, pageSize]);
+
+  function gotoPage(p: number) {
+    const clamped = Math.min(Math.max(1, p), totalPages);
+    setPage(clamped);
+  }
 
   return (
     <div className="p-4">
@@ -111,9 +114,9 @@ export default function ReportsClient({ initialReports, users }: {initialReports
           ))}
         </fieldset>
 
-          <fieldset className="flex flex-col gap-2">
+        <fieldset className="flex flex-col gap-2">
           <legend className="font-semibold">Filter by severity</legend>
-          {(["LOW", "MEDIUM", "HIGH"] as Severity[]).map(severity => (
+          {(["UNRANKED", "LOW", "MEDIUM", "HIGH"] as Severity[]).map(severity => (
             <label key={severity} className="inline-flex items-center gap-2">
               <input
                 type="checkbox"
@@ -175,14 +178,14 @@ export default function ReportsClient({ initialReports, users }: {initialReports
             </button>
             <button
               onClick={() => {
-                // reset working controls to show all
-              setWorkingStatuses({
+                setWorkingStatuses({
                   "OPEN": true,
                   "UNDER_REVIEW": true,
                   "RESOLVED": true,
                 });
 
                 setWorkingSeverities({
+                  "UNRANKED": true,
                   "LOW": true,
                   "MEDIUM": true,
                   "HIGH": true,
@@ -208,37 +211,371 @@ export default function ReportsClient({ initialReports, users }: {initialReports
         </div>
       </div>
 
-      {/* <div className="flex flex-col gap-2 py-[3%]">
-        {viewableReports.length === 0 ? (
-          <div>No reports match the selected filters.</div>
-        ) : (
-          {
-            for (let i = 0; )
-            viewableReports.map(report => (
-            <ReportOverviewItem key={report.id} report={report} />
-          ))
-          }
+      {/* Pagination controls (top) */}
+      <div className="flex items-center justify-between mb-3 gap-4">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => gotoPage(page - 1)}
+            disabled={safePage <= 1}
+            className="px-2 py-1 border rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
 
-        )}
-      </div> */}
+          {/* Page numbers: show up to 7 buttons with current centered when possible */}
+          <div className="flex items-center gap-1">
+            {(() => {
+              const buttons = [];
+              const maxButtons = 7;
+              let start = Math.max(1, safePage - Math.floor(maxButtons / 2));
+              let end = start + maxButtons - 1;
+              if (end > totalPages) {
+                end = totalPages;
+                start = Math.max(1, end - maxButtons + 1);
+              }
+              for (let p = start; p <= end; p++) {
+                buttons.push(
+                  <button
+                    key={p}
+                    onClick={() => gotoPage(p)}
+                    aria-current={p === safePage ? "page" : undefined}
+                    className={`px-2 py-1 border rounded ${p === safePage ? "bg-gray-200" : ""}`}
+                  >
+                    {p}
+                  </button>
+                );
+              }
+              return buttons;
+            })()}
+          </div>
+
+          <button
+            onClick={() => gotoPage(page + 1)}
+            disabled={safePage >= totalPages}
+            className="px-2 py-1 border rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm">Page</span>
+          <select
+            value={pageSize}
+            onChange={(e) => { setPageSize(parseInt(e.target.value, 10)); setPage(1); }}
+            className="border rounded px-2 py-1"
+          >
+            {[5,10,20,50].map(n => <option key={n} value={n}>{n} / page</option>)}
+          </select>
+          <span className="text-sm">Showing {Math.min(totalReports, (safePage - 1) * pageSize + 1)}–{Math.min(totalReports, safePage * pageSize)} of {totalReports}</span>
+        </div>
+      </div>
+
       <div className="flex flex-col gap-2 py-[3%]">
         {(viewableReports && viewableReports.length === 0) ? (
           <div>No reports match the selected filters.</div>
         ) : (
-          (() => {
-            const items = [];
-            const list = viewableReports || [];
-            for (let i = 0; i < list.length; i++) {
-              const report = list[i];
-              const targetUser = getUserById({ users, userId: report.reporterId });
-              const reporter = getUserById({ users, userId: report.targetUserId });
-              items.push(<ReportOverviewItem key={report.id} report={report} reporter={reporter} targetUser={targetUser} />);
-            }
-            return items;
-          })()
+          currentPageReports.map(report => (
+            <ReportOverviewItem
+              key={report.id}
+              report={report}
+              reporter={userMap[report.reporterId]}
+              targetUser={userMap[report.targetUserId]}
+            />
+          ))
         )}
       </div>
 
+      {/* Pagination controls (bottom) */}
+      <div className="flex items-center justify-between mt-4 gap-4">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => gotoPage(1)}
+            disabled={safePage <= 1}
+            className="px-2 py-1 border rounded disabled:opacity-50"
+          >
+            First
+          </button>
+          <button
+            onClick={() => gotoPage(page - 1)}
+            disabled={safePage <= 1}
+            className="px-2 py-1 border rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+        </div>
+
+        <div className="text-sm">Page {safePage} of {totalPages}</div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => gotoPage(page + 1)}
+            disabled={safePage >= totalPages}
+            className="px-2 py-1 border rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+          <button
+            onClick={() => gotoPage(totalPages)}
+            disabled={safePage >= totalPages}
+            className="px-2 py-1 border rounded disabled:opacity-50"
+          >
+            Last
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
+
+
+
+
+
+// // app/reports/ReportsClient.tsx
+// "use client";
+// import React, { useMemo, useState } from "react";
+// import ReportOverviewItem from "@/components/shared/ReportOverviewItem";
+// import {Report, Status, User, Severity, Category} from '@/app/app/reports/types'
+// import { prisma } from "@/lib/prisma";
+// import { getReportsFilteredSorted } from "./db_access";
+
+
+// // return map with id -> user from the array of users
+// function mapUsers({users}){
+//   const userMap = [];
+
+//   for (let i = 0; i < users.length; i++){
+//     userMap[users[i].id] = users[i]
+//   }
+//   console.log("USERMAP")
+//   console.log(userMap)
+
+//   return userMap
+// }
+
+
+
+// // async function getUserById({users, userId} : {users: User[], userId : number}){
+// //   console.log(users);
+// //   console.log(userId);
+// //   for (let i = 0; i < users.length; i++){
+// //     if (users[i].id == userId){
+// //       console.log("found " + users[i])
+// //       return users[i];
+// //     }
+// //   }
+// //   console.log("user with id " + userId + " not found");
+// //   return undefined;
+// // }
+
+// // async function getUsers({users, reports} : {users:User[], reports:Report[]}){
+// //   const ret = [];
+
+// //   for (let i = 0; i < reports.length; i++){
+// //     ret.push([getUserById(reports[i].reporterID), getUserById(reports[i].targetUserId)]);
+// //   }
+
+// //   return ret;
+// // }
+
+// export default function ReportsClient({ initialReports, users }: {initialReports: Report[], users: User[]}) {
+
+//   const [viewableReports, setViewableReports] = useState(initialReports);
+//   console.log(viewableReports)
+//   // const [viewableUsers, setViewableUsers] = useState(getUsers({users, reports:initialReports}));
+//   const userMap = mapUsers({users});
+
+//   // parse dates lazily when needed
+//   const [selectedStatuses, setSelectedStatuses] = useState<Record<Status, boolean>>({
+//     "OPEN": true,
+//     "UNDER_REVIEW": true,
+//     "RESOLVED": true,
+//   });
+
+//   const [selectedSeverities, setSelectedSeverities] = useState<Record<Severity, boolean>>({
+//     "LOW": true,
+//     "MEDIUM": true,
+//     "HIGH": true,
+//   });
+
+//   const [selectedCategories, setCatetgories] = useState<Record<Category, boolean>>({
+//     "INAPPROPRIATE_CONTENT": true,
+//     "FRAUD": true,
+//     "HARASSMENT": true,
+//     "FAKE_INFORMATION": true,
+//     "IMPERSONATION": true,
+//     "OTHER": true,
+//   });
+
+
+//   const [sortField, setSortField] = useState<"modifiedAt" | "createdAt">("modifiedAt");
+//   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
+//   // working values for sorting and filtering
+//   const [workingStatuses, setWorkingStatuses] = useState(selectedStatuses);
+//   const [workingSeverities, setWorkingSeverities] = useState(selectedSeverities);
+//   const [workingCategories, setWorkingCategories] = useState(selectedCategories);
+//   const [workingSortField, setWorkingSortField] = useState(sortField);
+//   const [workingSortDirection, setWorkingSortDirection] = useState(sortDirection);
+
+
+//   // toggles for status, severity and category checkboxes
+//   function toggleStatus(status: Status) {
+//     setWorkingStatuses(prev => ({ ...prev, [status]: !prev[status] }));
+//   }
+
+//   function toggleSeverity(severity: Severity) {
+//     setWorkingSeverities(prev => ({ ...prev, [severity]: !prev[severity] }));
+//   }
+
+//   function toggleCategory(category: Category) {
+//     setWorkingCategories(prev => ({ ...prev, [category]: !prev[category] }));
+//   }
+
+//   // apply filters and sorts
+//   async function handleApplyFilters() {
+//     const resultReports = await getReportsFilteredSorted({selectedStatuses:workingStatuses, selectedSeverities:workingSeverities, selectedCategories:workingCategories, sortField:workingSortField, sortDirection:workingSortDirection});
+//     setViewableReports(resultReports);
+//     // setViewableUsers( getUsers({users, resultReports}) );
+
+//     return;
+//   }
+
+    
+
+
+//   return (
+//     <div className="p-4">
+//       <div className="mb-4 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+//         <fieldset className="flex flex-col gap-2">
+//           <legend className="font-semibold">Filter by status</legend>
+//           {(["OPEN", "UNDER_REVIEW", "RESOLVED"] as Status[]).map(status => (
+//             <label key={status} className="inline-flex items-center gap-2">
+//               <input
+//                 type="checkbox"
+//                 checked={workingStatuses[status]}
+//                 onChange={() => toggleStatus(status)}
+//                 className="w-4 h-4"
+//               />
+//               <span>{status}</span>
+//             </label>
+//           ))}
+//         </fieldset>
+
+//           <fieldset className="flex flex-col gap-2">
+//           <legend className="font-semibold">Filter by severity</legend>
+//           {(["LOW", "MEDIUM", "HIGH"] as Severity[]).map(severity => (
+//             <label key={severity} className="inline-flex items-center gap-2">
+//               <input
+//                 type="checkbox"
+//                 checked={workingSeverities[severity]}
+//                 onChange={() => toggleSeverity(severity)}
+//                 className="w-4 h-4"
+//               />
+//               <span>{severity}</span>
+//             </label>
+//           ))}
+//         </fieldset>
+
+//         <fieldset className="flex flex-col gap-2">
+//           <legend className="font-semibold">Filter by category</legend>
+//           {(["INAPPROPRIATE_CONTENT","FRAUD","HARASSMENT","FAKE_INFORMATION","IMPERSONATION","OTHER"] as Category[]).map(category => (
+//             <label key={category} className="inline-flex items-center gap-2">
+//               <input
+//                 type="checkbox"
+//                 checked={workingCategories[category]}
+//                 onChange={() => toggleCategory(category)}
+//                 className="w-4 h-4"
+//               />
+//               <span>{category}</span>
+//             </label>
+//           ))}
+//         </fieldset>
+
+//         <div className="flex items-center gap-4">
+//           <div>
+//             <label className="block text-sm font-medium">Sort by</label>
+//             <select
+//               value={workingSortField}
+//               onChange={(e) => setWorkingSortField(e.target.value as "modifiedAt" | "createdAt")}
+//               className="border rounded px-2 py-1"
+//             >
+//               <option value="modifiedAt">Modified At</option>
+//               <option value="createdAt">Created At</option>
+//             </select>
+//           </div>
+
+//           <div>
+//             <label className="block text-sm font-medium">Direction</label>
+//             <select
+//               value={workingSortDirection}
+//               onChange={(e) => setWorkingSortDirection(e.target.value as "asc" | "desc")}
+//               className="border rounded px-2 py-1"
+//             >
+//               <option value="desc">Newest first</option>
+//               <option value="asc">Oldest first</option>
+//             </select>
+//           </div>
+
+//           <div className="flex gap-2">
+//             <button
+//               onClick={handleApplyFilters}
+//               className="bg-blue-600 text-white px-3 py-1 rounded"
+//             >
+//               Search
+//             </button>
+//             <button
+//               onClick={() => {
+//                 // reset working controls to show all
+//               setWorkingStatuses({
+//                   "OPEN": true,
+//                   "UNDER_REVIEW": true,
+//                   "RESOLVED": true,
+//                 });
+
+//                 setWorkingSeverities({
+//                   "LOW": true,
+//                   "MEDIUM": true,
+//                   "HIGH": true,
+//                 });
+
+//                 setWorkingCategories({
+//                   "INAPPROPRIATE_CONTENT": true,
+//                   "FRAUD": true,
+//                   "HARASSMENT": true,
+//                   "FAKE_INFORMATION": true,
+//                   "IMPERSONATION": true,
+//                   "OTHER": true,
+//                 });
+//                 setWorkingSortField("modifiedAt");
+//                 setWorkingSortDirection("desc");
+//                 handleApplyFilters();
+//               }}
+//               className="border px-3 py-1 rounded"
+//             >
+//               Reset
+//             </button>
+//           </div>
+//         </div>
+//       </div>
+
+//       <div className="flex flex-col gap-2 py-[3%]">
+//         {(viewableReports && viewableReports.length === 0) ? (
+//           <div>No reports match the selected filters.</div>
+//         ) : (
+//           (() => {
+//             const items = [];
+//             const list = viewableReports || [];
+//             for (let i = 0; i < list.length; i++) {
+//               const report = list[i];
+//               items.push(<ReportOverviewItem key={report.id} report={report} reporter={userMap[report.reporterId]} targetUser={userMap[report.targetUserId]} />);
+//             }
+//             return items;
+//           })()
+//         )}
+//       </div>
+
+//     </div>
+//   );
+// }

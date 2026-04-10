@@ -34,6 +34,7 @@ export function SeveritySelector({report, setSeverity, setVis} : Props) {
                 onChange={(e) => setSelectedSeverity(e.target.value)}
                 disabled={loading}
             >
+                <option value="UNRANKED">Unranked</option>
                 <option value="LOW">Low</option>
                 <option value="MEDIUM">Medium</option>
                 <option value="HIGH">High</option>

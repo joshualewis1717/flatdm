@@ -12,25 +12,23 @@ import {deleteReport, getUser} from '@/app/app/reports/db_access';
 import { prisma } from "@/lib/prisma";
 
 export default function ReportOverviewItem( {report, reporter, targetUser} : {report:Report, reporter: User, targetUser : User}){
-    console.log("item report: " + report);
+    
     // depending on what value 'status' holds, the status bar will appear a different colour
     // theme is passed into the Status component to style it
-    const statusTheme =
-      report['status'] === 'RESOLVED' ? 'green' :
-      report['status'] === 'UNDER_REVIEW' ? 'amber' :
-      report['status'] === 'OPEN' ? 'red' :
-    'neutral';
+    const themeMap = {
+        "RESOLVED":"green",
+        "UNDER_REVIEW":"amber",
+        "OPEN":"red",
+        "LOW":"green",
+        "MEDIUM":"amber",
+        "HIGH":"red",
+        "UNRANKED":"neutral"
+    }
 
-    const severityTheme =
-      report['severity'] === 'LOW' ? 'green' :
-      report['severity'] === 'MEDIUM' ? 'amber' :
-      report['severity'] === 'HIGH' ? 'red' :
-    'neutral';
-
-    console.log("reporter:")
-    console.log(reporter);
-
-
+    let severity = report['severity'];
+    if (!severity || severity === null){
+        severity = "Not Ranked Yet"
+    }
 
     return(
         <section className="px-[7%]">
@@ -39,8 +37,8 @@ export default function ReportOverviewItem( {report, reporter, targetUser} : {re
                     <h1 className="text-white font-bold text-lg">[{report['id']}, {report['category']}] {targetUser.username} : {report['reason']}</h1>
                     <h2 className="italic text-gray-400">{`Submitted by ${reporter.username} at ${report['createdAt']}`}</h2>
                     <div className="flex flex-row gap-2">
-                        <Status theme={statusTheme} text={"Status: " + report['status']} />
-                        <Status theme={severityTheme} text={"Severity: " + report['severity']} />
+                        <Status theme={themeMap[report['status']]} text={"Status: " + report['status']} />
+                        <Status theme={themeMap[report['severity']]} text={"Severity: " + severity} />
                     </div>
 
                 </div>

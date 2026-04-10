@@ -17,7 +17,8 @@ const themeMap = {
     "OPEN":"red",
     "LOW":"green",
     "MEDIUM":"amber",
-    "HIGH":"red"
+    "HIGH":"red",
+    "UNRANKED":"neutral"
 }
 
 
@@ -34,15 +35,15 @@ export default function SelectedReportClient({report, target, reporter, moderato
     const [severity, setSeverity] = useState(report['severity']);
 
 
-    function assignModeratorWrap({setVis, vis}): void {
+    function assignModeratorWrap({setVis, vis} : {setVis:Function, vis:boolean}): void {
         setVis(!vis);
     }
 
-    function changeStatusWrap({setVis, vis}): void {
+    function changeStatusWrap({setVis, vis} : {setVis:Function, vis:boolean}): void {
         setVis(!vis);
     }
 
-    function changeSeverityWrap({setVis, vis}): void {
+    function changeSeverityWrap({setVis, vis} : {setVis:Function, vis:boolean}): void {
         setVis(!vis)
     }
 

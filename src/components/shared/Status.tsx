@@ -16,7 +16,7 @@ export default function Status( {theme, text} : Props){
         style = style + "inline-block text-[#FF5236] bg-[#FF5236]/20";
     }
     else if (theme == "neutral"){
-        style = "text-white-900";
+        style = style + "inline-block text-white bg-gray-500/20";
     }
     else{
         console.log("Status used with empty theme");
