@@ -1,7 +1,7 @@
 'use server'
 import { prisma } from "@/lib/prisma";
 import { PropertyListingForm } from "../types";
-import { queryPropertiesForLandlord, queryListingById, queryListingsForLandlord, querySoftDeleteListing, queryCreateListing } from "./rawQueries";
+import { queryPropertiesForLandlord, queryListingById, queryListingsForLandlord, querySoftDeleteListing, queryCreateListing, queryLandlordByListingId, querySyncAmenity, queryCheckListingConflict, propertyUpsert, queryUpdateListing } from "./rawQueries";
 import { mapToExistingProperty, mapToListingDetail, mapToMyPropertyListing } from "./mappers";
 import { runService, withRole } from "../../clientService/prisma/prismaUtils";
 import { landlordOwnsListing } from "../../applications/prisma/clientServices";
@@ -49,15 +49,7 @@ function validateListingInput(data: PropertyListingForm) {
 async function assertNoListingConflict(propertyId: number, flatNumber: string | undefined | null, excludeListingId?: number) {
   const isWholeProperty = !flatNumber || flatNumber.trim() === "";
 
-  const existingListings = await prisma.propertyListing.findMany({
-    where: {
-      propertyId,
-      isDeleted: false,
-      ...(excludeListingId ? { id: { not: excludeListingId } } : {}),
-    },
-    select: { id: true, flatNumber: true },
-  });
-
+  const existingListings = await queryCheckListingConflict(propertyId, excludeListingId)
   if (isWholeProperty && existingListings.length > 0)
     throw new Error("A listing already exists for this property. Delete it before creating a whole-property listing.");
 
@@ -72,6 +64,14 @@ async function assertNoListingConflict(propertyId: number, flatNumber: string | 
 
 /************** getters **********/
 
+export async function getLandlordFromListing(listingId: number){
+  return runService(async ()=>{
+    if (!listingId) throw new Error("could not find listing")
+    const landlord = queryLandlordByListingId(listingId);
+    if (!landlord) throw new Error("landlord could not be found")
+    return landlord
+  })
+}
 export async function getPropertiesForLandlord() {
   return runService(async () => {
     const user = await withRole("LANDLORD");
@@ -119,57 +119,17 @@ async function resolvePropertyId(tx: PrismaTx, data: PropertyListingForm, landlo
   if (selectedPropertyId) {
      // Landlord explicitly chose an existing property, sync amenities.
     for (const amenity of amenities) {
-      if (amenity.dbId) {
-        await tx.amenity.update({
-          where: { id: amenity.dbId },
-          data: { name: amenity.name, type: amenity.type, distance: amenity.distance ?? null },
-        });
-      } else {
-        await tx.amenity.create({
-          data: { name: amenity.name, type: amenity.type, distance: amenity.distance ?? null, propertyId: selectedPropertyId },
-        });
-      }
+      await querySyncAmenity(tx, amenity, selectedPropertyId)
     }
     return selectedPropertyId;
   }
 
-  const property = await tx.property.upsert({
-    where: {
-      streetName_city_postcode_landlordId: {
-        streetName: streetName ?? "",
-        city: city ?? "",
-        postcode: postcode ?? "",
-        landlordId,
-      },
-    },
-    update: { title: buildingName ?? "" },
-     // Update the title in case they corrected the building name
-    create: {
-      title: buildingName ?? "",
-      streetName: streetName ?? "",
-      city: city ?? "",
-      postcode: postcode ?? "",
-      landlordId,
-      lat: 1.2,// TODO: derive from geocoding later
-      lng: 1.2,
-      amenities: {
-        create: amenities.map(({ name, type, distance }) => ({ name, type, distance: distance ?? null })),
-      },
-    },
-  });
+  const property = await propertyUpsert(tx, data,  landlordId)
+
 
   // update or create amenities depending if it was in db or not
   for (const amenity of amenities) {
-    if (amenity.dbId) {
-      await tx.amenity.update({
-        where: { id: amenity.dbId },
-        data: { name: amenity.name, type: amenity.type, distance: amenity.distance ?? null },
-      });
-    } else {
-      await tx.amenity.create({
-        data: { name: amenity.name, type: amenity.type, distance: amenity.distance ?? null, propertyId: property.id },
-      });
-    }
+    await querySyncAmenity(tx, amenity, property.id);
   }
 
   return property.id;
@@ -222,9 +182,9 @@ export async function updateListing(listingId: number, data: PropertyListingForm
        // Conflict check against the resolved property (exclude self)
       await assertNoListingConflict(propertyId, flatNumber, listingId);
 
-      await tx.propertyListing.update({
-        where: { id: listingId },
-        data: { flatNumber: flatNumber?.trim() || "WHOLE_PROPERTY", description, rent, rooms, bedrooms, bathrooms, area, maxOccupants, minStay, propertyId }, // swap the property if it changed
+      await queryUpdateListing(tx, listingId, {
+        flatNumber: flatNumber?.trim() || "WHOLE_PROPERTY",
+        description, rent, rooms, bedrooms, bathrooms, area, maxOccupants, minStay, propertyId,
       });
     });
     return null;

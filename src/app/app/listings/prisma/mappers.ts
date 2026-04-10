@@ -1,6 +1,6 @@
 // functions to map raw prisma query to data that our UI can work with:
 
-import { Amenity } from "@prisma/client";
+import { Amenity, Occupant } from "@prisma/client";
 import { AmenityUI, ExistingProperty, ListingInfoData, MyPropertyListingData, OccupantUI, OccupantWithUser } from "../types";
 import { queryListingById, queryListingsForLandlord, queryPropertiesForLandlord } from "./rawQueries";
 
@@ -55,10 +55,19 @@ function mapOccupantToUI(o: OccupantWithUser): OccupantUI {
   return {
     id: o.id,
     userId: o.userId,
-    name: `${o.user.firstName} ${o.user.lastName}`,
+    name: o.user.username,
     moveInDate: o.moveIn,
     moveOutDate: o.moveOut,
   };
+}
+
+// function to map an occupant from db to occupantUI type but without the dates, it filters and shows only
+function mapOccupantToUINoDates(o: OccupantWithUser){
+  return{
+    id: o.id,
+    userId: o.userId,
+    name: o.user.username,
+  }
 }
 
 // map from raw property query result to the ExistingProperty type
@@ -76,6 +85,13 @@ export function mapToExistingProperty(p: Awaited<ReturnType<typeof queryProperti
 
 export function mapToListingDetail(listing: NonNullable<Awaited<ReturnType<typeof queryListingById>>>): ListingInfoData {
   const thumbnailImg = listing.images.find((img) => img.isThumbnail);
+
+  // for listingInfoData we only want current occupants, no future occupants unlike other functions
+  const now = new Date();
+
+  const currentOccupants = listing.occupants.filter(o =>
+    o.moveIn <= now && (!o.moveOut || o.moveOut > now)
+  );
 
   return {
     propertyId: listing.propertyId,
@@ -99,6 +115,7 @@ export function mapToListingDetail(listing: NonNullable<Awaited<ReturnType<typeo
     postcode: listing.property.postcode,
     landlordName: listing.property.landlord.username,
     amenities: mapToAmenityUI(listing.property.amenities),
+    currentOccupants: currentOccupants.map(mapOccupantToUINoDates)
   };
 }
 

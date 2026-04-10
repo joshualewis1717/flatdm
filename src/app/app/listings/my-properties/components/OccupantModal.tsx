@@ -4,6 +4,10 @@ import { removeOccupant } from '@/app/app/applications/prisma/clientServices';
 import { OccupantUI, PropertyListingUI } from '../../types';
 import { X, Calendar, SquareArrowRightEnter, SquareArrowRightExit } from 'lucide-react';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import ErrorMessage from '@/components/shared/ErrorMessage';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import ConfirmModal from '@/components/shared/ConfirmModal';
 
 // modal to show when a speciific user is expected to move in/ when they moved into a speciic property + when they are planning
 // to move out
@@ -19,7 +23,9 @@ type props={
 export default function OccupantModal({occupant,property,onClose, onRemove}: props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const isApplicant = occupant.moveInDate.getTime() > Date.now();
+  const router = useRouter();
   // some sort of back end service to convert user id to actual user 
   
   // function to remove an occupant
@@ -42,6 +48,13 @@ export default function OccupantModal({occupant,property,onClose, onRemove}: pro
       className="fixed inset-0 bg-black/65 z-50 flex items-center justify-center p-5 backdrop-blur-sm"
       onClick={onClose}
     >
+
+      {showDeleteModal && (
+        <ConfirmModal title='Remove occupant' description={`are you sure that you want to remove ${occupant.name}`}
+        onCancel={()=>setShowDeleteModal(false)} onConfirm={()=>{handleRemoveOccupant(), setShowDeleteModal(false)}}
+        loading={loading}
+        />
+      )}
       <div
         className="bg-[#272727] border border-white/[0.13] rounded-[20px] p-7 max-w-[380px] w-full"
         onClick={(e) => e.stopPropagation()}
@@ -79,6 +92,14 @@ export default function OccupantModal({occupant,property,onClose, onRemove}: pro
 
         {/* Date rows */}
         <div className="flex flex-col gap-2.5">
+
+          <button
+            onClick={() => router.push(`/app/profile/${occupant.userId}`)}
+            className="mt-5 w-full px-3 py-2 rounded-[10px] bg-[#c9fb00] text-black text-[13px] font-semibold hover:opacity-90 transition"
+          >
+            View Profile
+          </button>
+
           {isApplicant ? (
             <>
               <div className="flex items-center justify-between bg-[#323232] border border-white/[0.08] rounded-[10px] px-3.5 py-3">
@@ -128,22 +149,26 @@ export default function OccupantModal({occupant,property,onClose, onRemove}: pro
 
         {!isApplicant && (// we only want landlord to delete current occuapnts, not future ones
           <>
+            {/* Loading state for the remove action */}
+            {loading && <LoadingSpinner text="Removing occupant…" />}
+
+            {/* Removal error state */}
             {error && (
-              <div className="mt-4 text-[12px] text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-[8px]">
-                {error}
+              <div className="mt-4">
+                <ErrorMessage text={error} />
               </div>
             )}
+
             <button
-              onClick={handleRemoveOccupant}
+              onClick={()=>setShowDeleteModal(true)}
               disabled={loading}
               className="mt-5 w-full px-3 py-2 rounded-[10px] bg-red-500 text-white text-[13px] font-semibold hover:opacity-90 disabled:opacity-40"
             >
-              {loading ? 'Removing…' : 'Remove Occupant'}
+              {'Remove Occupant'}
             </button>
-        </>
+          </>
         )}
       </div>
-    
 
       <style>{`
         @keyframes popIn {

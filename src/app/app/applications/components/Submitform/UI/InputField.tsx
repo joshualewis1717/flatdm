@@ -25,7 +25,7 @@ type InputFieldProps = {
 //TODO: pass required down into actual underlying input fields so that form can't be submitted without them
 export default function InputField({label,placeholder,required,type = "text",name,value, onChange,onDateChange,
   onValueChange,options, radioOptions, onRadioChange, readOnly = false}: InputFieldProps) {
-  const stringValue = typeof value === "string" ? value : "";
+    const stringValue = value !== null && value !== undefined ? String(value) : "";// always return a string
 
   return (
     <div className="flex flex-col">

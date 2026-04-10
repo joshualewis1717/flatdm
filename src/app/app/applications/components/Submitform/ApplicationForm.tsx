@@ -7,6 +7,11 @@ import { useSessionContext } from "@/components/shared/app-frame";
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { getListingById } from "@/app/app/listings/prisma/clientServices";
 import { getListingTitle } from "@/app/app/logic/listing";
+import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ErrorMessage from "@/components/shared/ErrorMessage";
+import SuccessMessage from "@/components/shared/SuccessMessage";
+import { routerServerGlobal } from "next/dist/server/lib/router-utils/router-server-context";
+import { useRouter } from "next/navigation";
 
 
 // page where consultants can submit an application form for a specific listing
@@ -38,6 +43,7 @@ export default function ApplicationForm({ listingId, applicationId}: SubmitAppli
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const {isConsultant, firstName, lastName, email} = useSessionContext();
+  const router = useRouter();
 
   async function handleSubmit(e: React.SubmitEvent){
     e.preventDefault();
@@ -144,13 +150,19 @@ export default function ApplicationForm({ listingId, applicationId}: SubmitAppli
 
     fetchApplicationDetails();
   }, [applicationId])// only do it when application id changes
+
+  useEffect(()=>{
+    if (success){
+      setTimeout(()=>{
+        setSuccess(false);
+        router.push('/app/applications/dashboard')
+      }, 3000)
+    }
+  }, [success])
   
   if (success) {
     return (
-      <div className="max-w-3xl mx-auto p-6 sm:p-8 space-y-6 text-center">
-        <h1 className="font-bold text-5xl">Application Submitted</h1>
-        <p className="text-white/50 text-sm">Your application has been sent. You'll hear back soon.</p>
-      </div>
+      <SuccessMessage position="top" text="Application Submitted"/>
     );
   }
 
@@ -158,11 +170,10 @@ export default function ApplicationForm({ listingId, applicationId}: SubmitAppli
   return (
     <div className="max-w-3xl mx-auto p-6 sm:p-8 space-y-6">
       <h1 className="font-bold text-5xl text-center">Submit Application</h1>
-      {pageLoading && (
-        <h2 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight">
-          Loading...
-        </h2>
-      )}
+
+      {/* Page-level loading state */}
+      {pageLoading && <LoadingSpinner text="Loading application details…" />}
+
       {!pageLoading && (
         <>
 
@@ -268,7 +279,8 @@ export default function ApplicationForm({ listingId, applicationId}: SubmitAppli
                 readOnly={readOnly}
               />
 
-              {error && <p className="text-sm text-red-400">{error}</p>}
+              {/* Inline form submission errors */}
+              {error && <ErrorMessage text={error} />}
 
               <div className="flex gap-4 pt-2">
                 <button

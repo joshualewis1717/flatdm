@@ -67,7 +67,6 @@ export type PropertyListingForm = {
 
   description: string;
   rent: number; // per person per month (£)
-  availableFrom: Date;
 
   rooms: number;
   bedrooms: number;
@@ -117,6 +116,7 @@ export type ListingInfoData = {
   thumbnail: string | null;
   images?: string[];
   amenities: AmenityUI[];
+  currentOccupants?: Omit<OccupantUI, 'moveInDate' | 'moveOutDate'>[]// we do not need move in and move out date for each indivisual occupants
 }
   
 export type OccupantUI ={

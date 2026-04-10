@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, FileText, Home, LogOut, MessageSquare, User, UserRound, X } from "lucide-react";
-
+import { signOut } from "next-auth/react";
+import { Building2, FileText, Home, LogOut, MessageSquare, User, UserRound, X, Fence } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useSessionContext } from "./app-frame";
 
 type AppSidebarProps = {
   role?: string;
@@ -17,7 +18,8 @@ type AppSidebarProps = {
 const navigation = [
   { href: "/app", label: "Overview", icon: Home },
   { href: "/app/listings", label: "Listings", icon: Building2 },
-  { href: "/app/applications", label: "Applications", icon: FileText },
+  { href: "/app/listings/my-properties", label: "Your Listings", icon: Fence },
+  { href: "/app/applications/dashboard", label: "Applications", icon: FileText },
   { href: "/app/messages", label: "Messages", icon: MessageSquare },
   { href: "/app/profile", label: "Profile", icon: UserRound },
 ];
@@ -27,6 +29,20 @@ export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
   const pathname = usePathname();
   const displayRole = role ? role.charAt(0) + role.slice(1).toLowerCase() : "Workspace";
   const initial = (name ?? displayRole ?? "U").slice(0, 1).toUpperCase();
+  const {isLandlord} = useSessionContext();
+
+  async function handleSignOut() {
+    setIsSigningOut(true);
+    await signOut({ callbackUrl: "/login" });
+  }
+
+  // your listing button 7690is only visisble to landlords
+  const filteredNavigation = navigation.filter((item) => {
+    if (item.href === "/app/listings/my-properties") {
+      return isLandlord;
+    }
+    return true;
+  });
 
   return (
     <>
@@ -60,10 +76,12 @@ export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
         </div>
 
         <nav className="mt-8 space-y-2">
-          {navigation.map((item) => {
-            const isActive =
-              pathname === item.href ||
-              (item.href !== "/app" && pathname.startsWith(item.href));
+          {filteredNavigation.map((item) => {
+           const isActive =
+           pathname === item.href ||
+           (item.href !== "/app" &&
+             pathname.startsWith(item.href) &&
+             !pathname.startsWith(item.href + "/"));
             const Icon = item.icon;
 
             return (

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { APPLICATION_EXPIRY_TIME } from "../const";
 import { Occupant, Prisma } from "@prisma/client";
+import 'server-only'
 // raw prisma queries for applications
 
 // args needed to submit an application
@@ -70,6 +71,17 @@ export async function getOccupant(listingId: number, userId: number) {
   });
 }
 
+  // get occupant via id:
+  export async function getOccupantByOccupantId(occupantId: number){
+    return prisma.occupant.findUnique({
+      where: { id: occupantId },
+      include: {
+        listing: {
+          select: { landlordId: true },
+        },
+      },
+    });
+  }
 // function to count all occupants that would be active in a specific date
 export async function countOccupantsAtDate(
   listingId: number,
@@ -100,6 +112,48 @@ export async function countCurrentOccupants(listingId: number) {
   });
 }
 
+
+
+// function to count overlapping occupants within a specific time range
+export async function countOverlappingOccupantsQuery(listingId: number,moveInDate: Date,moveOutDate: Date | null) {
+  return prisma.occupant.count({
+    where: {
+      listingId,
+      AND: [
+        { moveIn: { lt: moveOutDate ?? new Date("9999-12-31") } },// if  move out is null, treat it like it will
+        // go on forever (e.g. infinitly)
+        {
+          OR: [
+            { moveOut: null },
+            { moveOut: { gt: moveInDate } },
+          ],
+        },
+      ],
+    },
+  });
+}
+
+// function to grab all occupants of a specific listing
+export async function getOccupantWithListingQuery(occupantId: number) {
+  return prisma.occupant.findUnique({
+    where: { id: occupantId },
+    include: {
+      listing: {
+        select: { landlordId: true },
+      },
+    },
+  });
+}
+
+// function to remove an occupant
+  //  to remove occuapnt, we set move out to be current date, since all our logic counts active occupants as move out > current
+    // (hence if move out < current, we treat it as soft deletion)
+export async function removeOccupantQuery(occupantId: number) {
+  return prisma.occupant.update({
+    where: { id: occupantId },
+    data: { moveOut: new Date() },
+  });
+}
 
 export async function createApplicationQuery(data: SubmitApplication) {
   return prisma.propertyApplication.create({
