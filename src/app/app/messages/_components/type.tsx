@@ -20,3 +20,13 @@ export type Conversation = {
 export type UserConversations = {
   conversations: Conversation[];
 };
+
+export type Report = {
+  category: string;
+  severity: string;
+  reason: string;
+  description?: string;
+  targetType: "conversation" | "listing" | "review";
+  targetId: number;
+  targetUserId?: number | null;
+};
