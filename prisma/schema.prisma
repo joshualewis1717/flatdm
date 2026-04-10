@@ -144,10 +144,11 @@ model PropertyListing {
   maxOccupants Int // e.g. withRoomates boolean or whatnot is derived from this
   minStay      Int
 
-  rooms     Int
-  bedrooms  Int
-  bathrooms Int
-  area      Int
+  rooms          Int
+  bedrooms       Int
+  bathrooms      Int
+  area           Int
+  furnished_type FurnishedType
 
   propertyId Int
   property   Property @relation(fields: [propertyId], references: [id])
@@ -378,4 +379,10 @@ enum ReportCategory {
   FAKE_INFORMATION
   IMPERSONATION
   OTHER
+}
+
+enum FurnishedType {
+  UNFURNISHED
+  PART_FURNISHED
+  FULLY_FURNISHED
 }
