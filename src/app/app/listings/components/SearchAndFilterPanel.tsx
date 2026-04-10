@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import SearchBar from "./UI/SearchBar";
 import FiltersSheet from "./FiltersSheet";
@@ -46,6 +46,7 @@ function getSortPresetValue(listingParameters: ListingParameters): string {
 export default function SearchAndFilterPanel() {
   const { listingParameters, setListingParameters } = useListingsState();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [stickyTopOffset, setStickyTopOffset] = useState(96);
   const searchValue =
     typeof listingParameters.search === "string" ? listingParameters.search : "";
   const distanceValue =
@@ -54,9 +55,35 @@ export default function SearchAndFilterPanel() {
       : "";
   const sortValue = getSortPresetValue(listingParameters);
 
+  useEffect(() => {
+    const header = document.getElementById("app-page-header");
+
+    if (!header) {
+      return;
+    }
+
+    const updateOffset = () => {
+      setStickyTopOffset(Math.ceil(header.getBoundingClientRect().height));
+    };
+
+    updateOffset();
+
+    const resizeObserver = new ResizeObserver(updateOffset);
+    resizeObserver.observe(header);
+    window.addEventListener("resize", updateOffset);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateOffset);
+    };
+  }, []);
+
   return (
     <>
-      <div className="-mx-4 -mt-6 sticky top-24 z-20 border-b border-white/10 bg-background/80 px-4 backdrop-blur-xl sm:-mx-6 sm:top-24 sm:px-6 lg:-mx-8 lg:top-26 lg:px-8">
+      <div
+        className="-mx-4 -mt-6 sticky z-20 border-b border-white/10 bg-background/80 px-4 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+        style={{ top: `${stickyTopOffset}px` }}
+      >
         <section className="flex w-full flex-col-reverse items-stretch gap-2 py-2 sm:flex-row sm:items-center">
           <div className="flex min-w-0 flex-1 items-stretch">
             <SearchBar
