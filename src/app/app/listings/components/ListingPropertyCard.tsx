@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Bath, BedDouble, CalendarDays, ChevronLeft, ChevronRight, Clock3, Dumbbell, Home, ImageIcon, MapPin, Shapes, Stethoscope, TrainFront, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { getListingTitle } from "@/app/app/logic/listing";
 
 //
 // Helper components and functions at end of file, after main component
@@ -13,7 +14,8 @@ type ListingPropertyCardProps = {
 };
 
 export default function ListingPropertyCard({ listing, href }: ListingPropertyCardProps) {
-  const headline = listing.flatNumber ? `Flat ${listing.flatNumber}` : `Listing ${listing.id}`;
+  const buildingName = listing?.property?.title ?? listing?.property?.buildingName ?? `Listing ${listing.id}`;
+  const headline = getListingTitle(buildingName, listing?.flatNumber ?? null);
   const nearbyAmenities = listing.property.amenities.slice(0, 3);
 
   return (
