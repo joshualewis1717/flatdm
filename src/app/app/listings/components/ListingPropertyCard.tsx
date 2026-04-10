@@ -87,7 +87,7 @@ export default function ListingPropertyCard({ listing, href }: ListingPropertyCa
     >
       <Card className="border border-white/10 bg-[#242424] p-0 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#c9fb00]/30 hover:shadow-[0_18px_50px_rgba(0,0,0,0.28)]">
         <div className="flex flex-col overflow-hidden md:flex-row">
-        <div className="relative min-h-48 w-full shrink-0 overflow-hidden border-b border-white/8 bg-[#1c1c1c] md:h-auto md:w-65 md:border-b-0 md:border-r md:border-white/8">
+        <div className="relative w-full shrink-0 overflow-hidden border-b border-white/8 bg-[#1c1c1c] aspect-video md:w-65 md:aspect-square md:border-b-0 md:border-r md:border-white/8">
           {hasImages ? (
             <img
               src={imageUrls[activeImageIndex]}
@@ -95,7 +95,7 @@ export default function ListingPropertyCard({ listing, href }: ListingPropertyCa
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             />
           ) : (
-            <div className="flex h-full min-h-48 w-full items-center justify-center bg-[linear-gradient(135deg,rgba(201,251,0,0.18),rgba(255,255,255,0.03))] text-white/45">
+            <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,rgba(201,251,0,0.18),rgba(255,255,255,0.03))] text-white/45">
               <div className="flex flex-col items-center gap-2">
                 <ImageIcon className="h-7 w-7 text-[#c9fb00]" />
                 <span className="text-xs uppercase tracking-[0.2em]">No image</span>
