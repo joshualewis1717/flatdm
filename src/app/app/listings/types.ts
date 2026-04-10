@@ -207,6 +207,7 @@ export type ListingParameters = Record<string, unknown> & {
   transport_nearby?: boolean;
   healthcare_nearby?: boolean;
   recreation_nearby?: boolean;
+  other_nearby?: boolean;
 
   //
   //

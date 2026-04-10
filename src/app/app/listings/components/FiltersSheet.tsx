@@ -276,6 +276,17 @@ export default function FiltersSheet({
                 />
                 <span className="text-sm text-foreground">Recreation</span>
               </label>
+
+              <label className="flex h-8 cursor-pointer items-center gap-2 px-0.5">
+                <Checkbox
+                  className="cursor-pointer"
+                  checked={Boolean(draftFilters.other_nearby)}
+                  onCheckedChange={(checked) =>
+                    updateDraftFilters({ other_nearby: checked === true ? true : undefined })
+                  }
+                />
+                <span className="text-sm text-foreground">Other</span>
+              </label>
             </div>
           </FilterGrouping>
         </SheetInnerContent>

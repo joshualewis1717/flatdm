@@ -1,5 +1,6 @@
 'use server'
 import { prisma } from "@/lib/prisma";
+import { AmenityType } from "@prisma/client";
 import { ListingParameters } from "../types";
 
 export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
@@ -77,6 +78,34 @@ export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
 						{ moveOut: null },
 						{ moveOut: { gt: availableAt } },
 					],
+				},
+			},
+		};
+	}
+
+	const selectedAmenityTypes: AmenityType[] = [];
+	if (LP.transport_nearby) {
+		selectedAmenityTypes.push(AmenityType.TRANSPORT);
+	}
+	if (LP.healthcare_nearby) {
+		selectedAmenityTypes.push(AmenityType.HEALTHCARE);
+	}
+	if (LP.recreation_nearby) {
+		selectedAmenityTypes.push(AmenityType.RECREATIONAL);
+	}
+	if (LP.other_nearby) {
+		selectedAmenityTypes.push(AmenityType.OTHER);
+	}
+
+	if (selectedAmenityTypes.length > 0) {
+		where.property = {
+			is: {
+				amenities: {
+					some: {
+						type: {
+							in: selectedAmenityTypes,
+						},
+					},
 				},
 			},
 		};
