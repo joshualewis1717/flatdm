@@ -28,21 +28,27 @@ export function SeveritySelector({report, setSeverity, setVis} : Props) {
     };
     
     return (
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="flex items-center m-3 py-2 gap-3 border border-gray-300 rounded-md p-2">
+            <label className="whitespace-nowrap">Select Severity:</label>
+
             <select
+                className="px-3 py-2 border border-gray-200 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-gray-200"
                 value={selectedSeverity}
                 onChange={(e) => setSelectedSeverity(e.target.value)}
                 disabled={loading}
             >
-                <option value="UNRANKED">Unranked</option>
-                <option value="LOW">Low</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="HIGH">High</option>
-                
+                <option className="text-black" value="UNRANKED">Unranked</option>
+                <option className="text-black" value="LOW">Low</option>
+                <option className="text-black" value="MEDIUM">Medium</option>
+                <option className="text-black" value="HIGH">High</option>
             </select>
 
-            <button onClick={handleSave} disabled={loading}>
-            {loading ? "Saving..." : "Save"}
+            <button
+                className="px-4 py-2 bg-[#c9fb00] text-black rounded-md text-base"
+                onClick={handleSave}
+                disabled={loading}
+            >
+                {loading ? "Saving..." : "Save"}
             </button>
         </div>
     );

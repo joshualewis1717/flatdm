@@ -31,34 +31,40 @@ export function ModeratorSelector({moderators, report, setVis} : Props) {
     };
 
     return (
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="flex items-center m-3 py-2 gap-3 border border-gray-300 rounded-md p-2">
+            <label className="whitespace-nowrap">Assign Moderator:</label>
             <select
+                className="px-3 py-2 border border-gray-200 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-gray-200"
                 value={selectedUserId}
                 onChange={(e) => {
-                const val = e.target.value;
-                // preserve numeric ids if originally numeric
-                const exampleId = moderators.find((m) => String(m.id) === val)?.id;
-                setSelectedUserId(exampleId ?? val);
+                    const val = e.target.value;
+                    // preserve numeric ids if originally numeric
+                    const exampleId = moderators.find((m) => String(m.id) === val)?.id;
+                    setSelectedUserId(exampleId ?? val);
                 }}
                 disabled={loading || moderators.length === 0}
-            >
-                {moderators.length === 0 ? (
+                >
+                    {moderators.length === 0 ? (
                     <option value="Unassigned">No moderators (Unassign)</option>
                 ) : (
                     moderators.map((mod) => (
-                    <option key={mod.id} value={String(mod.id)}>
+                    <option className="text-black" key={mod.id} value={String(mod.id)}>
                     {`${mod.id} : ${mod.username}`}
                     </option>
                     ))
                 )}
-                <option value={"Unassigned"}>Unassign</option>
-                
+                <option className="text-black" value={"Unassigned"}>Unassign</option>
             </select>
 
-            <button onClick={handleSave} disabled={loading || moderators.length === 0}>
-            {loading ? "Saving..." : "Save"}
+            <button
+                onClick={handleSave}
+                disabled={loading || moderators.length === 0}
+                className="px-4 py-2 bg-[#c9fb00] text-black rounded-md text-base"
+            >
+                {loading ? "Saving..." : "Save"}
             </button>
         </div>
+
     );
 };
 
