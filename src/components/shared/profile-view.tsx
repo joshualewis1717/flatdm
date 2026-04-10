@@ -290,10 +290,6 @@ export default function ProfileView({
               ) : (
                 <>
                   <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <p className="text-xs uppercase tracking-[0.28em] text-white/45">Full name</p>
-                    <p className="mt-2 text-base font-medium text-white">{fullName}</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                     <p className="text-xs uppercase tracking-[0.28em] text-white/45">Username</p>
                     <p className="mt-2 text-base font-medium text-white">@{profile.username}</p>
                   </div>
@@ -301,15 +297,6 @@ export default function ProfileView({
                     <p className="text-xs uppercase tracking-[0.28em] text-white/45">Role</p>
                     <p className="mt-2 text-base font-medium text-white">
                       {profile.role.charAt(0) + profile.role.slice(1).toLowerCase()}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <p className="flex items-center gap-2 text-xs uppercase tracking-[0.28em] text-white/45">
-                      <ShieldCheck className="size-3.5" />
-                      Privacy
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-white/72">
-                      Contact details stay private until the relationship moves into messaging or a formal application flow.
                     </p>
                   </div>
                 </>
