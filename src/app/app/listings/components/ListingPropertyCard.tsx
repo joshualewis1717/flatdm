@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Bath, BedDouble, CalendarDays, ChevronLeft, ChevronRight, Clock3, Dumbbell, Home, ImageIcon, MapPin, Shapes, ShelvingUnit, Stethoscope, TrainFront, Users } from "lucide-react";
+import { Bath, BedDouble, CalendarDays, ChevronLeft, ChevronRight, Clock3, Dumbbell, Home, ImageIcon, MapPin, Shapes, Armchair, Stethoscope, TrainFront, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { getListingTitle } from "@/app/app/logic/listing";
 
@@ -168,7 +168,7 @@ function PropertyCardAvailabilityInfo({
         Area {typeof area === "number" ? `${area} m²` : "N/A"}
       </span>
       <span className="flex items-center gap-1.5">
-        <ShelvingUnit className="h-3.5 w-3.5" />
+        <Armchair className="h-3.5 w-3.5" />
         {formatFurnishedLevel(furnishedLevel)}
       </span>
     </div>

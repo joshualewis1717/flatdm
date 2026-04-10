@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState } from "react";
-import { BedDouble, Bath, Users, Ruler, CalendarClock, Clock, ShelvingUnit } from "lucide-react";
+import { BedDouble, Bath, Users, Ruler, CalendarClock, Clock, Armchair } from "lucide-react";
 import ImageSlider from "../UI/ImageSlider";
 import PropertyStatsGrid from "../UI/PropertyStatsGrid";
 import RoommateProfileList from "../UI/RoomateProfileList";
@@ -138,7 +138,7 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
     { icon: <BedDouble    className="w-4 h-4" />, label: "Rooms",         value: totalRooms },
     { icon: <Bath         className="w-4 h-4" />, label: "Bathrooms",     value: bathrooms },
     { icon: <BedDouble    className="w-4 h-4" />, label: "Bedrooms",      value: bedrooms },
-    {icon: <ShelvingUnit className="w-4 h-4"/>, label: "furnished level", value: furnishedLabelMap[furnishedLevel] ?? furnishedLevel},
+    {icon: <Armchair className="w-4 h-4"/>, label: "furnished level", value: furnishedLabelMap[furnishedLevel] ?? furnishedLevel},
     { icon: <Users        className="w-4 h-4" />, label: "Max Occupants", value: maxOccupants },
     { icon: <Ruler        className="w-4 h-4" />, label: "Area",          value: `${area} m²` },
     { icon: <Clock        className="w-4 h-4" />, label: "Min Stay",      value: `${minStay} months` },
