@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState } from "react";
-import { BedDouble, Bath, Users, Ruler, CalendarClock, Clock } from "lucide-react";
+import { BedDouble, Bath, Users, Ruler, CalendarClock, Clock, ShelvingUnit } from "lucide-react";
 import ImageSlider from "../UI/ImageSlider";
 import PropertyStatsGrid from "../UI/PropertyStatsGrid";
 import RoommateProfileList from "../UI/RoomateProfileList";
@@ -10,6 +10,7 @@ import { getListingTitle } from "@/app/app/logic/listing";
 import { useAllItemsState } from "../../../state/AllItemsStateProvider";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ErrorMessage from "@/components/shared/ErrorMessage";
+import { FURNISHED_LEVEL_OPTIONS } from "../../createForm/ListingForm";
 // Panel to display the static listing specific data in full
 
 type ListingInfoPanelProps = {
@@ -29,10 +30,11 @@ function mapCachedListingToListingData(listing: CachedListing): ListingData {
     flatNumber: listing.flatNumber ?? null,
     description: listing.description,
     rent: listing.rent,
-    availableFrom: null,
+    availableFrom: null,// TO DO: fix this
     totalRooms: listing.rooms,
     bedrooms: listing.bedrooms,
     bathrooms: listing.bathrooms,
+    furnishedLevel: listing.furnished_type,
     maxOccupants: listing.maxOccupants,
     area: listing.area,
     minStay: listing.minStay,
@@ -66,6 +68,14 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
   const cachedListing = useMemo(
     () => ListingsResults.find((listing) => listing.id === numericListingId) ?? null,
     [ListingsResults, numericListingId],
+  );
+
+  const furnishedLabelMap = useMemo(
+    () =>
+      Object.fromEntries(
+        FURNISHED_LEVEL_OPTIONS.map((opt) => [opt.value, opt.label])
+      ),
+    []
   );
   
   useEffect(() => {
@@ -112,7 +122,7 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
     bedrooms, bathrooms, maxOccupants, minStay,
     area, totalRooms,  thumbnail, images,
     buildingName, streetName, city, postcode,
-    landlordName, amenities, availableFrom, currentOccupants } = data;
+    landlordName, amenities, availableFrom, currentOccupants, furnishedLevel } = data;
 
   const shared = maxOccupants > 1;// derive shared from max occupants
   const headline = getListingTitle(buildingName, flatNumber)
@@ -128,6 +138,7 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
     { icon: <BedDouble    className="w-4 h-4" />, label: "Rooms",         value: totalRooms },
     { icon: <Bath         className="w-4 h-4" />, label: "Bathrooms",     value: bathrooms },
     { icon: <BedDouble    className="w-4 h-4" />, label: "Bedrooms",      value: bedrooms },
+    {icon: <ShelvingUnit className="w-4 h-4"/>, label: "furnished level", value: furnishedLabelMap[furnishedLevel] ?? furnishedLevel},
     { icon: <Users        className="w-4 h-4" />, label: "Max Occupants", value: maxOccupants },
     { icon: <Ruler        className="w-4 h-4" />, label: "Area",          value: `${area} m²` },
     { icon: <Clock        className="w-4 h-4" />, label: "Min Stay",      value: `${minStay} months` },

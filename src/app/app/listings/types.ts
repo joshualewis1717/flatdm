@@ -1,4 +1,4 @@
-import { AmenityType, Prisma } from "@prisma/client";
+import { AmenityType, FurnishedType, Prisma } from "@prisma/client";
 import type { Dispatch, SetStateAction } from "react";
 import { propertyInclude, propertyListingBasicInclude, propertyListingFullInclude } from "./prismaConst";
 
@@ -73,7 +73,7 @@ export type PropertyListingForm = {
   bedrooms: number;
   bathrooms: number;
   area: number; // m²
-
+  furnishedLevel: FurnishedType
   maxOccupants: number;
   minStay: number;
 
@@ -110,6 +110,7 @@ export type ListingInfoData = {
   totalRooms: number;
   bedrooms: number;
   bathrooms: number;
+  furnishedLevel: FurnishedType
   maxOccupants: number;
   area: number;
   minStay: number;

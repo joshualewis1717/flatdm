@@ -1,6 +1,6 @@
 // functions to map raw prisma query to data that our UI can work with:
 
-import { Amenity, Occupant } from "@prisma/client";
+import { Amenity, FurnishedType, Occupant } from "@prisma/client";
 import { AmenityUI, ExistingProperty, ListingInfoData, MyPropertyListingData, OccupantUI, OccupantWithUser } from "../types";
 import { queryListingById, queryListingsForLandlord, queryPropertiesForLandlord } from "./rawQueries";
 
@@ -105,6 +105,7 @@ export function mapToListingDetail(listing: NonNullable<Awaited<ReturnType<typeo
     lastUpdated: listing.updatedAt,
     bedrooms: listing.bedrooms,
     bathrooms: listing.bathrooms,
+    furnishedLevel: listing.furnished_type,
     maxOccupants: listing.maxOccupants,
     minStay: listing.minStay,
     thumbnail: thumbnailImg ? toImageUrl(thumbnailImg) : null,

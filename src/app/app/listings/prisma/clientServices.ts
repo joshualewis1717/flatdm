@@ -142,7 +142,7 @@ export async function createListing(data: PropertyListingForm): Promise<{ result
     validateListingInput(data);
     const user = await withRole("LANDLORD");
 
-    const { flatNumber, description, rent, rooms, bedrooms, bathrooms, area, maxOccupants, minStay } = data;
+    const { flatNumber, description, rent, rooms, bedrooms, bathrooms, area, maxOccupants, minStay, furnishedLevel } = data;
 
     let newListingId!: number;
 
@@ -152,7 +152,7 @@ export async function createListing(data: PropertyListingForm): Promise<{ result
 
       const listing = await queryCreateListing(tx, {
         flatNumber: flatNumber?.trim() || "WHOLE_PROPERTY",
-        description, rent, rooms, bedrooms, bathrooms, area, maxOccupants, minStay,
+        description, rent, rooms, bedrooms, bathrooms, area, maxOccupants, minStay, furnished_type: furnishedLevel,
         propertyId, landlordId: user.id, lat: 1, lng: 1,
       });
 
@@ -174,7 +174,7 @@ export async function updateListing(listingId: number, data: PropertyListingForm
     const existing = await landlordOwnsListing(listingId);
     if (!existing) throw new Error("Listing not found, or you do not own this listing");
 
-    const { flatNumber, description, rent, rooms, bedrooms, bathrooms, area, maxOccupants, minStay } = data;
+    const { flatNumber, description, rent, rooms, bedrooms, bathrooms, area, maxOccupants, minStay, furnishedLevel } = data;
 
     await prisma.$transaction(async (tx) => {
        // Resolve the (possibly new/swapped) property, same logic as create
@@ -183,8 +183,8 @@ export async function updateListing(listingId: number, data: PropertyListingForm
       await assertNoListingConflict(propertyId, flatNumber, listingId);
 
       await queryUpdateListing(tx, listingId, {
-        flatNumber: flatNumber?.trim() || "WHOLE_PROPERTY",
-        description, rent, rooms, bedrooms, bathrooms, area, maxOccupants, minStay, propertyId,
+        flatNumber: flatNumber?.trim() || "WHOLE_PROPERTY",description, rent, rooms, bedrooms, bathrooms, area,
+         maxOccupants, minStay, propertyId, furnished_type: furnishedLevel
       });
     });
     return null;

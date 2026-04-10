@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import InputField from "@/app/app/applications/components/Submitform/UI/InputField";
 import { PropertyListingForm, ExistingProperty, AmenityUI } from "../../types";
-import { AmenityType } from "@prisma/client";
+import { AmenityType, FurnishedType } from "@prisma/client";
 import AddAmenitiesPanel from "./layout/AddAmenityPanel";
 import AddImagesPanel from "./layout/AddImagePanel";
 import AddThumbnailPanel from "./layout/AddThumbnailPanel";
@@ -30,8 +30,16 @@ const EMPTY_FORM: PropertyListingForm = {
   maxOccupants: 1,
   minStay: 0,
   flatNumber: "",
+  furnishedLevel: 'UNFURNISHED',
   thumbnail: "",
 };
+
+// const to map the different furnished levles with human readable text
+export const FURNISHED_LEVEL_OPTIONS = [
+  { label: "Unfurnished", value: "UNFURNISHED" },
+  { label: "Part Furnished", value: "PART_FURNISHED" },
+  { label: "Fully Furnished", value: "FULLY_FURNISHED" },
+];
 
 // function to upload images to db
 async function uploadImages( listingId: number, thumbnail: string | null,images: string[],removedImageIds: number[],) {
@@ -117,6 +125,7 @@ export default function ListingForm({ listingId }: Props) {
           rooms: result.totalRooms,
           bedrooms: result.bedrooms,
           bathrooms: result.bathrooms,
+          furnishedLevel: result.furnishedLevel,
           area: result.area,
           maxOccupants: result.maxOccupants,
           minStay: result.minStay,
@@ -180,7 +189,7 @@ export default function ListingForm({ listingId }: Props) {
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -314,6 +323,19 @@ export default function ListingForm({ listingId }: Props) {
             <InputField label="Total Rooms" type="number" name="rooms" value={String(form.rooms)} required onChange={handleChange} placeholder="Total rooms" />
             <InputField label="Bedrooms" type="number" name="bedrooms" value={String(form.bedrooms)} required onChange={handleChange} placeholder="Number of bedrooms" />
             <InputField label="Bathrooms" type="number" name="bathrooms" value={String(form.bathrooms)} required onChange={handleChange} placeholder="Number of bathrooms" />
+            <InputField
+              label="Furnishing Level"
+              required
+              type="select"
+              value={form.furnishedLevel}
+              onValueChange={(val: string) =>
+                setForm((prev) => ({
+                  ...prev,
+                  furnishedLevel: val as FurnishedType,
+                }))
+              }
+              options={FURNISHED_LEVEL_OPTIONS}
+            />
             <InputField label="Area (m²)" type="number" name="area" value={String(form.area)} required onChange={handleChange} placeholder="Floor area in m²" />
           </div>
           <div className="space-y-2">
