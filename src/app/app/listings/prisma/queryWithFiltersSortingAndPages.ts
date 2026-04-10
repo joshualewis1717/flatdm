@@ -98,17 +98,20 @@ export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
 	}
 
 	if (selectedAmenityTypes.length > 0) {
-		where.property = {
-			is: {
-				amenities: {
-					some: {
-						type: {
-							in: selectedAmenityTypes,
+		where.AND = [
+			...(Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : []),
+			...selectedAmenityTypes.map((amenityType) => ({
+				property: {
+					is: {
+						amenities: {
+							some: {
+								type: amenityType,
+							},
 						},
 					},
 				},
-			},
-		};
+			})),
+		];
 	}
 
 	const items = await prisma.propertyListing.findMany({
