@@ -130,7 +130,7 @@ export default function FiltersSheet({
               />
             </FilterSubGrouping>
             
-            <FilterSubGrouping title="Minimum Stay (Months)">
+            <FilterSubGrouping title="Minimum Stay (Months) (Up to)">
               <label className="flex h-6 cursor-pointer items-center gap-2 px-0.5">
                 <Checkbox
                   className="cursor-pointer"
