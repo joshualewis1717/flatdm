@@ -24,7 +24,8 @@ type AuthFormState = {
 type NoticeState = {
   tone: "info" | "success";
   message: string;
-  verificationLink?: string;
+  actionLink?: string;
+  actionLabel?: string;
 };
 
 const initialFormState: AuthFormState = {
@@ -91,8 +92,46 @@ export default function AuthModal({
     setNotice({
       tone: "info",
       message: payload?.message ?? "Verification email sent",
-      verificationLink: payload?.link,
+      actionLink: payload?.link,
+      actionLabel: "verify this email",
     });
+    return true;
+  }
+
+  async function sendPasswordResetEmail(email: string) {
+    if (!email.trim()) {
+      setError("Enter your email address first so we know where to send the reset link");
+      return false;
+    }
+
+    setError("");
+    setNotice(null);
+    setIsSubmitting(true);
+
+    const response = await fetch("/api/auth/magic-links/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        type: "PASSWORD_RESET",
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      setError(payload?.error ?? "Failed to send password reset email");
+      setIsSubmitting(false);
+      return false;
+    }
+
+    setNotice({
+      tone: "info",
+      message: payload?.message ?? "If the account exists, a password reset email has been sent",
+      actionLink: payload?.link,
+      actionLabel: "reset your password",
+    });
+    setIsSubmitting(false);
     return true;
   }
 
@@ -134,7 +173,8 @@ export default function AuthModal({
         message: payload?.verificationEmailSent === false
           ? "Account created. Verification email could not be sent automatically, so use resend below before signing in."
           : "Account created. Check your inbox and verify your email before accessing the app.",
-        verificationLink: payload?.verificationLink,
+        actionLink: payload?.verificationLink,
+        actionLabel: "verify this email",
       });
       setFormState((current) => ({
         ...current,
@@ -273,11 +313,11 @@ export default function AuthModal({
                   : "border border-primary/20 bg-primary/10 text-foreground"
               }`}>
                 <p>{activeNotice.message}</p>
-                {activeNotice.verificationLink ? (
+                {activeNotice.actionLink ? (
                   <p className="mt-2">
                     Dev link:{" "}
-                    <Link href={activeNotice.verificationLink} className="underline underline-offset-4">
-                      verify this email
+                    <Link href={activeNotice.actionLink} className="underline underline-offset-4">
+                      {activeNotice.actionLabel ?? "open link"}
                     </Link>
                   </p>
                 ) : null}
@@ -414,6 +454,19 @@ export default function AuthModal({
                   }
                 />
               </div>
+
+              {authMode === "login" ? (
+                <div className="-mt-2 flex justify-end">
+                  <button
+                    type="button"
+                    className="text-sm text-primary transition hover:text-primary/80 disabled:cursor-not-allowed disabled:opacity-60"
+                    onClick={() => sendPasswordResetEmail(formState.email)}
+                    disabled={isSubmitting}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              ) : null}
 
               {authMode === "register" ? (
                 <div className="space-y-2">
