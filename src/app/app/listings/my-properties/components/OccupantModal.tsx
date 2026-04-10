@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import ConfirmModal from '@/components/shared/ConfirmModal';
 
 // modal to show when a speciific user is expected to move in/ when they moved into a speciic property + when they are planning
 // to move out
@@ -22,6 +23,7 @@ type props={
 export default function OccupantModal({occupant,property,onClose, onRemove}: props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const isApplicant = occupant.moveInDate.getTime() > Date.now();
   const router = useRouter();
   // some sort of back end service to convert user id to actual user 
@@ -46,6 +48,13 @@ export default function OccupantModal({occupant,property,onClose, onRemove}: pro
       className="fixed inset-0 bg-black/65 z-50 flex items-center justify-center p-5 backdrop-blur-sm"
       onClick={onClose}
     >
+
+      {showDeleteModal && (
+        <ConfirmModal title='Remove occupant' description={`are you sure that you want to remove ${occupant.name}`}
+        onCancel={()=>setShowDeleteModal(false)} onConfirm={()=>{handleRemoveOccupant(), setShowDeleteModal(false)}}
+        loading={loading}
+        />
+      )}
       <div
         className="bg-[#272727] border border-white/[0.13] rounded-[20px] p-7 max-w-[380px] w-full"
         onClick={(e) => e.stopPropagation()}
@@ -151,11 +160,11 @@ export default function OccupantModal({occupant,property,onClose, onRemove}: pro
             )}
 
             <button
-              onClick={handleRemoveOccupant}
+              onClick={()=>setShowDeleteModal(true)}
               disabled={loading}
               className="mt-5 w-full px-3 py-2 rounded-[10px] bg-red-500 text-white text-[13px] font-semibold hover:opacity-90 disabled:opacity-40"
             >
-              {loading ? 'Removing…' : 'Remove Occupant'}
+              {'Remove Occupant'}
             </button>
           </>
         )}
