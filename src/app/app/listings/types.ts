@@ -1,4 +1,5 @@
 import { AmenityType, Prisma } from "@prisma/client";
+import type { Dispatch, SetStateAction } from "react";
 import { propertyInclude, propertyListingBasicInclude, propertyListingFullInclude } from "./prismaConst";
 
 /***** prisma types relatin with listing and property management *********/
@@ -176,11 +177,6 @@ export type ListingReview = {
 export type ListingParameters = Record<string, unknown> & {
   //
   //
-  // Meta parameter
-  changed: boolean;
-  
-  //
-  //
   // Filters
   rent_min?: number;
   rent_max?: number;
@@ -207,6 +203,7 @@ export type ListingParameters = Record<string, unknown> & {
   transport_nearby?: boolean;
   healthcare_nearby?: boolean;
   recreation_nearby?: boolean;
+  other_nearby?: boolean;
 
   //
   //
@@ -226,4 +223,32 @@ export type ListingParameters = Record<string, unknown> & {
   //
   // Pagination
   page?: number;
+};
+
+// Shared all items state for listings pages
+export type ListingsResultItem = Prisma.PropertyListingGetPayload<{
+  include: {
+    images: true;
+    property: {
+      include: {
+        amenities: true;
+      };
+    };
+  };
+}>;
+
+export type PaginationMeta = {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+};
+
+export type AllItemsState = {
+  ListingsResults: ListingsResultItem[];
+  setListingsResults: Dispatch<SetStateAction<ListingsResultItem[]>>;
+  paginationMeta: PaginationMeta;
+  setPaginationMeta: Dispatch<SetStateAction<PaginationMeta>>;
+  querySignature: string | null;
+  setQuerySignature: Dispatch<SetStateAction<string | null>>;
 };
