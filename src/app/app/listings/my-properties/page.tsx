@@ -228,7 +228,7 @@ export default function Page() {
           {deleteMode && filtered.length > 0 && (
             <>
               <button
-                onClick={()=>setShowDeleteModal(false)}
+                onClick={()=>{setShowDeleteModal(false), exitDeleteMode()}}
                 className="px-3.5 py-2.5 rounded-[10px] text-[13px] bg-[#2a2a2a]"
               >
                 Cancel
