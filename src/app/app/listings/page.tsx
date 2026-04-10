@@ -132,8 +132,7 @@ export default function ListingsPage() {
         case "updated_at":
           return compareDate(a.updatedAt, b.updatedAt);
         case "available_from":
-          // There is no direct available_from field on PropertyListing yet.
-          return compareDate(a.updatedAt, b.updatedAt);
+          return compareDate(a.availableFrom ?? new Date(0), b.availableFrom ?? new Date(0));
         case "distance":
           // Distance sorting is intentionally not implemented yet.
           return compareDate(a.updatedAt, b.updatedAt);

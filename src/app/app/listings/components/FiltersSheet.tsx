@@ -130,7 +130,7 @@ export default function FiltersSheet({
               />
             </FilterSubGrouping>
             
-            <FilterSubGrouping title="Minimum Stay (Months)">
+            <FilterSubGrouping title="Minimum Stay (Months) (Up to)">
               <label className="flex h-6 cursor-pointer items-center gap-2 px-0.5">
                 <Checkbox
                   className="cursor-pointer"
@@ -554,7 +554,7 @@ const FURNISHED_OPTIONS: NonNullable<ListingParameters["furnished_level"]>[] = [
 ];
 
 const FURNISHED_LABELS: Record<NonNullable<ListingParameters["furnished_level"]>, string> = {
-  furnished: "Furnished",
+  furnished: "Fully Furnished",
   unfurnished: "Unfurnished",
-  part_furnished: "Part Furnished",
+  part_furnished: "Partly Furnished",
 };
