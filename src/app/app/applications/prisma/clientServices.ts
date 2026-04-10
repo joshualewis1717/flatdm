@@ -13,6 +13,9 @@ import {
   isListingOwnedByLandlord,
   getListingIdFromApplicationQuery,
   getApplicationIfAuthorised,
+  countOverlappingOccupantsQuery,
+  getOccupantByOccupantId,
+  removeOccupantQuery,
 } from "./rawQueries";
 import { mapApplicantApplication, mapLandlordApplication } from "./mappers";
 import { runService, withRole } from "@/app/app/clientService/prisma/prismaUtils";
@@ -20,7 +23,6 @@ import { MINIMUM_APPLICATION_WINDOW } from "./const";
 import { startOfDay } from "date-fns";
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -78,27 +80,7 @@ export async function submitApplication(
     if (existingApp) throw new Error("Already applied.");
 
     // stop user from applying to when listing is full at their intended move in time.
-    const overlappingOccupants = await prisma.occupant.count({
-      where: {
-        listingId,
-    
-        AND: [
-          {
-            moveIn: {
-              lt: moveOutDate ?? new Date("9999-12-31"),// if move out date is null, assume they will stay
-              // there for an infinite amount of time for this check
-            },
-          },
-          {
-            OR: [
-              { moveOut: null },
-              { moveOut: { gt: moveInDate } },
-            ],
-          },
-        ],
-      },
-    });
-    
+    const overlappingOccupants = await countOverlappingOccupantsQuery(listingId, moveInDate, moveOutDate)
     if (overlappingOccupants >= listing.maxOccupants) {
       throw new Error("Listing is full for the selected date range.");
     }
@@ -190,11 +172,7 @@ export async function updateApplicationStatus(
 export async function respondToOffer(applicationId: number, status: 'CONFIRMED' | 'REJECTED' | 'WITHDRAWN') {
   return runService(async () => {
     const user = await withRole("CONSULTANT");
-    await updateApplicationStatusAsConsultantQuery(
-      applicationId,
-      user.id,
-      status
-    );
+    await updateApplicationStatusAsConsultantQuery( applicationId, user.id, status );
   });
 }
 
@@ -227,14 +205,7 @@ export async function removeOccupant(occupantId: number) {
     const user = await withRole("LANDLORD");
 
     // 1. Get occupant + listing ownership check
-    const occupant = await prisma.occupant.findUnique({
-      where: { id: occupantId },
-      include: {
-        listing: {
-          select: { landlordId: true },
-        },
-      },
-    });
+    const occupant = await getOccupantByOccupantId(occupantId)
 
     if (!occupant) throw new Error("Occupant not found");
 
@@ -247,14 +218,7 @@ export async function removeOccupant(occupantId: number) {
       throw new Error("cannot remove upcoming occupants")
     }
 
-    //  to remove occuapnt, we set move out to be current date, since all our logic counts active occupants as move out > current
-    // (hence if move out < current, we treat it as soft deletion)
-    await prisma.occupant.update({
-      where: { id: occupantId },
-      data: {
-        moveOut: new Date(), 
-      },
-    });
+    await removeOccupantQuery(occupantId)
     return true
   });
 }
