@@ -13,7 +13,7 @@ export default function Status( {theme, text} : Props){
         style = style + "inline-block text-[#FFD452] bg-[#FFD452]/20";
     }
     else if (theme == "red"){
-        style = style + "inline-block text-[#FF5236] bg-[#FF5236]/20";
+        style = style + "inline-block text-[#FF1A1A] bg-[#FF5236]/20";
     }
     else if (theme == "neutral"){
         style = style + "inline-block text-white bg-gray-500/20";

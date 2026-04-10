@@ -21,6 +21,15 @@ const themeMap = {
     "UNRANKED":"neutral"
 }
 
+const wordMap = {
+    "RESOLVED":"Resolved",
+    "UNDER_REVIEW":"Under Review",
+    "OPEN":"Open",
+    "LOW":"Low",
+    "MEDIUM":"Medium",
+    "HIGH":"High",
+    "UNRANKED":"Unranked"
+}
 
 export default function SelectedReportClient({report, target, reporter, moderators} : {report : Report, target : User, reporter : User, moderators : User[]}){
 
@@ -71,8 +80,8 @@ export default function SelectedReportClient({report, target, reporter, moderato
 
                     {/* status and severity */}
                     <div className="flex flex-col gap-1 justify-center items-right">
-                        <Status theme={themeMap[status]} text={"Status: " + status} />
-                        <Status theme={themeMap[severity]} text={"Severity: " + severity} />
+                        <Status theme={themeMap[status]} text={"Status: " + wordMap[status]} />
+                        <Status theme={themeMap[severity]} text={"Severity: " + wordMap[severity]} />
                     </div>
                 </div>
 

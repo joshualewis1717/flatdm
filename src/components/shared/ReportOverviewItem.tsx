@@ -25,6 +25,18 @@ export default function ReportOverviewItem( {report, reporter, targetUser} : {re
         "UNRANKED":"neutral"
     }
 
+
+    const wordMap = {
+        "RESOLVED":"Resolved",
+        "UNDER_REVIEW":"Under Review",
+        "OPEN":"Open",
+        "LOW":"Low",
+        "MEDIUM":"Medium",
+        "HIGH":"High",
+        "UNRANKED":"Unranked"
+    }
+
+
     let severity = report['severity'];
     if (!severity || severity === null){
         severity = "Not Ranked Yet"
@@ -37,8 +49,8 @@ export default function ReportOverviewItem( {report, reporter, targetUser} : {re
                     <h1 className="text-white font-bold text-lg">[{report['id']}, {report['category']}] {targetUser.username} : {report['reason']}</h1>
                     <h2 className="italic text-gray-400">{`Submitted by ${reporter.username} at ${report['createdAt']}`}</h2>
                     <div className="flex flex-row gap-2">
-                        <Status theme={themeMap[report['status']]} text={"Status: " + report['status']} />
-                        <Status theme={themeMap[report['severity']]} text={"Severity: " + severity} />
+                        <Status theme={themeMap[report['status']]} text={"Status: " + wordMap[report['status']]} />
+                        <Status theme={themeMap[report['severity']]} text={"Severity: " + wordMap[severity]} />
                     </div>
 
                 </div>
