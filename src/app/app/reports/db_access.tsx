@@ -31,34 +31,31 @@ async function rawDeletePropertiesByLandlord({landlordId} : {landlordId : number
     return;
 }
 
-// delete all property applications made by a given user id
-async function rawDeletePropertyApplicationsByUser({userId} : {userId : number}){
 
-    try{
-        await prisma.propertyApplication.deleteMany({
-            where: {userId: {equals: userId}}
-        });
-    }
-    catch (error){
-        console.error("error occured: " + error.message);
-    }    
-
-    return;
+// set status to "WITHDRAWN" for all property applications made by a given user id
+async function rawDeletePropertyApplicationsByUser({ userId }: { userId: number }) {
+  try {
+    await prisma.propertyApplication.updateMany({
+      where: { userId: userId },
+      data: { status: "WITHDRAWN" },
+    });
+  } catch (error: any) {
+    console.error("error occured:", error?.message ?? error);
+  }
+  return;
 }
 
-// delete all property applications for a given listing id
-async function rawDeletePropertyApplicationsByListing({listingId} : {listingId : number}){
-
-    try{
-        await prisma.propertyApplication.deleteMany({
-            where: {listingId: listingId}
-        }); 
-    }
-    catch (error){
-        console.error("error occured: " + error.message);
-    }
-
-    return;
+// set status to "WITHDRAWN" for all property applications for a given listing id
+async function rawDeletePropertyApplicationsByListing({ listingId }: { listingId: number }) {
+  try {
+    await prisma.propertyApplication.updateMany({
+      where: { listingId: listingId },
+      data: { status: "WITHDRAWN" },
+    });
+  } catch (error: any) {
+    console.error("error occured:", error?.message ?? error);
+  }
+  return;
 }
 
 async function rawDeletePropertyListingByLandlord({landlordId} : {landlordId : number}){

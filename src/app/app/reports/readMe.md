@@ -13,4 +13,4 @@
     - [ ] withdraw applications instead of deleting
 
 - REVIEWS
-    - [ ] make remove review buttons for moderators to remove reviews
+    - [X] make RemoveReviewButton for moderators to remove reviews
