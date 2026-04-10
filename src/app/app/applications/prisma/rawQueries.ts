@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { APPLICATION_EXPIRY_TIME } from "../const";
-import { Occupant, Prisma } from "@prisma/client";
+import { Occupant, Prisma, User } from "@prisma/client";
 import 'server-only'
 // raw prisma queries for applications
 
@@ -22,6 +22,33 @@ type CreateOccupant={
   moveIn: Date,
   moveOut: Date | null,
 }
+
+// what we return when an application has been updated
+type UpdatedApplication = Prisma.PropertyApplicationGetPayload<{
+  include: {
+    user: true;
+    listing: {
+      include: {
+        property: {
+          include: {
+            landlord: true; 
+          };
+        };
+      };
+    };
+  };
+}>;
+
+
+// we need to return a bit more info to send emails depending on conultant actions
+type ConsultantUpdateResult = {
+  updatedApplication: UpdatedApplication;
+
+  autoRejectedApplications: Array<{
+    user: User;
+  }>;
+};
+
 export async function getListingById(listingId: number) {
   return prisma.propertyListing.findUnique({
     where: { id: listingId, isDeleted: false },
@@ -227,13 +254,23 @@ export async function updateApplicationStatusAsLandlordQuery(applicationId: numb
       status,
       expiryDate,
     },
+    include: {
+      user: true,
+      listing: {
+        include: {
+          property: {
+            include: { landlord: true }
+          }
+        }
+      }
+    }
   });
 }
 
-export async function updateApplicationStatusAsConsultantQuery( applicationId: number, userId: number, status: "CONFIRMED" | "REJECTED" | "WITHDRAWN") {
+export async function updateApplicationStatusAsConsultantQuery(applicationId: number,userId: number,status: "CONFIRMED" | "REJECTED" | "WITHDRAWN"): Promise<ConsultantUpdateResult> {
   return prisma.$transaction(async (tx) => {
-    // 1. Get application
-    const application = await tx.propertyApplication.findUnique({
+     // 1. Get application
+     const application = await tx.propertyApplication.findUnique({
       where: { id: applicationId },
       select: {
         userId: true,
@@ -242,28 +279,39 @@ export async function updateApplicationStatusAsConsultantQuery( applicationId: n
         moveOutDate: true,
       },
     });
-
     if (!application) throw new Error("Application not found");
+     // 2. Auth check
+    if (application.userId !== userId) throw new Error("Forbidden");
 
-    // 2. Auth check
-    if (application.userId !== userId) {
-      throw new Error("Forbidden");
-    }
-
-    // 3. Update current application
-    const updated = await tx.propertyApplication.update({
+     // 3. Update current application
+    const updatedApplication = await tx.propertyApplication.update({
       where: { id: applicationId },
       data: { status },
+      include: {
+        user: true,
+        listing: {
+          include: {
+            property: {
+              include: {
+                landlord: true,
+              },
+            },
+          },
+        },
+      },
     });
 
-    // 4. Only proceed if confirmed
+    // initialise our array of people who might get auto rejected
+    const autoRejectedApplications: Array<{ user: User }> = [];
+
+     // 4. Only proceed if confirmed
     if (status === "CONFIRMED") {
       const listingId = application.listingId;
-
+      
       const moveIn = application.moveInDate;
       const moveOut = application.moveOutDate ?? new Date("9999-12-31");
 
-      // 5. Get listing capacity
+         // 5. Get listing capacity
       const listing = await tx.propertyListing.findUnique({
         where: { id: listingId },
         select: { maxOccupants: true },
@@ -271,28 +319,21 @@ export async function updateApplicationStatusAsConsultantQuery( applicationId: n
 
       if (!listing) throw new Error("Listing not found");
 
+      
       // 6. Check overlapping occupants.
       const overlappingOccupants = await tx.occupant.count({
         where: {
           listingId,
-
           AND: [
+            { moveIn: { lt: moveOut } },
             {
-              moveIn: {
-                lt: moveOut,
-              },
-            },
-            {
-              OR: [
-                { moveOut: null },
-                { moveOut: { gt: moveIn } },
-              ],
+              OR: [{ moveOut: null }, { moveOut: { gt: moveIn } }],
             },
           ],
         },
       });
 
-      // 7. Prevent overbooking
+       // 7. Prevent overbooking
       if (overlappingOccupants >= listing.maxOccupants) {
         throw new Error("Listing became full. Cannot confirm.");
       }
@@ -319,21 +360,15 @@ export async function updateApplicationStatusAsConsultantQuery( applicationId: n
         },
       });
 
-      // 10. Auto-reject overlapping applications for this listing
-      await tx.propertyApplication.updateMany({
+
+       // 10. find users who will be auto rejected
+      const toReject = await tx.propertyApplication.findMany({
         where: {
           listingId,
           id: { not: applicationId },
-          status: {
-            in: ["PENDING", "APPROVED"],
-          },
-
+          status: { in: ["PENDING", "APPROVED"] },
           AND: [
-            {
-              moveInDate: {
-                lt: moveOut,
-              },
-            },
+            { moveInDate: { lt: moveOut } },
             {
               OR: [
                 { moveOutDate: null },
@@ -342,13 +377,29 @@ export async function updateApplicationStatusAsConsultantQuery( applicationId: n
             },
           ],
         },
-        data: {
-          status: "REJECTED",
+        include: {
+          user: true,
         },
       });
+
+      // 11. set their status to be rejected
+      if (toReject.length > 0) {
+        await tx.propertyApplication.updateMany({
+          where: {
+            id: { in: toReject.map((a) => a.id) },
+          },
+          data: { status: "REJECTED" },
+        });
+
+        autoRejectedApplications.push(
+          ...toReject.map((a) => ({
+            user: a.user,
+          }))
+        );
+      }
     }
 
-    return updated;
+    return {updatedApplication, autoRejectedApplications,};
   });
 }
 

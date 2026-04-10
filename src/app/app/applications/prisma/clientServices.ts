@@ -23,6 +23,14 @@ import { MINIMUM_APPLICATION_WINDOW } from "./const";
 import { startOfDay } from "date-fns";
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { auth } from "@/lib/auth";
+import { applicationOfferEmailToApplicant } from "../../email/application/ApprovedEmail";
+import { getListingTitle } from "../../logic/listing";
+import { sendEmail } from "@/lib/email";
+import { applicationRejectedEmail } from "../../email/application/RejectionEmail";
+import { applicationOfferConfirmedEmail } from "../../email/application/OfferConfirmedEmail";
+import { applicationWithdrawnEmail } from "../../email/application/WithdrawnEmail";
+import { applicationAutoRejectionEmail } from "../../email/application/AutoRejectedEmail";
+import { applicationOfferRejectedEmail } from "../../email/application/OfferRejectedEmail";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -144,15 +152,6 @@ export async function getApplicationsForLandlord() {
   });
 }
 
-// Withdraw
-
-// TODO: swap deleteApplicationQuery for updateApplicationStatusAsConsultantQuery
-export async function withdrawApplication(applicationId: number) {
-  return runService(async () => {
-    const user = await withRole("CONSULTANT");
-    await deleteApplicationQuery(applicationId, user.id);
-  });
-}
 
 // Landlord status update
 
@@ -162,17 +161,60 @@ export async function updateApplicationStatus(
 ) {
   return runService(async () => {
     const user = await withRole("LANDLORD");
-    await updateApplicationStatusAsLandlordQuery(applicationId, user.id, status);
+    const updated = await updateApplicationStatusAsLandlordQuery(applicationId, user.id, status);
+    const recipient = updated.user.email;
+    const listingTitle=  getListingTitle(updated.listing.property.title, updated.listing.flatNumber)
+    const applicantName = updated.user.username
+    const landlordName = updated.listing.property.landlord.username
+
+
+    if (status === 'APPROVED'){
+
+      const email = applicationOfferEmailToApplicant(recipient, {listingTitle, applicantName, landlordName})
+      await sendEmail(email)
+    }
+    else if (status ==='REJECTED'){
+      const email = applicationRejectedEmail(recipient, {listingTitle, applicantName, landlordName})
+      await sendEmail(email)
+    }
   });
 }
 
 // Consultant response
 
-// TODO: extend with a WITHDRAWN status option
 export async function respondToOffer(applicationId: number, status: 'CONFIRMED' | 'REJECTED' | 'WITHDRAWN') {
   return runService(async () => {
     const user = await withRole("CONSULTANT");
-    await updateApplicationStatusAsConsultantQuery( applicationId, user.id, status );
+    const updated = await updateApplicationStatusAsConsultantQuery( applicationId, user.id, status );
+    const landlordEmail = updated.updatedApplication.listing.property.landlord.email
+    const landlordName =  updated.updatedApplication.listing.property.landlord.username
+    const listingTitle=  getListingTitle(updated.updatedApplication.listing.property.title, updated.updatedApplication.listing.flatNumber)
+    const applicantName = updated.updatedApplication.user.username
+
+    if (status == 'CONFIRMED'){
+      const email = applicationOfferConfirmedEmail(landlordEmail, {listingTitle, applicantName, landlordName})
+      await sendEmail(email)
+
+      // if some users were auto rejected since listing is now full, also email them:
+      if (updated.autoRejectedApplications.length > 0){
+        const rejectedApplicants = updated.autoRejectedApplications;
+        for (const applicant of rejectedApplicants){
+          const recipient = applicant.user.email;
+          const applicantName = applicant.user.username
+          const email = applicationAutoRejectionEmail(recipient, {listingTitle, applicantName, landlordName})
+          await sendEmail(email)
+        
+        }
+      }
+    }
+    else if (status == 'WITHDRAWN'){
+      const email = applicationWithdrawnEmail(landlordEmail, {listingTitle, applicantName, landlordName})
+      await sendEmail(email);
+    }
+    else if (status == 'REJECTED'){
+      const email = applicationOfferRejectedEmail(landlordEmail, {listingTitle, applicantName, landlordName})
+      await sendEmail(email)
+    }
   });
 }
 

@@ -8,7 +8,7 @@ import ApplicantCard from "../components/dashboard/UI/userCards/ApplicantCard";
 import ConfirmedCard from "../components/dashboard/UI/userCards/ConfirmedCard";
 import LandlordCard from "../components/dashboard/UI/userCards/LandlordCard";
 import { Application } from "../types";
-import { getApplicationsForApplicant, getApplicationsForLandlord, withdrawApplication, updateApplicationStatus, respondToOffer,
+import { getApplicationsForApplicant, getApplicationsForLandlord, updateApplicationStatus, respondToOffer,
 } from "../prisma/clientServices";
 import { useSessionContext } from "@/components/shared/app-frame";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
