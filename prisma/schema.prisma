@@ -285,14 +285,14 @@ model Report {
   description         String?
   status              ReportStatus
   assignedModeratorId Int?
-  severity            OffenceSeverity?
+  severity            OffenceSeverity? @default(UNRANKED)
   category            ReportCategory?
 
   createdAt  DateTime @default(now())
   modifiedAt DateTime @default(now()) @updatedAt
 
   reporterId     Int
-  targetUserId   Int?
+  targetUserId   Int
   listingId      Int?
   conversationId Int?
   reviewId       Int?
@@ -370,6 +370,7 @@ enum OffenceSeverity {
   LOW
   MEDIUM
   HIGH
+  UNRANKED
 }
 
 enum ReportCategory {
