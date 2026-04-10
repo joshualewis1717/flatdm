@@ -10,6 +10,7 @@ type AuthorizedUser = {
   email: string;
   username: string;
   role: string;
+  emailVerified: boolean;
 };
 
 const authSecret = process.env.NEXTAUTH_SECRET;
@@ -33,6 +34,7 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({ where: { email: credentials.email } });
         if (!user) return null;
+        if (user.isDeleted) return null;
 
         const isValidPassword = await compare(credentials.password, user.passwordHash);
         if (!isValidPassword) return null;
@@ -43,7 +45,9 @@ export const authOptions: NextAuthOptions = {
           lastName: user.lastName,
           username: user.username,
           email: user.email,
-          role: user.role };
+          role: user.role,
+          emailVerified: user.emailVerified,
+        };
       },
     }),
   ],
@@ -55,7 +59,24 @@ export const authOptions: NextAuthOptions = {
         token.firstName = user.firstName;
         token.lastName = user.lastName;
         token.name = [user.firstName, user.lastName].filter(Boolean).join(" ");
+        token.emailVerified = user.emailVerified;
       }
+
+      if (token.sub && token.emailVerified !== true) {
+        const userId = Number(token.sub);
+
+        if (Number.isFinite(userId)) {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { emailVerified: true, isDeleted: true },
+          });
+
+          if (dbUser && !dbUser.isDeleted) {
+            token.emailVerified = dbUser.emailVerified;
+          }
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
@@ -64,6 +85,7 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as string | undefined;
         session.user.firstName = token.firstName as string | undefined;
         session.user.lastName = token.lastName as string | undefined;
+        session.user.emailVerified = token.emailVerified as boolean | undefined;
       }
       return session;
     },
