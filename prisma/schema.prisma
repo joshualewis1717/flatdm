@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   // only if your Prisma version/docs still require it
   previewFeatures = ["postgresqlExtensions"]
 }
@@ -10,20 +10,20 @@ datasource db {
 }
 
 model User {
-  id           Int       @id @default(autoincrement())
-  username     String    @unique
-  firstName    String
-  lastName     String
-  email        String    @unique
+  id            Int       @id @default(autoincrement())
+  username      String    @unique
+  firstName     String
+  lastName      String
+  email         String    @unique
   emailVerified Boolean   @default(false)
-  passwordHash String
-  role         Role
-  isDeleted    Boolean   @default(false)
-  deletedAt    DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  passwordHash  String
+  role          Role
+  isDeleted     Boolean   @default(false)
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  profile Profile?
+  profile    Profile?
   magicLinks MagicLink[]
 
   // Listings (landlord)
@@ -65,13 +65,13 @@ model Profile {
 }
 
 model MagicLink {
-  id        Int             @id @default(autoincrement())
-  tokenHash String          @unique
+  id        Int           @id @default(autoincrement())
+  tokenHash String        @unique
   type      MagicLinkType
   email     String
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime        @default(now())
+  createdAt DateTime      @default(now())
 
   userId Int
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -84,11 +84,11 @@ model MagicLink {
 // Demo note: we know storing image blobs directly in the database is usually bad practice for a real production setup.
 // This is only for demonstration purposes, in a real environment we would move image storage to object storage/CDN and keep only references here.
 model ListingImage {
-  id       Int    @id @default(autoincrement())
-  fileName String?
-  mimeType String
+  id        Int     @id @default(autoincrement())
+  fileName  String?
+  mimeType  String
   sizeBytes Int
-  data     Bytes
+  data      Bytes
 
   isThumbnail Boolean @default(false)
 
@@ -107,8 +107,8 @@ model Property {
   city       String
   postcode   String
 
-  lat Float
-  lng Float
+  lat    Float
+  lng    Float
   coords Unsupported("geometry(Point, 4326)")? // PostGIS
 
   landlordId Int
@@ -134,10 +134,10 @@ model PropertyListing {
   flatNumber  String?
   description String
 
-  rent          Int
+  rent Int
 
-  lat Float
-  lng Float
+  lat    Float
+  lng    Float
   coords Unsupported("geometry(Point, 4326)")? // PostGIS
 
   // rental rules
@@ -173,9 +173,9 @@ model PropertyListing {
 model PropertyApplication {
   id Int @id @default(autoincrement())
 
-  email      String?
-  phone      String?
-  message    String?
+  email   String?
+  phone   String?
+  message String?
 
   moveInDate  DateTime
   moveOutDate DateTime?
@@ -279,21 +279,22 @@ model Review {
 }
 
 model Report {
-  id          Int          @id @default(autoincrement())
-  reason      String
-  description String?
-  status      ReportStatus
+  id                  Int              @id @default(autoincrement())
+  reason              String
+  description         String?
+  status              ReportStatus
   assignedModeratorId Int?
-  severity OffenceSeverity? 
-  category ReportCategory?
+  severity            OffenceSeverity?
+  category            ReportCategory?
 
+  createdAt  DateTime @default(now())
+  modifiedAt DateTime @default(now()) @updatedAt
 
-  createdAt   DateTime     @default(now())
-  modifiedAt  DateTime     @default(now()) @updatedAt
-
-  reporterId   Int
-  targetUserId Int?
-  listingId    Int?
+  reporterId     Int
+  targetUserId   Int?
+  listingId      Int?
+  conversationId Int?
+  reviewId       Int?
 
   reporter   User             @relation("ReportsMade", fields: [reporterId], references: [id])
   targetUser User?            @relation("ReportsAgainst", fields: [targetUserId], references: [id])

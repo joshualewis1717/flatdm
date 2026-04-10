@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createContext, useContext } from "react";
 import Header from "@/components/shared/header";
-import Menu from "@/components/shared/menu";
+import Menu from "@/components/shared/Menu";
 import { Role } from "@prisma/client";
 
 type AppFrameProps = {
