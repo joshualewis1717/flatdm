@@ -37,7 +37,7 @@ const EMPTY_FORM: PropertyListingForm = {
 // const to map the different furnished levles with human readable text
 export const FURNISHED_LEVEL_OPTIONS = [
   { label: "Unfurnished", value: "UNFURNISHED" },
-  { label: "Part Furnished", value: "PART_FURNISHED" },
+  { label: "Partly Furnished", value: "PART_FURNISHED" },
   { label: "Fully Furnished", value: "FULLY_FURNISHED" },
 ];
 

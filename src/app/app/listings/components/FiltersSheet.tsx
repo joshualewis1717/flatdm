@@ -554,7 +554,7 @@ const FURNISHED_OPTIONS: NonNullable<ListingParameters["furnished_level"]>[] = [
 ];
 
 const FURNISHED_LABELS: Record<NonNullable<ListingParameters["furnished_level"]>, string> = {
-  furnished: "Furnished",
+  furnished: "Fully Furnished",
   unfurnished: "Unfurnished",
-  part_furnished: "Part Furnished",
+  part_furnished: "Partly Furnished",
 };
