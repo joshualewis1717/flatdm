@@ -191,21 +191,33 @@ export async function changeReportStatus({reportId, newStatus}){
     return;
 }
 
+// assign no mod to a report
+export async function unassignReport({reportId}){
+    await prisma.report.update({
+        where: {id: reportId},
+        data: {assignedModeratorId: null}
+    });
+}
+
+
 // assign a moderator to a report
 export async function assignModToReport({reportId, userId}){
 
     try{
         // make sure the user is actually a moderator
-        const role = await prisma.user.findFirst({
+        const userRole = await prisma.user.findFirst({
             where: {id: userId},
-            select: {role}
+            select: {role: true}
         })
 
-        if (role === "CONSULTANT"){      
+        if (String(userRole.role) == "MODERATOR"){      
             await prisma.report.update({
                 where: { id: reportId },
                 data: { assignedModeratorId: userId },
             });
+        }
+        else{
+            console.log("report assignment denied since user " + userId + " is not a moderator")
         }
     }
     catch (error){
@@ -220,10 +232,6 @@ export async function assignModToReport({reportId, userId}){
 
 export async function deleteReport({report} : Report){
 
-    // make sure we actually want to delete this
-    const ok = window.confirm(`Delete Report ${report['reason']}? This cannot be undone.`);
-    if (!ok) return;
-
     try{
         // delete from database
         await prisma.report.delete({
@@ -236,6 +244,22 @@ export async function deleteReport({report} : Report){
 
     return;
 }
+
+export async function getModerators() {
+    try {
+        const mods = await prisma.user.findMany({
+        where: {
+            role: "MODERATOR",
+            isDeleted: false
+        }
+        });
+        return mods;
+    } catch (error: any) {
+        console.error("error occured: " + error.message);
+        return [];
+    }
+}
+
 
 export async function getReport({reportId}: any){
     if (reportId == undefined){

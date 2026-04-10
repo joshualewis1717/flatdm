@@ -7,37 +7,43 @@ import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { assignModToReport } from '../db_access';
 import { useState } from 'react';
+import ModeratorSelector from '@/components/shared/ModeratorSelector';
+import StatusSelector from '@/components/shared/StatusSelector';
+import SeveritySelector from '@/components/shared/SeveritySelector';
+
+const themeMap = {
+    "RESOLVED":"green",
+    "UNDER_REVIEW":"amber",
+    "OPEN":"red",
+    "LOW":"green",
+    "MEDIUM":"amber",
+    "HIGH":"red"
+}
 
 
-export default function SelectedReportClient({report, target, reporter} : {report : Report, target : User, reporter : User}){
-
-    console.log(report);
-    console.log(target);
-    console.log(reporter);
+export default function SelectedReportClient({report, target, reporter, moderators} : {report : Report, target : User, reporter : User, moderators : User[]}){
 
     // depending on what value 'status' holds, the status bar will appear a different colour
     // theme is passed into the Status component to style it
-    const theme =
-        report['status'] === 'RESOLVED' ? 'green' :
-        report['status'] === 'UNDER_REVIEW' ? 'amber' :
-        report['status'] === 'OPEN' ? 'red' :
-        'neutral';
 
     const [assignModVis, setAssignModVis] = useState(false);
     const [changeStatusVis, setChangeStatusVis] = useState(false);
     const [changeSeverityVis, setChangeSeverityVis] = useState(false);
 
+    const [status, setStatus] = useState(report['status']);
+    const [severity, setSeverity] = useState(report['severity']);
 
-    function assignModeratorWrap(setVis): void {
-        setVis(true);
+
+    function assignModeratorWrap({setVis, vis}): void {
+        setVis(!vis);
     }
 
-    function changeStatusWrap(setVis): void {
-        setVis(true);
+    function changeStatusWrap({setVis, vis}): void {
+        setVis(!vis);
     }
 
-    function changeSeverityWrap(setVis): void {
-        setVis(true)
+    function changeSeverityWrap({setVis, vis}): void {
+        setVis(!vis)
     }
 
     return (
@@ -55,11 +61,12 @@ export default function SelectedReportClient({report, target, reporter} : {repor
 
                 <div className="flex items-center gap-5">
                     <div className="flex-1 min-w-0">
-                    <p className="mt-3 text-sm text-white/60 truncate">
-                        Submitted by User {reporter['username']} at {String(report['createdAt'])}
-                    </p>
+                        <p className="mt-3 text-sm text-white/60 truncate">
+                            Submitted by User {reporter['username']} at {String(report['createdAt'])}
+                        </p>
                     </div>
-                    <Status theme={theme} text={report['status']} />
+                    <Status theme={themeMap[status]} text={"Status: " + status} />
+                    <Status theme={themeMap[severity]} text={"Severity: " + severity} />
                 </div>
                 <hr />
                 <div className="flex flex-row">
@@ -68,6 +75,20 @@ export default function SelectedReportClient({report, target, reporter} : {repor
                         <br />
                         {report['description']}
                     </p>
+
+                    {assignModVis &&
+                        <ModeratorSelector moderators={moderators} report={report} setVis={setAssignModVis} />
+                    }
+                    
+                    
+                    {changeStatusVis &&
+                        <StatusSelector report={report} setStatus={setStatus} setVis={setChangeStatusVis} />
+                    }
+
+                    {changeSeverityVis &&
+                        <SeveritySelector report={report} setSeverity={setSeverity} setVis={setChangeSeverityVis} />
+                    }
+
 
                     {/* button options */}
                     <div className="flex flex-col items-center space-x-4 gap-5">
@@ -83,17 +104,17 @@ export default function SelectedReportClient({report, target, reporter} : {repor
                         </Button>
 
                         {/* assign moderator */}
-                        <button onClick={() => assignModeratorWrap({setVis:setAssignModVis})} className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground">
+                        <button onClick={() => assignModeratorWrap({setVis:setAssignModVis, vis:assignModVis})} className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground">
                             Assign Moderator
                         </button>
 
                         {/* change status */}
-                        <button onClick={() => changeStatusWrap({setVis:setChangeStatusVis})} className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground">
+                        <button onClick={() => changeStatusWrap({setVis:setChangeStatusVis, vis:changeStatusVis})} className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground">
                             Change Status
                         </button>
 
                         {/* change severity */}
-                        <button onClick={() => changeSeverityWrap({setVis:setChangeSeverityVis})} className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground">
+                        <button onClick={() => changeSeverityWrap({setVis:setChangeSeverityVis, vis:changeSeverityVis})} className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground">
                             Change Severity
                         </button>
                     </div>

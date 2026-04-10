@@ -80,8 +80,6 @@ export default function UserModOverviewPanel({user} : User){
                         Ban User
                     </button>
 
-                    <RemoveReviewButton reviewId={26} />
-
                 </div>
 
 
