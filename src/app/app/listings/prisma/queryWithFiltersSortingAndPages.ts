@@ -5,8 +5,8 @@ import { ListingParameters } from "../types";
 
 export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
 	// from ListingParameters, this query considers:
-	// rent_min, rent_max, maxoccupants_max, minstay_max, bedrooms_min, bedrooms_max, bathrooms_min, bathrooms_max, area_min, area_max, has_photo, furnished_level, transport_nearby, healthcare_nearby, recreation_nearby, other_nearby
-	// LATER: available_from (NOT YET)
+	// rent_min, rent_max, maxoccupants_max, minstay_max, bedrooms_min, bedrooms_max, bathrooms_min, bathrooms_max, area_min, area_max, has_photo, furnished_level, transport_nearby, healthcare_nearby, recreation_nearby, other_nearby, available_from
+	const now = new Date();
 	const where: Prisma.PropertyListingWhereInput = {
 		isDeleted: false,
 	};
@@ -29,6 +29,43 @@ export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
 			...(max !== null ? { lte: max } : {}),
 		};
 	};
+
+	const getAvailableFrom = (
+		occupants: { moveIn: Date; moveOut: Date | null }[],
+		maxOccupants: number,
+	) => {
+		const currentOccupants = occupants.filter(
+			(occupant) => occupant.moveIn <= now && (!occupant.moveOut || occupant.moveOut > now),
+		).length;
+
+		if (currentOccupants < maxOccupants) {
+			return now;
+		}
+
+		const moveOuts = occupants
+			.map((occupant) => occupant.moveOut)
+			.filter((moveOut): moveOut is Date => !!moveOut && moveOut > now)
+			.sort((a, b) => a.getTime() - b.getTime());
+
+		if (moveOuts.length === 0) {
+			return null;
+		}
+
+		return moveOuts[0];
+	};
+
+	const availableFromFilter = (() => {
+		if (!LP.available_from) {
+			return null;
+		}
+
+		if (LP.available_from === "now") {
+			return now;
+		}
+
+		const parsed = new Date(LP.available_from);
+		return Number.isNaN(parsed.getTime()) ? null : parsed;
+	})();
 
 	// numeric min/max filters
     // rent_min, rent_max
@@ -125,14 +162,41 @@ export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
 	const items = await prisma.propertyListing.findMany({
 		where,
 		include: {
-			images: true,
+			images: {
+				select: {
+					id: true,
+					isThumbnail: true,
+					mimeType: true,
+				},
+			},
 			property: {
 				include: {
 					amenities: true,
+					landlord: { select: { username: true } },
 				},
+			},
+			occupants: {
+				where: {
+					OR: [
+						{ moveOut: null },
+						{ moveOut: { gt: now } },
+					],
+				},
+				include: { user: true },
 			},
 		},
 	});
 
-	return items;
+	return items
+		.map((item) => ({
+			...item,
+			availableFrom: getAvailableFrom(item.occupants, item.maxOccupants),
+		}))
+		.filter((item) => {
+			if (!availableFromFilter) {
+				return true;
+			}
+
+			return item.availableFrom !== null && item.availableFrom <= availableFromFilter;
+		});
 }

@@ -229,14 +229,28 @@ export type ListingParameters = Record<string, unknown> & {
 // Shared all items state for listings pages
 export type ListingsResultItem = Prisma.PropertyListingGetPayload<{
   include: {
-    images: true;
+    images: {
+      select: {
+        id: true;
+        isThumbnail: true;
+        mimeType: true;
+      };
+    };
     property: {
       include: {
         amenities: true;
+        landlord: { select: { username: true } };
+      };
+    };
+    occupants: {
+      include: {
+        user: true;
       };
     };
   };
-}>;
+}> & {
+  availableFrom: Date | null;
+};
 
 export type PaginationMeta = {
   page: number;

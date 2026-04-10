@@ -30,7 +30,7 @@ function mapCachedListingToListingData(listing: CachedListing): ListingData {
     flatNumber: listing.flatNumber ?? null,
     description: listing.description,
     rent: listing.rent,
-    availableFrom: null,// TO DO: fix this
+    availableFrom: listing.availableFrom,
     totalRooms: listing.rooms,
     bedrooms: listing.bedrooms,
     bathrooms: listing.bathrooms,
@@ -47,7 +47,7 @@ function mapCachedListingToListingData(listing: CachedListing): ListingData {
     streetName: listing.property.streetName,
     city: listing.property.city,
     postcode: listing.property.postcode,
-    landlordName: "Landlord",
+    landlordName: listing.property.landlord.username,
     amenities: listing.property.amenities.map((amenity) => ({
       id: `cached-amenity-${amenity.id}`,
       dbId: amenity.id,
