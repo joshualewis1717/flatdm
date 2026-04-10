@@ -12,6 +12,8 @@ export type ApplicationForm={
 
 export type Application = {
   id: number;
+  applicantId: number;
+  landlordId: number
   buildingName: string;
   flatNumber?: string;
   listingAddress: string;

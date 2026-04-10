@@ -5,38 +5,9 @@ import {
   useContext,
   useMemo,
   useState,
-  type Dispatch,
   type ReactNode,
-  type SetStateAction,
 } from "react";
-import type { Prisma } from "@prisma/client";
-
-type ListingsResultItem = Prisma.PropertyListingGetPayload<{
-  include: {
-    images: true;
-    property: {
-      include: {
-        amenities: true;
-      };
-    };
-  };
-}>;
-
-export type PaginationMeta = {
-  page: number;
-  pageSize: number;
-  totalItems: number;
-  totalPages: number;
-};
-
-type AllItemsState = {
-  ListingsResults: ListingsResultItem[];
-  setListingsResults: Dispatch<SetStateAction<ListingsResultItem[]>>;
-  paginationMeta: PaginationMeta;
-  setPaginationMeta: Dispatch<SetStateAction<PaginationMeta>>;
-  querySignature: string | null;
-  setQuerySignature: Dispatch<SetStateAction<string | null>>;
-};
+import type { AllItemsState, ListingsResultItem, PaginationMeta } from "../types";
 
 const DEFAULT_PAGE_SIZE = 5;
 

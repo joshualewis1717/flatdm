@@ -1,4 +1,4 @@
-import { ArrowUpRight, RotateCcw } from "lucide-react";
+import {RotateCcw } from "lucide-react";
 import CardFooter from "../../layout/CardFooter";
 import DateColumn from "../generic/DateColumn";
 import ExpiryCountdown from "../generic/ExpiryCountdown";
@@ -7,6 +7,7 @@ import ProfileButton from "../profile/ProfileButton";
 import { Application } from "../../../../types";
 import ViewListingButton from "../generic/ViewListingButton";
 import ViewApplicationButton from "../generic/ViewApplicationButton";
+import { useRouter } from "next/navigation";
 
 // cards that was produced by applicants, landlords will be seeing these cards and interacting with them
 type props={
@@ -15,6 +16,7 @@ type props={
 }
 
 export default function ApplicantCard({ application,onAction, }: props) {
+  const router = useRouter();
     return (
       <li className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden hover:border-white/20 transition-colors">
       <div
@@ -39,7 +41,9 @@ export default function ApplicantCard({ application,onAction, }: props) {
   
           {/* Row 2: landlord profile */}
           {application.landlordName && (
-            <ProfileButton role="Landlord" username={application.landlordName} profileUrl={application.landlordAvatar} />
+            <ProfileButton role="Landlord" username={application.landlordName} profileUrl={application.landlordAvatar} 
+            onClick={()=>router.push(`/app/profile/${application.landlordId}`)}// user can check out the corresponding landlord profile
+            />
           )}
   
           {/* Row 3: expiry (ACCEPTED only) */}

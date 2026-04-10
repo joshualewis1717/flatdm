@@ -57,7 +57,10 @@ export default function Header({ onMenuClick } : { onMenuClick: () => void; }) {
         : headers[pathname] ?? headers["/app"];
 
   return (
-    <header className="sticky top-0 z-30 border-b border-white/10 bg-background/80 backdrop-blur-xl">
+    <header
+      id="app-page-header"
+      className="sticky top-0 z-30 border-b border-white/10 bg-background/80 backdrop-blur-xl"
+    >
       <div className="flex items-start justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-start gap-3">
           <Button

@@ -11,6 +11,9 @@ import { useRouter } from 'next/navigation';
 import { MyPropertyListingData, OccupantUI } from '../types';
 import { getListingsForLandlord, deleteListing } from '../prisma/clientServices';
 import { useSessionContext } from '@/components/shared/app-frame';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import ErrorMessage from '@/components/shared/ErrorMessage';
+import ConfirmModal from '@/components/shared/ConfirmModal';
 
 export default function Page() {
   const router = useRouter();
@@ -18,9 +21,11 @@ export default function Page() {
 
   const [listings, setListings] = useState<MyPropertyListingData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('default');
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
 
   const [modal, setModal] = useState<{
     occupant: OccupantUI;
@@ -34,7 +39,7 @@ export default function Page() {
   useEffect(() => {
     async function fetchListings() {
       const { result, error } = await getListingsForLandlord();
-      if (error) console.error("Failed to fetch listings:", error);
+      if (error) setError(error);
       else setListings(result ?? []);
       setLoading(false);
     }
@@ -108,7 +113,7 @@ export default function Page() {
     const deletedIds = [...selectedIds].filter((_, i) => !results[i].error);
     const failedCount = results.filter(r => r.error).length;
 
-    if (failedCount > 0) console.error(`Failed to delete ${failedCount} listing(s).`);
+    if (failedCount > 0) setError(`Failed to delete ${failedCount} listing(s). Please try again.`);
 
     setListings((prev) =>
       prev.filter((l) => !deletedIds.includes(l.propertyListing.id))
@@ -154,20 +159,25 @@ export default function Page() {
   if (!isLandlord) return null;
 
   if (loading)
-    return (
-      <p className="text-sm text-white/40 p-8">
-        Loading properties…
-      </p>
-    );
+    return <LoadingSpinner text="Loading your properties…" />;
 
   return (
     <div className="min-h-screen bg-[#1e1e1e] text-white p-6">
       <div className="max-w-4xl mx-auto">
 
+        {showDeleteModal && (
+          <ConfirmModal title='Delete Listings?' 
+          description={`are you sure that you want to delete ${selectedIds.size} properties?`}
+          onCancel={()=>{exitDeleteMode(), setShowDeleteModal(false)}}
+          onConfirm={()=>{deleteSelected(), setShowDeleteModal(false)}}
+          loading={deleteLoading}
+          />
+        )}
+
         {/* HEADER */}
         <header className="mb-6 flex items-start justify-between">
           <div>
-            <h1 className="text-xl font-semibold">My Properties</h1>
+            <h1 className="text-xl font-semibold">My Listings</h1>
             <p className="text-white/45 text-sm">
               Manage your listings
             </p>
@@ -181,6 +191,13 @@ export default function Page() {
             Add Property
           </button>
         </header>
+
+        {/* Delete/fetch error banner */}
+        {error && (
+          <div className="mb-4">
+            <ErrorMessage text={error} />
+          </div>
+        )}
 
         {/* SEARCH + FILTER */}
         <div className="flex gap-3 mb-5 flex-wrap">
@@ -211,20 +228,18 @@ export default function Page() {
           {deleteMode && filtered.length > 0 && (
             <>
               <button
-                onClick={exitDeleteMode}
+                onClick={()=>{setShowDeleteModal(false), exitDeleteMode()}}
                 className="px-3.5 py-2.5 rounded-[10px] text-[13px] bg-[#2a2a2a]"
               >
                 Cancel
               </button>
 
               <button
-                onClick={deleteSelected}
+                onClick={()=>setShowDeleteModal(true)}
                 disabled={selectedIds.size === 0 || deleteLoading}
                 className="px-3.5 py-2.5 rounded-[10px] text-[13px] font-semibold bg-red-500 text-white disabled:opacity-40"
               >
-                {deleteLoading
-                  ? 'Deleting…'
-                  : `Delete Selected (${selectedIds.size})`}
+                {`Delete Selected (${selectedIds.size}) ?`}
               </button>
             </>
           )}

@@ -31,7 +31,6 @@ function hasMeaningfulValue(value: unknown) {
 
 function getHasUnsavedChanges(params: ListingParameters) {
   const {
-    changed: _changed,
     page: _page,
     ...rest
   } = params;
@@ -56,9 +55,7 @@ type ListingsState = {
 const ListingsStateContext = createContext<ListingsState | null>(null);
 
 export function ListingsStateProvider({ children }: { children: ReactNode }) {
-  const [listingParameters, setRawListingParameters] = useState<ListingParameters>({
-    changed: false,
-  });
+  const [listingParameters, setRawListingParameters] = useState<ListingParameters>({});
 
   const setListingParameters: Dispatch<SetStateAction<ListingParameters>> = useCallback(
     (nextState) => {
@@ -68,19 +65,14 @@ export function ListingsStateProvider({ children }: { children: ReactNode }) {
             ? (nextState as (prevState: ListingParameters) => ListingParameters)(prev)
             : nextState;
 
-        const hasUnsavedChanges = getHasUnsavedChanges(resolvedState);
-
-        return {
-          ...resolvedState,
-          changed: hasUnsavedChanges,
-        };
+        return resolvedState;
       });
     },
     [],
   );
 
 
-  // Track unsaved changes based on the `changed` property in listingParameters
+  // Track unsaved changes based on filter/search params
   const hasUnsavedChangesRef = useRef(false);
   useEffect(() => {
     hasUnsavedChangesRef.current = getHasUnsavedChanges(listingParameters);

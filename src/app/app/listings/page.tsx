@@ -176,7 +176,7 @@ export default function ListingsPage() {
         </Card>
       ) : listings.length === 0 ? (
         <Card className="border border-white/10 bg-[#242424] px-5 py-6 text-white/60">
-          No listings found.
+          No listings found. Please adjust the search and filter criteria.
         </Card>
       ) : (
         <div className="space-y-4">

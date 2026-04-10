@@ -4,6 +4,8 @@ import { getApplicationsForApplicantQuery, getApplicationsForLandlordQuery } fro
 export function mapApplicantApplication(a: Awaited<ReturnType<typeof getApplicationsForApplicantQuery>>[number] ): Application {
     return {
       id: a.id,
+      applicantId: a.userId,
+      landlordId: a.listing.landlordId,
       status: a.status,
       moveInDate: a.moveInDate.toLocaleString(),
       expiryDate: a.expiryDate?.toISOString(),
@@ -21,6 +23,8 @@ export function mapApplicantApplication(a: Awaited<ReturnType<typeof getApplicat
   export function mapLandlordApplication(a:  Awaited<ReturnType<typeof getApplicationsForLandlordQuery>>[number]): Application {
     return {
       id: a.id,
+      applicantId: a.userId,
+      landlordId: a.listing.landlordId,
       status: a.status,
       moveInDate: a.moveInDate.toLocaleString(),
       expiryDate: a.expiryDate?.toISOString(),

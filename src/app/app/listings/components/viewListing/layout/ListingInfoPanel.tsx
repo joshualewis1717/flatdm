@@ -8,6 +8,8 @@ import AmenityList from "../UI/AmenityList";
 import { getListingById } from "../../../prisma/clientServices";
 import { getListingTitle } from "@/app/app/logic/listing";
 import { useAllItemsState } from "../../../state/AllItemsStateProvider";
+import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ErrorMessage from "@/components/shared/ErrorMessage";
 // Panel to display the static listing specific data in full
 
 type ListingInfoPanelProps = {
@@ -56,6 +58,7 @@ function mapCachedListingToListingData(listing: CachedListing): ListingData {
 
 export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
   const [data, setData] = useState<ListingData | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { ListingsResults } = useAllItemsState();
 
@@ -64,7 +67,7 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
     () => ListingsResults.find((listing) => listing.id === numericListingId) ?? null,
     [ListingsResults, numericListingId],
   );
-
+  
   useEffect(() => {
     let isCancelled = false;
 
@@ -86,6 +89,7 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
       if (error) {
         console.error("Failed to fetch listing data:", error);
         setData(null);
+        setError(error);
       } else {
         setData(result);
       }
@@ -100,14 +104,15 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
     };
   }, [cachedListing, listingId]);
 
-  if (loading) return <p className="text-sm text-white/40 p-8">Loading listing…</p>;
-  if (!data)   return <p className="text-sm text-red-400 p-8">Listing not found.</p>;
+  if (loading) return <LoadingSpinner text="Loading listing details…" />;
+  if (error)   return <ErrorMessage text={error} />;
+  if (!data)   return <ErrorMessage text="This listing could not be found." />;
 
   const {  flatNumber, description, rent, lastUpdated,
     bedrooms, bathrooms, maxOccupants, minStay,
     area, totalRooms,  thumbnail, images,
     buildingName, streetName, city, postcode,
-    landlordName, amenities, availableFrom } = data;
+    landlordName, amenities, availableFrom, currentOccupants } = data;
 
   const shared = maxOccupants > 1;// derive shared from max occupants
   const headline = getListingTitle(buildingName, flatNumber)
@@ -115,23 +120,8 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
 
   // combine thumbnail + images for the slider, thumbnail first
   const sliderImages = [
-    ...(thumbnail ? [thumbnail] : []),// TO DO: use a place holder image if thumbnail is somehow empty
+    ...(thumbnail ? [thumbnail] : ['/defaultImage.svg']),
     ...(images ?? []),
-  ];
-
-  // hardcoded roommates for now, in real app this would come from our listing data (occupants relation)
-  const roommates = [
-    { id: 1, name: "Alice Johnson" },
-    { id: 2, name: "Bob Smith" },
-    { id: 3, name: "Charlie Lee" },
-    { id: 4, name: "Diana Chen" },
-    { id: 5, name: "Ethan Davis" },
-    { id: 6, name: "Fiona Garcia" },
-    { id: 7, name: "George Patel" },
-    { id: 8, name: "Hannah Nguyen" },
-    { id: 9, name: "Ian Martinez" },
-    { id: 10, name: "Julia Kim" },
-    { id: 11, name: "Kevin Brown" },
   ];
 
   const stats = [
@@ -188,8 +178,7 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
         <PropertyStatsGrid stats={stats} />
 
         <RoommateProfileList
-          roommates={roommates}
-          onShowMore={() => console.log("Open full roommate list")}
+          roomates={currentOccupants}
         />
 
         {/* Description */}

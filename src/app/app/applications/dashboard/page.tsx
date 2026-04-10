@@ -11,6 +11,8 @@ import { Application } from "../types";
 import { getApplicationsForApplicant, getApplicationsForLandlord, withdrawApplication, updateApplicationStatus, respondToOffer,
 } from "../prisma/clientServices";
 import { useSessionContext } from "@/components/shared/app-frame";
+import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ErrorMessage from "@/components/shared/ErrorMessage";
 // main page for landlords and consultants to see their applications and interact with them in various ways
 
 
@@ -19,16 +21,17 @@ export default function ApplicationDashBoardPage() {
   const {isConsultant, isLandlord} = useSessionContext();
   const [apps, setApps] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
       if (isConsultant) {
         const {result, error} = await getApplicationsForApplicant();
-        if (error) console.error("Failed to load applications:", error);
+        if (error) setError(error);
         else setApps(result ?? []);
       } else if (isLandlord) {
         const { result, error } = await getApplicationsForLandlord();
-        if (error) console.error("Failed to load applications:", error);
+        if (error) setError(error);
         else setApps(result ?? []);
       }
       setLoading(false);
@@ -62,15 +65,15 @@ function confirmAppAndRejectOthers(confirmedId: number){
   async function handleApplicantAction(id: number, action: "accept" | "reject" | "withdraw"){
     if (action === "withdraw") {
       const { error } = await respondToOffer(id, "WITHDRAWN");
-      if (error) console.error("Failed to withdraw:", error);
-      else  updateApp(id, "WITHDRAWN");
+      if (error) setError(error);
+      else updateApp(id, "WITHDRAWN");
     } else if (action === "accept") {
       const { error } = await respondToOffer(id, "CONFIRMED");
-      if (error) console.error("Failed to accept offer:", error);
+      if (error) setError(error);
       else confirmAppAndRejectOthers(id);
     } else if (action === "reject") {
       const { error } = await respondToOffer(id, "REJECTED");
-      if (error) console.error("Failed to reject offer:", error);
+      if (error) setError(error);
       else updateApp(id, "REJECTED");
     }
   };
@@ -78,16 +81,16 @@ function confirmAppAndRejectOthers(confirmedId: number){
   async function handleLandlordAction (id: number, action: "accept" | "reject"){
     if (action === "accept") {
       const { error } = await updateApplicationStatus(id, "APPROVED");
-      if (error) console.error("Failed to approve application:", error);
+      if (error) setError(error);
       else updateApp(id, "APPROVED");
     } else {
       const { error } = await updateApplicationStatus(id, "REJECTED");
-      if (error) console.error("Failed to reject application:", error);
+      if (error) setError(error);
       else updateApp(id, "REJECTED");
     }
   };
 
-  if (loading) return <p className="text-sm text-white/40 p-8">Loading applications…</p>;
+  if (loading) return <LoadingSpinner text="Loading your applications…" />;
 
   //consultant view
   const appOffers    = apps.filter(a => a.status === "APPROVED");
@@ -117,6 +120,9 @@ function confirmAppAndRejectOthers(confirmedId: number){
               : "Track your applications, respond to offers, and manage your next move."}
           </p>
         </div>
+
+        {/* Action-level error banner, shown when an accept/reject/withdraw action fails */}
+        {error && <ErrorMessage text={error} />}
 
         {/* ── APPLICANT VIEW ── */}
         {isConsultant && (
