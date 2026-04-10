@@ -176,11 +176,6 @@ export type ListingReview = {
 export type ListingParameters = Record<string, unknown> & {
   //
   //
-  // Meta parameter
-  changed: boolean;
-  
-  //
-  //
   // Filters
   rent_min?: number;
   rent_max?: number;

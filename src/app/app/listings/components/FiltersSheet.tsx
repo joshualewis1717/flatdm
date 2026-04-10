@@ -43,7 +43,7 @@ export default function FiltersSheet({
 
   // Reset Draft Filters
   const resetFilters = () => {
-    setDraftFilters({ changed: false });
+    setDraftFilters({});
   };
 
   // Apply Draft Filters
@@ -55,7 +55,6 @@ export default function FiltersSheet({
         page: 1,
         sort_by: listingParameters.sort_by,
         sort_order: listingParameters.sort_order,
-        changed: listingParameters.changed,
         distance_to_location: listingParameters.distance_to_location,
         location_lat: listingParameters.location_lat,
         location_lng: listingParameters.location_lng,

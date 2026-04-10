@@ -27,7 +27,7 @@ const SORT_OPTIONS: Array<{
 ];
 
 function hasActiveFilters(listingParameters: ListingParameters): boolean {
-  const { changed, sort_by, sort_order, distance_to_location, location_lat, location_lng, page, search, ...filtered } = listingParameters;
+  const { sort_by, sort_order, distance_to_location, location_lat, location_lng, page, search, ...filtered } = listingParameters;
   return Object.values(filtered).some((value) => value !== undefined);
 }
 
@@ -179,7 +179,7 @@ function FiltersButton({ onClick, hasFilters }: { onClick: () => void; hasFilter
       onClick={onClick}
       className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 py-2.5 text-[13px] backdrop-blur-xl transition-colors sm:w-auto ${
         hasFilters
-          ? "bg-[#c9fb00]/10 border-[#c9fb00]/25 hover:bg-[#c9fb00]/15 border-white/13 hover:border-white/25 hover:text-[#c9fb00]"
+          ? "bg-[#c9fb00]/10 border-[#c9fb00]/25 hover:bg-[#c9fb00]/15 hover:border-white/25 hover:text-[#c9fb00]"
           : "border-white/13 bg-[#2a2a2a]/70 text-white/80 hover:border-white/25 hover:bg-[#343434]/75 hover:text-white focus-visible:border-[#c9fb00]"
       }`}
     >
