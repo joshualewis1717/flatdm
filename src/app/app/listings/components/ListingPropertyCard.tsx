@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Bath, BedDouble, CalendarDays, ChevronLeft, ChevronRight, Clock3, Home, ImageIcon, MapPin, Users } from "lucide-react";
+import { Bath, BedDouble, CalendarDays, ChevronLeft, ChevronRight, Clock3, Dumbbell, Home, ImageIcon, MapPin, Shapes, Stethoscope, TrainFront, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 function formatCurrency(value: number) {
@@ -25,6 +25,27 @@ function getSharedLabel(maxOccupants: number) {
   }
 
   return "Private";
+}
+
+function getAmenityTypeIcon(type: string) {
+  switch (type) {
+    case "HEALTHCARE":
+      return <Stethoscope className="h-3.5 w-3.5 text-[#c9fb00]" aria-hidden="true" />;
+    case "TRANSPORT":
+      return <TrainFront className="h-3.5 w-3.5 text-[#c9fb00]" aria-hidden="true" />;
+    case "RECREATIONAL":
+      return <Dumbbell className="h-3.5 w-3.5 text-[#c9fb00]" aria-hidden="true" />;
+    default:
+      return <Shapes className="h-3.5 w-3.5 text-[#c9fb00]" aria-hidden="true" />;
+  }
+}
+
+function capitalizeFirstLetter(value: string) {
+  if (!value) {
+    return "";
+  }
+
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 type ListingPropertyCardProps = {
@@ -202,9 +223,10 @@ export default function ListingPropertyCard({ listing, href }: ListingPropertyCa
                 nearbyAmenities.map((amenity: any) => (
                   <span
                     key={amenity.id}
-                    className="rounded-full border border-white/10 bg-[#1c1c1c] px-2.5 py-1 text-[11px] text-white/70"
+                    className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-[#1c1c1c] px-1.75 py-1 text-[11px] text-white/70"
                   >
-                    {amenity.name}
+                    {getAmenityTypeIcon(amenity.type)}
+                    {capitalizeFirstLetter(amenity.name)}
                   </span>
                 ))
               ) : (
