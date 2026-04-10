@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { Building2, FileText, Home, LogOut, MessageSquare, User, UserRound, X, Fence } from "lucide-react";
@@ -18,8 +19,7 @@ type AppSidebarProps = {
 const navigation = [
   { href: "/app", label: "Overview", icon: Home },
   { href: "/app/listings", label: "Listings", icon: Building2 },
-  { href: "/app/listings/my-properties", label: "Your Listings", icon: Fence },
-  { href: "/app/applications/dashboard", label: "Applications", icon: FileText },
+  { href: "/app/applications", label: "Applications", icon: FileText },
   { href: "/app/messages", label: "Messages", icon: MessageSquare },
   { href: "/app/profile", label: "Profile", icon: UserRound },
 ];
@@ -28,13 +28,11 @@ const navigation = [
 export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
   const pathname = usePathname();
   const displayRole = role ? role.charAt(0) + role.slice(1).toLowerCase() : "Workspace";
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const initial = (name ?? displayRole ?? "U").slice(0, 1).toUpperCase();
   const {isLandlord} = useSessionContext();
 
-  async function handleSignOut() {
-    setIsSigningOut(true);
-    await signOut({ callbackUrl: "/login" });
-  }
+  async function handleSignOut() { setIsSigningOut(true); await signOut({ callbackUrl: "/login" });}
 
   // your listing button 7690is only visisble to landlords
   const filteredNavigation = navigation.filter((item) => {
@@ -77,11 +75,9 @@ export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
 
         <nav className="mt-8 space-y-2">
           {filteredNavigation.map((item) => {
-           const isActive =
-           pathname === item.href ||
-           (item.href !== "/app" &&
-             pathname.startsWith(item.href) &&
-             !pathname.startsWith(item.href + "/"));
+            const isActive =
+              pathname === item.href || 
+              (item.href !== "/app" && pathname.startsWith(item.href) && !pathname.startsWith(item.href + "/"));
             const Icon = item.icon;
 
             return (
@@ -114,17 +110,15 @@ export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
               <p className="text-xs text-white/55">{displayRole}</p>
 
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <Button asChild variant="outline" size="sm" className="min-w-0 px-2">
-                  <Link href="/app/profile" onClick={onClose}>
-                    <User className="size-3.5" />
-                    Profile
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="sm" className="min-w-0 px-2">
-                  <Link href="/logout" onClick={onClose}>
-                    <LogOut className="size-3.5" />
-                    Sign out
-                  </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-w-0 px-2"
+                  onClick={handleSignOut}
+                  disabled={isSigningOut}
+                >
+                  <LogOut className="size-3.5" />
+                  {isSigningOut ? "Signing out..." : "Sign out"}
                 </Button>
               </div>
             </div>
