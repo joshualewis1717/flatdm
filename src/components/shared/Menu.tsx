@@ -19,7 +19,8 @@ type AppSidebarProps = {
 const navigation = [
   { href: "/app", label: "Overview", icon: Home },
   { href: "/app/listings", label: "Listings", icon: Building2 },
-  { href: "/app/applications", label: "Applications", icon: FileText },
+  { href: "/app/listings/my-properties", label: "Your Listings", icon: Fence },
+  { href: "/app/applications/dashboard", label: "Applications", icon: FileText },
   { href: "/app/messages", label: "Messages", icon: MessageSquare },
   { href: "/app/profile", label: "Profile", icon: UserRound },
 ];
@@ -32,7 +33,10 @@ export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
   const initial = (name ?? displayRole ?? "U").slice(0, 1).toUpperCase();
   const {isLandlord} = useSessionContext();
 
-  async function handleSignOut() { setIsSigningOut(true); await signOut({ callbackUrl: "/login" });}
+  async function handleSignOut() {
+    setIsSigningOut(true);
+    await signOut({ callbackUrl: "/login" });
+  }
 
   // your listing button 7690is only visisble to landlords
   const filteredNavigation = navigation.filter((item) => {
@@ -75,9 +79,11 @@ export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
 
         <nav className="mt-8 space-y-2">
           {filteredNavigation.map((item) => {
-            const isActive =
-              pathname === item.href || 
-              (item.href !== "/app" && pathname.startsWith(item.href) && !pathname.startsWith(item.href + "/"));
+           const isActive =
+           pathname === item.href ||
+           (item.href !== "/app" &&
+             pathname.startsWith(item.href) &&
+             !pathname.startsWith(item.href + "/"));
             const Icon = item.icon;
 
             return (
@@ -117,7 +123,7 @@ export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
                   onClick={handleSignOut}
                   disabled={isSigningOut}
                 >
-                  <LogOut className="size-3.5" />
+                    <LogOut className="size-3.5" />
                   {isSigningOut ? "Signing out..." : "Sign out"}
                 </Button>
               </div>
