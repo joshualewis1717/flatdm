@@ -18,14 +18,6 @@ export default async function ReportPage({ params } : { params: Promise<{id: num
   // set the target and reporter users to use later
   let target = await getUser({userId:report['targetUserID']});
   let reporter = await getUser({userId:report['reporterId']});
-  // for (let i = 0; i < users.length; i++){             // iterate through all users to get to target and reporter user ids
-  //     if (users[i]['id'] == report['targetUserId']){
-  //       target = users[i];
-  //     }
-  //     else if (users[i]['id'] == report['reporterId']){
-  //       reporter = users[i];
-  //     }
-  // }
 
   return <SelectedReportClient report={report} target={target} reporter={reporter} />
 }

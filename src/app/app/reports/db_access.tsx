@@ -101,6 +101,7 @@ async function rawDeleteReview({reviewId} : {reviewId : number}){
     return;
 }
 
+
 // delete all reviews written by this user or about this user
 async function rawDeleteReviewByUser({userId} : {userId : number}){
     try{
@@ -156,6 +157,25 @@ export const addOffence: ConfirmFunction = async ({ user, text }) => {
 
     return;
 }
+
+// change the severity of a report
+export async function changeReportSeverity({reportId, newSeverity}){
+
+    try{
+        await prisma.report.update({
+            where: {id: reportId},
+            data: {severity: newSeverity}
+        });
+ 
+    }
+    catch (error){
+        console.error("error occured: " + error.message);
+    }
+
+    return;
+}
+
+
 
 // change the status of a report
 export async function changeReportStatus({reportId, newStatus}){
@@ -339,15 +359,12 @@ export async function deleteUser({user} : User){
     return;
 }
 
-export async function deleteReview({review} : Review){
-    // make sure we actually want to delete this
-    const ok = window.confirm(`Delete Review ${review['comment']}? This cannot be undone.`);
-    if (!ok) return;
+export async function deleteReview({ review }: Review) {
+    await rawDeleteReview({ reviewId: review.id });
+    return;
+}
 
-    rawDeleteReview({reviewId:review.id});
-
-    // confirm in logs
-    console.log("deleted review with id: " + review.id);
-    
+export async function deleteReviewById({ reviewId }: { reviewId: number }) {
+    await rawDeleteReview({ reviewId: reviewId });
     return;
 }
