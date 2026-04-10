@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { sendMagicLinkEmail } from "@/lib/magic-links";
 import { Role } from "@prisma/client";
 import { hash } from "bcrypt";
 import { NextResponse } from "next/server";
@@ -56,10 +57,36 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.create({
       data: { firstName, lastName, username, email, passwordHash, role: selectedRole },
-      select: { id: true, firstName: true, lastName: true, username: true, email: true, role: true },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        username: true,
+        email: true,
+        role: true,
+        emailVerified: true,
+      },
     });
 
-    return NextResponse.json({ success: true, user }, { status: 201 });
+    const magicLinkResult = await sendMagicLinkEmail({
+      user,
+      type: "EMAIL_VERIFICATION",
+      requestUrl: req.url,
+    }).catch((error: unknown) => ({
+      error: error instanceof Error ? error.message : "Failed to send verification email",
+    }));
+
+    return NextResponse.json({
+      success: true,
+      user,
+      requiresEmailVerification: true,
+      verificationEmailSent: !("error" in magicLinkResult),
+      verificationEmailError: "error" in magicLinkResult ? magicLinkResult.error : undefined,
+      previewUrl: "previewUrl" in magicLinkResult ? magicLinkResult.previewUrl : undefined,
+      verificationLink: process.env.NODE_ENV === "production" || !("link" in magicLinkResult)
+        ? undefined
+        : magicLinkResult.link,
+    }, { status: 201 });
   } catch {
     return NextResponse.json({ success: false, error: "failed to register user" }, { status: 500 });
   }

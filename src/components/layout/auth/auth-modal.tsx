@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, SyntheticEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -19,6 +19,12 @@ type AuthFormState = {
   password: string;
   confirmPassword: string;
   username: string;
+};
+
+type NoticeState = {
+  tone: "info" | "success";
+  message: string;
+  verificationLink?: string;
 };
 
 const initialFormState: AuthFormState = {
@@ -55,17 +61,45 @@ export default function AuthModal({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [formState, setFormState] = useState<AuthFormState>(() => ({ ...initialFormState }));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState<NoticeState | null>(null);
 
   const updateField = <K extends keyof AuthFormState>(field: K, value: AuthFormState[K]) =>
     setFormState((current) => ({ ...initialFormState, ...current, [field]: value }));
-  
+
+  async function sendVerificationEmail(email: string) {
+    const response = await fetch("/api/auth/magic-links/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        type: "EMAIL_VERIFICATION",
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      setError(payload?.error ?? "Failed to send verification email");
+      return false;
+    }
+
+    setNotice({
+      tone: "info",
+      message: payload?.message ?? "Verification email sent",
+      verificationLink: payload?.link,
+    });
+    return true;
+  }
+
   async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setNotice(null);
 
     if (authMode === "register" && formState.password !== formState.confirmPassword) {
       setError("Passwords do not match");
@@ -93,6 +127,22 @@ export default function AuthModal({
         setIsSubmitting(false);
         return;
       }
+
+      const payload = await registerResponse.json().catch(() => ({}));
+      setNotice({
+        tone: "success",
+        message: payload?.verificationEmailSent === false
+          ? "Account created. Verification email could not be sent automatically, so use resend below before signing in."
+          : "Account created. Check your inbox and verify your email before accessing the app.",
+        verificationLink: payload?.verificationLink,
+      });
+      setFormState((current) => ({
+        ...current,
+        password: "",
+        confirmPassword: "",
+      }));
+      setIsSubmitting(false);
+      return;
     }
 
     const signInResult = await signIn("credentials", {
@@ -117,6 +167,24 @@ export default function AuthModal({
   }
 
   if (!visible) return null;
+
+  const verified = searchParams.get("verified");
+  const verifiedReason = searchParams.get("reason");
+  const loginNotice = authMode === "login"
+    ? verified === "1"
+      ? { tone: "success" as const, message: "Email verified. You can log in and access your account now." }
+      : verified === "0"
+        ? {
+            tone: "info" as const,
+            message: verifiedReason === "expired"
+              ? "That verification link has expired. Log in and request a new one."
+              : verifiedReason === "used"
+                ? "That verification link has already been used. Try logging in."
+                : "That verification link is no longer valid. Log in and request a new one.",
+          }
+        : null
+    : null;
+  const activeNotice = notice ?? loginNotice;
 
   //password validation
   const passwordHas2Numbers = (formState.password.match(/\d/g) || []).length >= 2;
@@ -193,10 +261,28 @@ export default function AuthModal({
             </div>
 
             {error ? (
-                <p className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200 mb-4">
-                  {error}
-                </p>
-              ) : null}
+              <p className="mb-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                {error}
+              </p>
+            ) : null}
+
+            {activeNotice ? (
+              <div className={`mb-4 rounded-2xl px-4 py-3 text-sm ${
+                activeNotice.tone === "success"
+                  ? "border border-green-500/30 bg-green-500/10 text-green-100"
+                  : "border border-primary/20 bg-primary/10 text-foreground"
+              }`}>
+                <p>{activeNotice.message}</p>
+                {activeNotice.verificationLink ? (
+                  <p className="mt-2">
+                    Dev link:{" "}
+                    <Link href={activeNotice.verificationLink} className="underline underline-offset-4">
+                      verify this email
+                    </Link>
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {authMode === "register" ? (
@@ -396,6 +482,19 @@ export default function AuthModal({
                   (authMode === "register" ? "Register" : "Login")
                 }
               </Button>
+
+              {authMode === "register" && notice ? (
+                <Button
+                  type="button"
+                  size="lg"
+                  variant="outline"
+                  className="h-12 w-full rounded-2xl text-sm font-semibold"
+                  onClick={() => sendVerificationEmail(formState.email)}
+                  disabled={isSubmitting || !formState.email}
+                >
+                  Resend verification email
+                </Button>
+              ) : null}
             </form>
           </CardContent>
         </div>

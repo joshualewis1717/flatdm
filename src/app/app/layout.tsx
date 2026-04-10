@@ -10,10 +10,9 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-  console.log("session is", session)
 
   if (!session?.user) redirect("/login");
-  
+  if (!session.user.emailVerified) redirect("/verify-email");
 
   return (
     <AppFrame

@@ -15,6 +15,10 @@ export async function requireUser() {
     throw new Error("Invalid user id");
   }
 
+  if (!session.user.emailVerified) {
+    throw new Error("Email not verified");
+  }
+
   return {
     ...session.user,
     id: userId, // convert into number for prisma indexes
