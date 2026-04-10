@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BedDouble, Bath, Users, Ruler, CalendarClock, Clock } from "lucide-react";
 import ImageSlider from "../UI/ImageSlider";
 import PropertyStatsGrid from "../UI/PropertyStatsGrid";
@@ -7,6 +7,7 @@ import RoommateProfileList from "../UI/RoomateProfileList";
 import AmenityList from "../UI/AmenityList";
 import { getListingById } from "../../../prisma/clientServices";
 import { getListingTitle } from "@/app/app/logic/listing";
+import { useAllItemsState } from "../../../state/AllItemsStateProvider";
 // Panel to display the static listing specific data in full
 
 type ListingInfoPanelProps = {
@@ -15,20 +16,89 @@ type ListingInfoPanelProps = {
 
 type ListingData = NonNullable<Awaited<ReturnType<typeof getListingById>>["result"]>;
 
+type CachedListing = ReturnType<typeof useAllItemsState>["ListingsResults"][number];
+
+function mapCachedListingToListingData(listing: CachedListing): ListingData {
+  const thumbnail = listing.images.find((img) => img.isThumbnail) ?? null;
+
+  return {
+    propertyId: listing.propertyId,
+    id: listing.id,
+    flatNumber: listing.flatNumber ?? null,
+    description: listing.description,
+    rent: listing.rent,
+    availableFrom: null,
+    totalRooms: listing.rooms,
+    bedrooms: listing.bedrooms,
+    bathrooms: listing.bathrooms,
+    maxOccupants: listing.maxOccupants,
+    area: listing.area,
+    minStay: listing.minStay,
+    lastUpdated: new Date(listing.updatedAt),
+    thumbnail: thumbnail ? `/api/images/${thumbnail.id}` : null,
+    images: listing.images
+      .filter((img) => !img.isThumbnail)
+      .map((img) => `/api/images/${img.id}`),
+    buildingName: listing.property.title,
+    streetName: listing.property.streetName,
+    city: listing.property.city,
+    postcode: listing.property.postcode,
+    landlordName: "Landlord",
+    amenities: listing.property.amenities.map((amenity) => ({
+      id: `cached-amenity-${amenity.id}`,
+      dbId: amenity.id,
+      name: amenity.name,
+      type: amenity.type,
+      distance: amenity.distance ?? -1,
+    })),
+  };
+}
+
 export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
   const [data, setData] = useState<ListingData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { ListingsResults } = useAllItemsState();
+
+  const numericListingId = Number(listingId);
+  const cachedListing = useMemo(
+    () => ListingsResults.find((listing) => listing.id === numericListingId) ?? null,
+    [ListingsResults, numericListingId],
+  );
 
   useEffect(() => {
+    let isCancelled = false;
+
     const fetchData = async () => {
+      setLoading(true);
+
+      if (cachedListing) {
+        setData(mapCachedListingToListingData(cachedListing));
+        setLoading(false);
+        return;
+      }
+
       const { result, error } = await getListingById(listingId);
-      if (error) console.error("Failed to fetch listing data:", error);
-      else setData(result);
+
+      if (isCancelled) {
+        return;
+      }
+
+      if (error) {
+        console.error("Failed to fetch listing data:", error);
+        setData(null);
+      } else {
+        setData(result);
+      }
+
       setLoading(false);
     };
 
     fetchData();
-  }, [listingId]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [cachedListing, listingId]);
 
   if (loading) return <p className="text-sm text-white/40 p-8">Loading listing…</p>;
   if (!data)   return <p className="text-sm text-red-400 p-8">Listing not found.</p>;

@@ -1,14 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
+import Link from "next/link";
 
-export default function LoginBanner({
-    onLoginClick,
-    onRegisterClick,
-}:{
-    onLoginClick: () => void;
-    onRegisterClick: () => void;
-}) {
+export default function LoginBanner() {
     return (
         <Card className="rounded-2xl border-border/80 bg-card/70 p-4 backdrop-blur-xl">
           <CardContent className="flex items-center justify-between px-0">
@@ -27,8 +22,12 @@ export default function LoginBanner({
               </div>
             </div>
             <nav className="flex items-center gap-3">
-              <Button variant="outline" className="h-9 px-4" onClick={onLoginClick}>Login</Button>
-              <Button className="h-9 px-4" onClick={onRegisterClick}>Get Started</Button>
+              <Button asChild variant="outline" className="h-9 px-4">
+                <Link href="/login">Login</Link>
+              </Button>
+              <Button asChild className="h-9 px-4">
+                <Link href="/register">Get Started</Link>
+              </Button>
             </nav>
           </CardContent>
         </Card>

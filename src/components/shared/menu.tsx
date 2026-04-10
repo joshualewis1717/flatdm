@@ -1,9 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
 import { Building2, FileText, Home, LogOut, MessageSquare, User, UserRound, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -28,13 +26,7 @@ const navigation = [
 export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
   const pathname = usePathname();
   const displayRole = role ? role.charAt(0) + role.slice(1).toLowerCase() : "Workspace";
-  const [isSigningOut, setIsSigningOut] = useState(false);
   const initial = (name ?? displayRole ?? "U").slice(0, 1).toUpperCase();
-
-  async function handleSignOut() {
-    setIsSigningOut(true);
-    await signOut({ callbackUrl: "/login" });
-  }
 
   return (
     <>
@@ -110,15 +102,11 @@ export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
                     Profile
                   </Link>
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="min-w-0 px-2"
-                  onClick={handleSignOut}
-                  disabled={isSigningOut}
-                >
-                  <LogOut className="size-3.5" />
-                  {isSigningOut ? "Signing out..." : "Sign out"}
+                <Button asChild variant="outline" size="sm" className="min-w-0 px-2">
+                  <Link href="/logout" onClick={onClose}>
+                    <LogOut className="size-3.5" />
+                    Sign out
+                  </Link>
                 </Button>
               </div>
             </div>

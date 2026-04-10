@@ -88,3 +88,18 @@ export async function querySoftDeleteListing(listingId: number, landlordId: numb
     data: { isDeleted: true },
   });
 }
+
+export async function queryAllListings() {
+  const listings = await prisma.propertyListing.findMany({
+    include: {
+      images: true,
+      property: {
+        include: {
+          amenities: true,
+        },
+      },
+    },
+  });
+  
+  return listings;
+}

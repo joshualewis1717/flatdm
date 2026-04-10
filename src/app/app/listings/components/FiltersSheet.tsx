@@ -49,13 +49,20 @@ export default function FiltersSheet({
   // Apply Draft Filters
   const applyFilters = () => {
     if (draftFilters != listingParameters) {
-      setListingParameters((prev) => ({
-        ...prev,
-        ...Object.fromEntries(
-          Object.entries(draftFilters).filter(([, value]) => value !== undefined)
-        ), // (removes undefined key-value pairs)
-      }));
+      console.log("CHANGING, df: ", draftFilters)
+      setListingParameters({
+        ...draftFilters,
+        page: 1,
+        sort_by: listingParameters.sort_by,
+        sort_order: listingParameters.sort_order,
+        changed: listingParameters.changed,
+        distance_to_location: listingParameters.distance_to_location,
+        location_lat: listingParameters.location_lat,
+        location_lng: listingParameters.location_lng,
+        search: listingParameters.search,
+      });
     }
+    onOpenChange(false);
   }
 
   return (
