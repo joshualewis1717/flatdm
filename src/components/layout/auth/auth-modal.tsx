@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Check, X } from "lucide-react";
 
 type AuthMode = "login" | "register";
-type RegisterRole = "CONSULTANT" | "LANDLORD" | "MODERATOR";
+type RegisterRole = "CONSULTANT" | "LANDLORD";
 
 type AuthFormState = {
   firstName: string;
@@ -19,7 +19,6 @@ type AuthFormState = {
   password: string;
   confirmPassword: string;
   username: string;
-  role: RegisterRole;
 };
 
 const initialFormState: AuthFormState = {
@@ -29,8 +28,22 @@ const initialFormState: AuthFormState = {
   password: "",
   confirmPassword: "",
   username: "",
-  role: "CONSULTANT",
 };
+
+function getRegisterRoleFromEmail(email: string): RegisterRole | null {
+  const normalizedEmail = email.trim().toLowerCase();
+  const [, domain = ""] = normalizedEmail.split("@");
+
+  if (!domain) return null;
+
+  return domain.split(".")[0] === "gmail" ? "CONSULTANT" : "LANDLORD";
+}
+
+function formatRegisterRole(role: RegisterRole | null) {
+  if (role === "CONSULTANT") return "Consultant";
+  if (role === "LANDLORD") return "Landlord";
+  return null;
+}
 
 export default function AuthModal({
   visible,
@@ -71,7 +84,6 @@ export default function AuthModal({
           username: formState.username,
           email: formState.email,
           password: formState.password,
-          role: formState.role,
         }),
       });
 
@@ -111,6 +123,8 @@ export default function AuthModal({
   const passwordHasSpecialChar = /[!@#$%^&*(),.?":{}|<>£{}]/.test(formState.password);
   const passwordsMatch = formState.password === formState.confirmPassword;
   const passwordValid = formState.password.length >= 8 && passwordHas2Numbers && passwordHasSpecialChar && passwordsMatch;
+
+  const inferredRegisterRole = getRegisterRoleFromEmail(formState.email);
 
   //just a few tailwind string classes that are reusable and got a lil long
   const formInput: string = "h-12 w-full rounded-2xl border border-border/80 bg-card/70 px-4 text-sm text-foreground outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
@@ -273,6 +287,20 @@ export default function AuthModal({
                 />
               </div>
 
+              {authMode === "register" && inferredRegisterRole ? (
+                <div className="rounded-2xl border border-primary/20 bg-primary/10 px-4 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/80">
+                    {inferredRegisterRole === "CONSULTANT" ? "FDM address" : "Non-FDM address"}
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-foreground">
+                    Registering as a {formatRegisterRole(inferredRegisterRole)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Please note for demonstration purposes, we pretend gmail addresses are of the FDM domain.
+                  </p>
+                </div>
+              ) : null}
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
                   <label
@@ -358,28 +386,6 @@ export default function AuthModal({
                       </div>
                     </div>
                   )}
-                </div>
-              ) : null}
-
-              {authMode === "register" ? (
-                <div className="space-y-2">
-                  <label
-                    htmlFor="auth-role"
-                    className="text-sm font-medium text-foreground"
-                  >
-                    Role
-                  </label>
-                  <select
-                    id="auth-role"
-                    name="role"
-                    value={formState.role ?? "CONSULTANT"}
-                    onChange={(event) =>  updateField("role", event.target.value as RegisterRole)}
-                    className={formInput}
-                  >
-                    <option value="CONSULTANT">Consultant</option>
-                    <option value="LANDLORD">Landlord</option>
-                    <option value="MODERATOR">Moderator</option>
-                  </select>
                 </div>
               ) : null}
 

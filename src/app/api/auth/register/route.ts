@@ -3,7 +3,10 @@ import { Role } from "@prisma/client";
 import { hash } from "bcrypt";
 import { NextResponse } from "next/server";
 
-const ALLOWED_ROLES: Role[] = [Role.CONSULTANT, Role.LANDLORD, Role.MODERATOR];
+function getRegisterRoleFromEmail(email: string): Role {
+  const [, domain = ""] = email.trim().toLowerCase().split("@");
+  return domain.split(".")[0] === "gmail" ? Role.CONSULTANT : Role.LANDLORD;
+}
 
 export async function POST(req: Request) {
   try {
@@ -13,7 +16,6 @@ export async function POST(req: Request) {
     const username = body?.username?.trim();
     const email = body?.email?.trim()?.toLowerCase();
     const password = body?.password;
-    const role = body?.role;
 
     if (!firstName || !lastName || !username || !email || !password) 
       return NextResponse.json({ success: false, error: "All fields are required" }, { status: 400 });
@@ -37,7 +39,7 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     
-    const selectedRole: Role = ALLOWED_ROLES.includes(role) && typeof role === "string" ? (role as Role) : Role.CONSULTANT;
+    const selectedRole = getRegisterRoleFromEmail(email);
 
     const existingUser = await prisma.user.findFirst({
       where: { OR: [{ email }, { username }] },
