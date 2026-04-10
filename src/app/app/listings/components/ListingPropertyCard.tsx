@@ -39,7 +39,7 @@ export default function ListingPropertyCard({ listing, href }: ListingPropertyCa
 }
 
 function PropertyCardThumbnails({ listing, headline }: { listing: any; headline: string }) {
-  const isAvailableNow = listing.availableFrom <= new Date();
+  const isAvailableNow = getAvailabilityState(listing.availableFrom);
   const imageUrls = useMemo(() => {
     const images = Array.isArray(listing.images) ? listing.images : [];
     const sorted = [...images].sort((a: any, b: any) => Number(b.isThumbnail) - Number(a.isThumbnail));
@@ -119,7 +119,9 @@ function PropertyCardThumbnails({ listing, headline }: { listing: any; headline:
         </>
       ) : null}
 
-      <PropertyCardAvailabilityBadge isAvailableNow={isAvailableNow} />
+      {isAvailableNow !== null ? (
+        <PropertyCardAvailabilityBadge isAvailableNow={isAvailableNow} />
+      ) : null}
     </div>
   );
 }
@@ -138,7 +140,7 @@ function PropertyCardAvailabilityInfo({
   maxOccupants,
   area,
 }: {
-  availableFrom: Date;
+  availableFrom: Date | string | null | undefined;
   updatedAt: Date;
   maxOccupants: number;
   area?: number;
@@ -147,7 +149,7 @@ function PropertyCardAvailabilityInfo({
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/45">
       <span className="flex items-center gap-1.5 text-white/70">
         <CalendarDays className="h-3.5 w-3.5" />
-        Available {formatDate(availableFrom)}
+        Available {availableFrom ? formatDate(availableFrom) : "N/A"}
       </span>
       <span className="flex items-center gap-1.5">
         <Clock3 className="h-3.5 w-3.5" />
@@ -261,12 +263,31 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-function formatDate(value: Date) {
+function formatDate(value: Date | string) {
   return new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
     month: "short",
     year: "numeric",
-  }).format(value);
+  }).format(new Date(value));
+}
+
+function getAvailabilityState(value: Date | string | null | undefined): boolean | null {
+  if (!value) {
+    return null;
+  }
+
+  const availableDate = new Date(value);
+  if (Number.isNaN(availableDate.getTime())) {
+    return null;
+  }
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const availableStart = new Date(availableDate);
+  availableStart.setHours(0, 0, 0, 0);
+
+  return availableStart <= todayStart;
 }
 
 function getSharedLabel(maxOccupants: number) {
