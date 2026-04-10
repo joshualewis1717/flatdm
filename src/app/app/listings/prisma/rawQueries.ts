@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import 'server-only'
 import { AmenityUI, PropertyListingForm } from "../types";
+import { FurnishedType } from "@prisma/client";
 type PrismaTx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
 // raw prisma queries for listings
@@ -190,6 +191,7 @@ export async function queryUpdateListing(
     maxOccupants: number;
     minStay: number;
     propertyId: number;
+    furnished_type: FurnishedType
   }
 ) {
   return tx.propertyListing.update({
