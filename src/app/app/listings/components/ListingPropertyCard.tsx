@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Bath, BedDouble, CalendarDays, ChevronLeft, ChevronRight, Clock3, Dumbbell, Home, ImageIcon, MapPin, Shapes, Stethoscope, TrainFront, Users } from "lucide-react";
+import { Bath, BedDouble, CalendarDays, ChevronLeft, ChevronRight, Clock3, Dumbbell, Home, ImageIcon, MapPin, Shapes, Armchair, Stethoscope, TrainFront, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { getListingTitle } from "@/app/app/logic/listing";
 
 //
 // Helper components and functions at end of file, after main component
@@ -13,7 +14,8 @@ type ListingPropertyCardProps = {
 };
 
 export default function ListingPropertyCard({ listing, href }: ListingPropertyCardProps) {
-  const headline = listing.flatNumber ? `Flat ${listing.flatNumber}` : `Listing ${listing.id}`;
+  const buildingName = listing?.property?.title ?? listing?.property?.buildingName ?? `Listing ${listing.id}`;
+  const headline = getListingTitle(buildingName, listing?.flatNumber ?? null);
   const nearbyAmenities = listing.property.amenities.slice(0, 3);
 
   return (
@@ -139,11 +141,13 @@ function PropertyCardAvailabilityInfo({
   updatedAt,
   maxOccupants,
   area,
+  furnishedLevel,
 }: {
   availableFrom: Date | string | null | undefined;
   updatedAt: Date;
   maxOccupants: number;
   area?: number;
+  furnishedLevel?: string | null;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/45">
@@ -163,6 +167,10 @@ function PropertyCardAvailabilityInfo({
         <Home className="h-3.5 w-3.5" />
         Area {typeof area === "number" ? `${area} m²` : "N/A"}
       </span>
+      <span className="flex items-center gap-1.5">
+        <Armchair className="h-3.5 w-3.5" />
+        {formatFurnishedLevel(furnishedLevel)}
+      </span>
     </div>
   );
 }
@@ -180,6 +188,7 @@ function PropertyCardTitleAvailabilityRent({ listing, headline }: { listing: any
           updatedAt={listing.updatedAt}
           maxOccupants={listing.maxOccupants}
           area={area}
+          furnishedLevel={listing.furnished_type}
         />
       </div>
 
@@ -296,6 +305,19 @@ function getSharedLabel(maxOccupants: number) {
   }
 
   return "Private";
+}
+
+function formatFurnishedLevel(value: string | null | undefined) {
+  switch (value) {
+    case "FULLY_FURNISHED":
+      return "Fully Furnished";
+    case "PART_FURNISHED":
+      return "Partly Furnished";
+    case "UNFURNISHED":
+      return "Not Furnished";
+    default:
+      return "N/A";
+  }
 }
 
 function getAmenityTypeIcon(type: string) {

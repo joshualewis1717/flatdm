@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState } from "react";
-import { BedDouble, Bath, Users, Ruler, CalendarClock, Clock, ShelvingUnit } from "lucide-react";
+import { BedDouble, Bath, Users, Ruler, CalendarClock, Clock, Armchair } from "lucide-react";
 import ImageSlider from "../UI/ImageSlider";
 import PropertyStatsGrid from "../UI/PropertyStatsGrid";
 import RoommateProfileList from "../UI/RoomateProfileList";
@@ -30,7 +30,7 @@ function mapCachedListingToListingData(listing: CachedListing): ListingData {
     flatNumber: listing.flatNumber ?? null,
     description: listing.description,
     rent: listing.rent,
-    availableFrom: null,// TO DO: fix this
+    availableFrom: listing.availableFrom,
     totalRooms: listing.rooms,
     bedrooms: listing.bedrooms,
     bathrooms: listing.bathrooms,
@@ -47,7 +47,7 @@ function mapCachedListingToListingData(listing: CachedListing): ListingData {
     streetName: listing.property.streetName,
     city: listing.property.city,
     postcode: listing.property.postcode,
-    landlordName: "Landlord",
+    landlordName: listing.property.landlord.username,
     amenities: listing.property.amenities.map((amenity) => ({
       id: `cached-amenity-${amenity.id}`,
       dbId: amenity.id,
@@ -138,7 +138,7 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
     { icon: <BedDouble    className="w-4 h-4" />, label: "Rooms",         value: totalRooms },
     { icon: <Bath         className="w-4 h-4" />, label: "Bathrooms",     value: bathrooms },
     { icon: <BedDouble    className="w-4 h-4" />, label: "Bedrooms",      value: bedrooms },
-    {icon: <ShelvingUnit className="w-4 h-4"/>, label: "furnished level", value: furnishedLabelMap[furnishedLevel] ?? furnishedLevel},
+    {icon: <Armchair className="w-4 h-4"/>, label: "furnished level", value: furnishedLabelMap[furnishedLevel] ?? furnishedLevel},
     { icon: <Users        className="w-4 h-4" />, label: "Max Occupants", value: maxOccupants },
     { icon: <Ruler        className="w-4 h-4" />, label: "Area",          value: `${area} m²` },
     { icon: <Clock        className="w-4 h-4" />, label: "Min Stay",      value: `${minStay} months` },

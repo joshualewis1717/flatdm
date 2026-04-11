@@ -1,13 +1,13 @@
 import nodemailer from "nodemailer";
 
-type SendEmailArgs = {
+export type SendEmailArgs = {
   to: string;
   subject: string;
   text: string;
   html: string;
 };
 
-type SendEmailResult = {
+export type SendEmailResult = {
   messageId?: string;
   previewOnly: boolean;
   previewUrl?: string;

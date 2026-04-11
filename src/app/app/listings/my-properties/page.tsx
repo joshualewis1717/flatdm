@@ -14,6 +14,10 @@ import { useSessionContext } from '@/components/shared/app-frame';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import ConfirmModal from '@/components/shared/ConfirmModal';
+import PaginationBar from '../components/PaginationBar';
+
+const PAGE_SIZE = 10;// how much listings should  be shown per page
+
 
 export default function Page() {
   const router = useRouter();
@@ -26,6 +30,7 @@ export default function Page() {
   const [sortBy, setSortBy] = useState('default');
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [page, setPage] = useState(1);
 
   const [modal, setModal] = useState<{
     occupant: OccupantUI;
@@ -43,21 +48,20 @@ export default function Page() {
       else setListings(result ?? []);
       setLoading(false);
     }
-
     fetchListings();
   }, []);
 
-  //  filter by address and also sort by most occupants, least occupants, empty first, full first
+  // Reset to page 1 whenever search or sort changes
+  useEffect(() => {
+    setPage(1);
+  }, [search, sortBy]);
+
+   //  filter by address and also sort by most occupants, least occupants, empty first, full first
   const filtered = useMemo(() => {
     let list = listings.filter((listing) => {
       const p = listing.propertyListing;
       const address =
-        p.streetName.toLowerCase() +
-        ' ' +
-        p.city.toLowerCase() +
-        ' ' +
-        p.postcode.toLowerCase();
-
+        p.streetName.toLowerCase() + ' ' + p.city.toLowerCase() + ' ' + p.postcode.toLowerCase();
       return address.includes(search.toLowerCase());
     });
 
@@ -80,6 +84,15 @@ export default function Page() {
 
     return list;
   }, [search, sortBy, listings]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const effectivePage = Math.min(page, totalPages);// clamp our current page (so that it always exists)
+
+  // show only the items which is part of our current page
+  const paginated = useMemo(() => {
+    const start = (effectivePage - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, effectivePage]);
 
   function toggleExpand(id: number) {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -111,66 +124,55 @@ export default function Page() {
 
     // only remove listings that were successfully deleted
     const deletedIds = [...selectedIds].filter((_, i) => !results[i].error);
-    const failedCount = results.filter(r => r.error).length;
+    const failedCount = results.filter((r) => r.error).length;
 
     if (failedCount > 0) setError(`Failed to delete ${failedCount} listing(s). Please try again.`);
 
-    setListings((prev) =>
-      prev.filter((l) => !deletedIds.includes(l.propertyListing.id))
-    );
+    setListings((prev) => prev.filter((l) => !deletedIds.includes(l.propertyListing.id)));
 
     exitDeleteMode();
     setDeleteLoading(false);
   }
 
-  // function to allow landlords to delete a occupant:
+   // function to allow landlords to delete a occupant:
   function handleRemoveOccupant(occupantId: number) {
-    setListings(prev =>
-      prev.map(listing => {
-        // update both lists in case if we want for landlords to alsod elete upcoming applicants in future
-        const updatedCurrent = listing.currentOccupants.filter(
-          o => o.id !== occupantId
-        );
-
-        const updatedUpcoming = listing.upcomingOccupants.filter(
-          o => o.id !== occupantId
-        );
-
+    setListings((prev) =>
+      prev.map((listing) => {
+         // update both lists in case if we want for landlords to alsod elete upcoming applicants in future
+        const updatedCurrent = listing.currentOccupants.filter((o) => o.id !== occupantId);
+        const updatedUpcoming = listing.upcomingOccupants.filter((o) => o.id !== occupantId);
         return {
           ...listing,
           currentOccupants: updatedCurrent,
           upcomingOccupants: updatedUpcoming,
           propertyListing: {
             ...listing.propertyListing,
-            currentOccupants: updatedCurrent.length, // keep count in sync
+            currentOccupants: updatedCurrent.length,
           },
         };
       })
     );
   }
 
-  // use effect to redirect user if they are not a landlord
+ // use effect to redirect user if they are not a landlord
   useEffect(() => {
-    if (!isLandlord) {
-      router.push('/login');
-    }
+    if (!isLandlord) router.push('/login');
   }, [isLandlord, router]);
 
   if (!isLandlord) return null;
-
-  if (loading)
-    return <LoadingSpinner text="Loading your properties…" />;
+  if (loading) return <LoadingSpinner text="Loading your properties…" />;
 
   return (
     <div className="min-h-screen bg-[#1e1e1e] text-white p-6">
       <div className="max-w-4xl mx-auto">
 
         {showDeleteModal && (
-          <ConfirmModal title='Delete Listings?' 
-          description={`are you sure that you want to delete ${selectedIds.size} properties?`}
-          onCancel={()=>{exitDeleteMode(), setShowDeleteModal(false)}}
-          onConfirm={()=>{deleteSelected(), setShowDeleteModal(false)}}
-          loading={deleteLoading}
+          <ConfirmModal
+            title="Delete Listings?"
+            description={`are you sure that you want to delete ${selectedIds.size} properties?`}
+            onCancel={() => { exitDeleteMode(); setShowDeleteModal(false); }}
+            onConfirm={() => { deleteSelected(); setShowDeleteModal(false); }}
+            loading={deleteLoading}
           />
         )}
 
@@ -178,11 +180,8 @@ export default function Page() {
         <header className="mb-6 flex items-start justify-between">
           <div>
             <h1 className="text-xl font-semibold">My Listings</h1>
-            <p className="text-white/45 text-sm">
-              Manage your listings
-            </p>
+            <p className="text-white/45 text-sm">Manage your listings</p>
           </div>
-
           <button
             onClick={() => router.push('new')}
             className="flex items-center gap-2 px-4 py-2 rounded-[10px] bg-[#c9fb00] text-black text-[13px] font-semibold hover:opacity-90 transition"
@@ -193,16 +192,11 @@ export default function Page() {
         </header>
 
         {/* Delete/fetch error banner */}
-        {error && (
-          <div className="mb-4">
-            <ErrorMessage text={error} />
-          </div>
-        )}
+        {error && <div className="mb-4"><ErrorMessage text={error} /></div>}
 
         {/* SEARCH + FILTER */}
         <div className="flex gap-3 mb-5 flex-wrap">
           <SearchBar value={search} onChange={setSearch} />
-
           <FilterDropdown value={sortBy} onChange={setSortBy}>
             <option value="default">Default</option>
             <option value="most">Most Occupants</option>
@@ -224,18 +218,16 @@ export default function Page() {
               <Trash2 className="w-4 h-4" />
             </button>
           )}
-
           {deleteMode && filtered.length > 0 && (
             <>
               <button
-                onClick={()=>{setShowDeleteModal(false), exitDeleteMode()}}
+                onClick={() => { setShowDeleteModal(false); exitDeleteMode(); }}
                 className="px-3.5 py-2.5 rounded-[10px] text-[13px] bg-[#2a2a2a]"
               >
                 Cancel
               </button>
-
               <button
-                onClick={()=>setShowDeleteModal(true)}
+                onClick={() => setShowDeleteModal(true)}
                 disabled={selectedIds.size === 0 || deleteLoading}
                 className="px-3.5 py-2.5 rounded-[10px] text-[13px] font-semibold bg-red-500 text-white disabled:opacity-40"
               >
@@ -247,29 +239,30 @@ export default function Page() {
 
         {/* LIST */}
         {filtered.length > 0 ? (
-          <div className="space-y-3">
-            {filtered.map((listing) => (
-              <PropertyCard
-                key={listing.propertyListing.id}
-                property={listing}
-                isExpanded={expandedId === listing.propertyListing.id}
-                deleteMode={deleteMode}
-                isSelected={selectedIds.has(listing.propertyListing.id)}
-                onToggleExpand={() =>
-                  toggleExpand(listing.propertyListing.id)
-                }
-                onToggleSelect={() =>
-                  toggleSelect(listing.propertyListing.id)
-                }
-                onOccupantClick={(occ) =>
-                  setModal({
-                    occupant: occ,
-                    property: listing.propertyListing,
-                  })
-                }
-              />
-            ))}
-          </div>
+          <>
+            <div className="space-y-3 mb-5">
+              {paginated.map((listing) => (
+                <PropertyCard
+                  key={listing.propertyListing.id}
+                  property={listing}
+                  isExpanded={expandedId === listing.propertyListing.id}
+                  deleteMode={deleteMode}
+                  isSelected={selectedIds.has(listing.propertyListing.id)}
+                  onToggleExpand={() => toggleExpand(listing.propertyListing.id)}
+                  onToggleSelect={() => toggleSelect(listing.propertyListing.id)}
+                  onOccupantClick={(occ) =>
+                    setModal({ occupant: occ, property: listing.propertyListing })
+                  }
+                />
+              ))}
+            </div>
+
+            <PaginationBar
+              currentPage={effectivePage}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          </>
         ) : (
           <EmptyState
             title="No properties found"
