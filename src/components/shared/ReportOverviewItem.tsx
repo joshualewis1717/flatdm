@@ -38,8 +38,8 @@ export default function ReportOverviewItem( {report, reporter, targetUser} : {re
 
 
     let severity = report['severity'];
-    if (!severity || severity === null){
-        severity = "Not Ranked Yet"
+    if (!severity || severity === null || severity == undefined){
+        severity = "UNRANKED"
     }
 
     return(
@@ -50,7 +50,7 @@ export default function ReportOverviewItem( {report, reporter, targetUser} : {re
                     <h2 className="italic text-gray-400">{`Submitted by ${reporter.username} at ${report['createdAt']}`}</h2>
                     <div className="flex flex-row gap-2">
                         <Status theme={themeMap[report['status']]} text={"Status: " + wordMap[report['status']]} />
-                        <Status theme={themeMap[report['severity']]} text={"Severity: " + wordMap[severity]} />
+                        <Status theme={themeMap[severity]} text={"Severity: " + wordMap[severity]} />
                     </div>
 
                 </div>
