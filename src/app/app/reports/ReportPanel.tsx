@@ -27,6 +27,7 @@ const severityOptions = [
 type parameters = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onError?: (error: string) =>void// optional if parent wants to dislay error to user
   targetType: "conversation" | "listing" | "review";
   targetId: number;
   targetName?: string;
@@ -34,7 +35,7 @@ type parameters = {
   title?: string;
 };
 
-export default function ReportPanel({ open, onOpenChange, targetType, targetId, targetName, targetUserId, title }: parameters) {
+export default function ReportPanel({ open, onOpenChange, onError, targetType, targetId, targetName, targetUserId, title }: parameters) {
   const [category, setCategory] = useState("");
   const [severity, setSeverity] = useState("");
   const [reason, setReason] = useState("");
@@ -74,6 +75,7 @@ export default function ReportPanel({ open, onOpenChange, targetType, targetId, 
       onOpenChange(false);
     } catch (error) {
       console.error(error);
+      if (onError) onError(String(error))
     } finally {
       setSubmitting(false);
     }

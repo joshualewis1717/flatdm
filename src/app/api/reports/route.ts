@@ -56,12 +56,19 @@ async function resolveConversationTarget( userId: number, targetId: number): Pro
   };
 }
 
-async function resolveListingTarget( userId: number, targetId: number, providedTargetUserId: number | null ): Promise<ResolvedReportTarget> {
+async function resolveListingTarget(userId: number,targetId: number,providedTargetUserId: number | null): Promise<ResolvedReportTarget> {
+  const listing = await prisma.propertyListing.findUnique({  
+    where: { id: targetId },
+    select: { id: true },
+  });
+
+  if (!listing) throw new Error("Listing not found"); 
+
   return {
     conversationId: null,
-    listingId: null,
+    listingId: targetId, 
     reviewId: null,
-    targetUserId: providedTargetUserId,
+    targetUserId: targetId,
   };
 }
 
@@ -143,6 +150,7 @@ export async function POST(req: NextRequest) {
     console.error(error);
 
     if (error instanceof Error) {
+      // conversation specific error messages  
       if (error.message === "Conversation not found") {
         return jsonError("Conversation not found", 404);
       }
@@ -153,6 +161,11 @@ export async function POST(req: NextRequest) {
 
       if (error.message === "Conversation not available") {
         return jsonError("Conversation not available", 404);
+      }
+
+      // listing specific error messages
+      if (error.message === "Listing not found") {
+        return jsonError("Listing not found", 404);
       }
     }
 
