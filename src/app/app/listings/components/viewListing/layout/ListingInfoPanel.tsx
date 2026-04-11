@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState } from "react";
-import { BedDouble, Bath, Users, Ruler, CalendarClock, Clock, Armchair } from "lucide-react";
+import { BedDouble, Bath, Users, Ruler, CalendarClock, Clock, Armchair, ChevronDown } from "lucide-react";
 import ImageSlider from "../UI/ImageSlider";
 import PropertyStatsGrid from "../UI/PropertyStatsGrid";
 import RoommateProfileList from "../UI/RoomateProfileList";
@@ -19,11 +19,13 @@ type ListingInfoPanelProps = {
   listingId: string;
 };
 
+const READ_MORE_THRESHOLD = 300// how long must description be before it displays 'read more'
 
 export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
   const [data, setData] = useState<ListingInfoData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [descriptionexpanded, setDescriptionExpanded] = useState(false);
   const { ListingsResults } = useAllItemsState();
 
   const numericListingId = Number(listingId);
@@ -107,6 +109,7 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
     { icon: <CalendarClock className="w-4 h-4" />, label: "Shared",       value: shared ? "Yes" : "No", highlight: true },
   ];
 
+  const isLongText = description.length > READ_MORE_THRESHOLD;
   return (
     <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] overflow-hidden max-w-5xl mx-auto">
       <ImageSlider images={sliderImages} />
@@ -154,10 +157,43 @@ export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
           roomates={currentOccupants}
         />
 
-        {/* Description */}
+        {/* Description TODO: move into own component */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-white/85">About this property</h3>
-          <p className="text-sm leading-7 text-white/70">{description}</p>
+          <h3 className="text-sm font-medium text-white/85">
+            About this property
+          </h3>
+
+          <div className="relative">
+            <p
+              className={`text-sm leading-7 text-white/70 whitespace-pre-wrap break-words transition-all duration-300  ${
+                !descriptionexpanded && isLongText ? "max-h-32 overflow-hidden" : ""
+              }`}
+            >
+              {description}
+            </p>
+
+            {/* fade overlay when collapsed */}
+            {!description && isLongText && (
+              <div className="absolute bottom-0 left-0 w-full h-10 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+            )}
+          </div>
+
+          {/* Read more button */}
+          {isLongText && (
+            <div className= "flex justify-center">
+              <button
+                onClick={() => setDescriptionExpanded((prev) => !prev)}
+                className="flex items-center gap-1 text-xs transition text-primary"
+              >
+                {descriptionexpanded ? "Show less" : "Read more"}
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-300 text-primary ${
+                    descriptionexpanded ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+            </div>
+          )}
         </div>
 
         <AmenityList amenities={amenities} />
