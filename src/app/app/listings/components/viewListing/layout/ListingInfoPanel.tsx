@@ -11,55 +11,17 @@ import { useAllItemsState } from "../../../state/AllItemsStateProvider";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ErrorMessage from "@/components/shared/ErrorMessage";
 import { FURNISHED_LEVEL_OPTIONS } from "../../createForm/ListingForm";
+import { ListingInfoData } from "../../../types";
+import { mapCachedListingToListingData } from "../../../prisma/mappers";
 // Panel to display the static listing specific data in full
 
 type ListingInfoPanelProps = {
   listingId: string;
 };
 
-type ListingData = NonNullable<Awaited<ReturnType<typeof getListingById>>["result"]>;
-
-type CachedListing = ReturnType<typeof useAllItemsState>["ListingsResults"][number];
-
-function mapCachedListingToListingData(listing: CachedListing): ListingData {
-  const thumbnail = listing.images.find((img) => img.isThumbnail) ?? null;
-
-  return {
-    propertyId: listing.propertyId,
-    id: listing.id,
-    flatNumber: listing.flatNumber ?? null,
-    description: listing.description,
-    rent: listing.rent,
-    availableFrom: listing.availableFrom,
-    totalRooms: listing.rooms,
-    bedrooms: listing.bedrooms,
-    bathrooms: listing.bathrooms,
-    furnishedLevel: listing.furnished_type,
-    maxOccupants: listing.maxOccupants,
-    area: listing.area,
-    minStay: listing.minStay,
-    lastUpdated: new Date(listing.updatedAt),
-    thumbnail: thumbnail ? `/api/images/${thumbnail.id}` : null,
-    images: listing.images
-      .filter((img) => !img.isThumbnail)
-      .map((img) => `/api/images/${img.id}`),
-    buildingName: listing.property.title,
-    streetName: listing.property.streetName,
-    city: listing.property.city,
-    postcode: listing.property.postcode,
-    landlordName: listing.property.landlord.username,
-    amenities: listing.property.amenities.map((amenity) => ({
-      id: `cached-amenity-${amenity.id}`,
-      dbId: amenity.id,
-      name: amenity.name,
-      type: amenity.type,
-      distance: amenity.distance ?? -1,
-    })),
-  };
-}
 
 export default function ListingInfoPanel({ listingId }: ListingInfoPanelProps) {
-  const [data, setData] = useState<ListingData | null>(null);
+  const [data, setData] = useState<ListingInfoData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { ListingsResults } = useAllItemsState();
