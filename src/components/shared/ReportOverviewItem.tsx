@@ -44,10 +44,10 @@ export default function ReportOverviewItem( {report, reporter, targetUser} : {re
 
     return(
         <section className="px-[7%]">
-            <div className="bg-black/70 rounded-[0.5rem] grid-cols-[4fr_1fr] p-4 grid grid-cols-2 items-start gap-4">
+            <div className="bg-black/20 border border-white/10 hover:border-[#c9fb00] focus:border-[#c9fb00] transition-colors rounded-[0.5rem] grid-cols-[4fr_1fr] p-4 grid grid-cols-2 items-start gap-4">
                 <div className="flex flex-col gap-1">
                     <h1 className="text-white font-bold text-lg">[{report['id']}, {report['category']}] {targetUser.username} : {report['reason']}</h1>
-                    <h2 className="italic text-gray-400">{`Submitted by ${reporter.username} at ${report['createdAt']}`}</h2>
+                    <h2 className="italic text-gray-300">{`Submitted by ${reporter.username} at ${report['createdAt']}`}</h2>
                     <div className="flex flex-row gap-2">
                         <Status theme={themeMap[report['status']]} text={"Status: " + wordMap[report['status']]} />
                         <Status theme={themeMap[severity]} text={"Severity: " + wordMap[severity]} />
