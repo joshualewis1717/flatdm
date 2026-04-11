@@ -4,6 +4,7 @@ import ReportOverviewItem from "@/components/shared/ReportOverviewItem";
 import {Report, Status, User, Severity, Category} from '@/app/app/reports/types'
 import { getReportsFilteredSorted } from "./db_access";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 function mapUsers({users}:{users: User[]}) {
   const userMap: Record<number, User | undefined> = {};
@@ -160,7 +161,7 @@ export default function ReportsClient({ initialReports, users }: {initialReports
 
 
         <div className="flex items-center gap-4">
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium">Sort by</label>
             <select
               value={workingSortField}
@@ -170,19 +171,65 @@ export default function ReportsClient({ initialReports, users }: {initialReports
               <option value="modifiedAt">Modified At</option>
               <option value="createdAt">Created At</option>
             </select>
-          </div>
+          </div> */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="border rounded px-2 py-1 flex items-center gap-2">
+                <span className="text-sm font-medium">Sort by</span>
+                <span className="text-sm">
+                  {workingSortField === "modifiedAt" ? "Modified At" : "Created At"}
+                </span>
+              </button>
+            </DropdownMenuTrigger>
 
-          <div>
-            <label className="block text-sm font-medium">Direction</label>
-            <select
-              value={workingSortDirection}
-              onChange={(e) => setWorkingSortDirection(e.target.value as "asc" | "desc")}
-              className="border rounded px-2 py-1"
-            >
-              <option value="desc">Newest first</option>
-              <option value="asc">Oldest first</option>
-            </select>
-          </div>
+            <DropdownMenuContent align="start" sideOffset={8}>
+              <DropdownMenuGroup>
+                <DropdownMenuRadioGroup
+                  value={workingSortField}
+                  onValueChange={(val: "modifiedAt" | "createdAt") =>
+                    setWorkingSortField(val)
+                  }
+                >
+                  <DropdownMenuRadioItem value="modifiedAt">
+                    Modified At
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="createdAt">
+                    Created At
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="border rounded px-2 py-1 flex items-center gap-2">
+                <span className="text-sm font-medium">Direction</span>
+                <span className="text-sm">
+                  {workingSortDirection === "desc" ? "Newest first" : "Oldest first"}
+                </span>
+              </button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="start" sideOffset={8}>
+              <DropdownMenuGroup>
+                <DropdownMenuRadioGroup
+                  value={workingSortDirection}
+                  onValueChange={(val: "asc" | "desc") =>
+                    setWorkingSortDirection(val)
+                  }
+                >
+                  <DropdownMenuRadioItem value="desc">
+                    Newest first
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="asc">
+                    Oldest first
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
 
           <div className="flex gap-2">
             <button
