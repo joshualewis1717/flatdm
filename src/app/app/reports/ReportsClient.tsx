@@ -16,6 +16,25 @@ function mapUsers({users}:{users: User[]}) {
   return userMap;
 }
 
+// map words eg FRAUD to human nice words like Fraud
+const wordMap = {
+    "RESOLVED":"Resolved",
+    "UNDER_REVIEW":"Under Review",
+    "OPEN":"Open",
+    "LOW":"Low",
+    "MEDIUM":"Medium",
+    "HIGH":"High",
+    "UNRANKED":"Unranked",
+    "INAPPROPRIATE_CONTENT": "Inappropriate Content",
+    "FRAUD": "Fraud",
+    "HARASSMENT": "Harassment",
+    "FAKE_INFORMATION": "Fake Information",
+    "IMPERSONATION": "Impersonation",
+    "OTHER": "Other"
+}
+
+
+
 export default function ReportsClient({ initialReports, users }: {initialReports: Report[], users: User[]}) {
 
   // initially all reports viewable since user has made no selections yet
@@ -129,7 +148,7 @@ export default function ReportsClient({ initialReports, users }: {initialReports
                 onCheckedChange={() => toggleStatus(status)}
                 className="w-4 h-4"
                 />
-                <span>{status}</span>
+                <span>{wordMap[status]}</span>
               </label>
             ))}
           </fieldset>
@@ -146,7 +165,7 @@ export default function ReportsClient({ initialReports, users }: {initialReports
                   onCheckedChange={() => toggleSeverity(severity)}
                   className="w-4 h-4"
                 />
-                <span>{severity}</span>
+                <span>{wordMap[severity]}</span>
               </label>
             ))}
           </fieldset>
@@ -164,7 +183,7 @@ export default function ReportsClient({ initialReports, users }: {initialReports
                   onCheckedChange={() => toggleCategory(category)}
                   className="w-4 h-4"
                 />
-                <span>{category}</span>
+                <span>{wordMap[category]}</span>
               </label>
             ))}
           </fieldset>
