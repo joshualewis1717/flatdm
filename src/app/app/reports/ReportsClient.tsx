@@ -3,6 +3,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import ReportOverviewItem from "@/components/shared/ReportOverviewItem";
 import {Report, Status, User, Severity, Category} from '@/app/app/reports/types'
 import { getReportsFilteredSorted } from "./db_access";
+import { Checkbox } from "@/components/ui/checkbox";
 
 function mapUsers({users}:{users: User[]}) {
   const userMap: Record<number, User | undefined> = {};
@@ -99,7 +100,7 @@ export default function ReportsClient({ initialReports, users }: {initialReports
   return (
     <div className="p-4">
       <div className="mb-4 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <fieldset className="flex flex-col gap-2">
+        {/* <fieldset className="flex flex-col gap-2">
           <legend className="font-semibold">Filter by status</legend>
           {(["OPEN", "UNDER_REVIEW", "RESOLVED"] as Status[]).map(status => (
             <label key={status} className="inline-flex items-center gap-2">
@@ -112,16 +113,28 @@ export default function ReportsClient({ initialReports, users }: {initialReports
               <span>{status}</span>
             </label>
           ))}
+        </fieldset> */}
+        <fieldset className="flex flex-col gap-2">
+          <legend className="font-semibold">Filter by status</legend>
+          {(["OPEN", "UNDER_REVIEW", "RESOLVED"] as Status[]).map((status) => (
+            <label key={status} className="inline-flex items-center gap-2">
+              <Checkbox
+              checked={!!workingStatuses[status]}
+              onCheckedChange={() => toggleStatus(status)}
+              className="w-4 h-4"
+              />
+              <span>{status}</span>
+            </label>
+          ))}
         </fieldset>
 
         <fieldset className="flex flex-col gap-2">
           <legend className="font-semibold">Filter by severity</legend>
-          {(["UNRANKED", "LOW", "MEDIUM", "HIGH"] as Severity[]).map(severity => (
+          {(["UNRANKED", "LOW", "MEDIUM", "HIGH"] as Severity[]).map((severity) => (
             <label key={severity} className="inline-flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={workingSeverities[severity]}
-                onChange={() => toggleSeverity(severity)}
+              <Checkbox
+                checked={!!workingSeverities[severity]}
+                onCheckedChange={() => toggleSeverity(severity)}
                 className="w-4 h-4"
               />
               <span>{severity}</span>
@@ -131,18 +144,19 @@ export default function ReportsClient({ initialReports, users }: {initialReports
 
         <fieldset className="flex flex-col gap-2">
           <legend className="font-semibold">Filter by category</legend>
-          {(["INAPPROPRIATE_CONTENT","FRAUD","HARASSMENT","FAKE_INFORMATION","IMPERSONATION","OTHER"] as Category[]).map(category => (
+          {(["INAPPROPRIATE_CONTENT","FRAUD","HARASSMENT","FAKE_INFORMATION","IMPERSONATION","OTHER"] as Category[]
+          ).map((category) => (
             <label key={category} className="inline-flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={workingCategories[category]}
-                onChange={() => toggleCategory(category)}
+              <Checkbox
+                checked={!!workingCategories[category]}
+                onCheckedChange={() => toggleCategory(category)}
                 className="w-4 h-4"
               />
               <span>{category}</span>
             </label>
           ))}
         </fieldset>
+
 
         <div className="flex items-center gap-4">
           <div>
