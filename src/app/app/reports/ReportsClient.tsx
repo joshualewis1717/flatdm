@@ -4,8 +4,10 @@ import ReportOverviewItem from "@/components/shared/ReportOverviewItem";
 import {Report, Status, User, Severity, Category} from '@/app/app/reports/types'
 import { getReportsFilteredSorted } from "./db_access";
 import { Checkbox } from "@/components/ui/checkbox";
+import PaginationBar from '@/app/app/listings/components/PaginationBar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
+// map users by their ids. so userMap[3] returns the user with userId 3
 function mapUsers({users}:{users: User[]}) {
   const userMap: Record<number, User | undefined> = {};
   for (let i = 0; i < users.length; i++){
@@ -15,6 +17,8 @@ function mapUsers({users}:{users: User[]}) {
 }
 
 export default function ReportsClient({ initialReports, users }: {initialReports: Report[], users: User[]}) {
+
+  // initially all reports viewable since user has made no selections yet
   const [viewableReports, setViewableReports] = useState<Report[]>(initialReports);
   const userMap = mapUsers({users});
 
@@ -50,15 +54,6 @@ export default function ReportsClient({ initialReports, users }: {initialReports
   const [workingSortField, setWorkingSortField] = useState(sortField);
   const [workingSortDirection, setWorkingSortDirection] = useState(sortDirection);
 
-  // pagination state
-  const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
-
-  useEffect(() => {
-    // reset to first page whenever the data set changes
-    setPage(1);
-  }, [viewableReports.length]);
-
   function toggleStatus(status: Status) {
     setWorkingStatuses(prev => ({ ...prev, [status]: !prev[status] }));
   }
@@ -71,6 +66,7 @@ export default function ReportsClient({ initialReports, users }: {initialReports
     setWorkingCategories(prev => ({ ...prev, [category]: !prev[category] }));
   }
 
+  // called when search button pressed, get the viewable results with the user's selection in their order choice
   async function handleApplyFilters() {
     const resultReports = await getReportsFilteredSorted({
       selectedStatuses: workingStatuses,
@@ -82,6 +78,19 @@ export default function ReportsClient({ initialReports, users }: {initialReports
     setViewableReports(resultReports);
     return;
   }
+
+
+
+  // pagination logic
+
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+
+  useEffect(() => {
+    // reset to first page whenever the data set changes
+    setPage(1);
+  }, [viewableReports.length]);
+
 
   // derived pagination values
   const totalReports = viewableReports?.length || 0;
@@ -95,29 +104,23 @@ export default function ReportsClient({ initialReports, users }: {initialReports
   }, [viewableReports, safePage, pageSize]);
 
   function gotoPage(p: number) {
+    console.log("passed: " + p)
     const clamped = Math.min(Math.max(1, p), totalPages);
+    console.log("clamped: " + clamped)
     setPage(clamped);
   }
 
   return (
     <div className="p-4">
       <div className="mb-4 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        {/* <fieldset className="flex flex-col gap-2">
-          <legend className="font-semibold">Filter by status</legend>
-          {(["OPEN", "UNDER_REVIEW", "RESOLVED"] as Status[]).map(status => (
-            <label key={status} className="inline-flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={workingStatuses[status]}
-                onChange={() => toggleStatus(status)}
-                className="w-4 h-4"
-              />
-              <span>{status}</span>
-            </label>
-          ))}
-        </fieldset> */}
+
+        
+
+        {/* selection for statuses */}
         <fieldset className="flex flex-col gap-2">
           <legend className="font-semibold">Filter by status</legend>
+
+          {/* iterate through each option to make a checkbox and label */}
           {(["OPEN", "UNDER_REVIEW", "RESOLVED"] as Status[]).map((status) => (
             <label key={status} className="inline-flex items-center gap-2">
               <Checkbox
@@ -130,8 +133,11 @@ export default function ReportsClient({ initialReports, users }: {initialReports
           ))}
         </fieldset>
 
+        {/* selection for severities */}
         <fieldset className="flex flex-col gap-2">
           <legend className="font-semibold">Filter by severity</legend>
+
+          {/* iterate through all severities and make a checkbox and label */}
           {(["UNRANKED", "LOW", "MEDIUM", "HIGH"] as Severity[]).map((severity) => (
             <label key={severity} className="inline-flex items-center gap-2">
               <Checkbox
@@ -144,8 +150,11 @@ export default function ReportsClient({ initialReports, users }: {initialReports
           ))}
         </fieldset>
 
+        {/* selection for categories */}
         <fieldset className="flex flex-col gap-2">
           <legend className="font-semibold">Filter by category</legend>
+
+          {/* iterate through options and make checbox and label for each */}
           {(["INAPPROPRIATE_CONTENT","FRAUD","HARASSMENT","FAKE_INFORMATION","IMPERSONATION","OTHER"] as Category[]
           ).map((category) => (
             <label key={category} className="inline-flex items-center gap-2">
@@ -159,19 +168,10 @@ export default function ReportsClient({ initialReports, users }: {initialReports
           ))}
         </fieldset>
 
-
+        {/* sorting, search and reset buttons */}
         <div className="flex items-center gap-4">
-          {/* <div>
-            <label className="block text-sm font-medium">Sort by</label>
-            <select
-              value={workingSortField}
-              onChange={(e) => setWorkingSortField(e.target.value as "modifiedAt" | "createdAt")}
-              className="border rounded px-2 py-1"
-            >
-              <option value="modifiedAt">Modified At</option>
-              <option value="createdAt">Created At</option>
-            </select>
-          </div> */}
+          
+          {/* drop down menu for choosing option to sort by (modified at or created at) */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="border rounded px-2 py-1 flex items-center gap-2">
@@ -201,6 +201,8 @@ export default function ReportsClient({ initialReports, users }: {initialReports
             </DropdownMenuContent>
           </DropdownMenu>
 
+
+          {/* drop down menu for order of sorting (desc or asc) */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="border rounded px-2 py-1 flex items-center gap-2">
@@ -230,14 +232,18 @@ export default function ReportsClient({ initialReports, users }: {initialReports
             </DropdownMenuContent>
           </DropdownMenu>
 
-
+          {/* search and reset buttons */}
           <div className="flex gap-2">
+
+            {/* "search" button that actually just sorts and filters the reports */}
             <button
               onClick={handleApplyFilters}
               className="bg-blue-600 text-white px-3 py-1 rounded"
             >
               Search
             </button>
+
+            {/* reset to original settings where all options wanted */}
             <button
               onClick={() => {
                 setWorkingStatuses({
@@ -271,68 +277,12 @@ export default function ReportsClient({ initialReports, users }: {initialReports
             </button>
           </div>
         </div>
+
       </div>
 
-      {/* Pagination controls (top) */}
-      <div className="flex items-center justify-between mb-3 gap-4">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => gotoPage(page - 1)}
-            disabled={safePage <= 1}
-            className="px-2 py-1 border rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
+      <PaginationBar currentPage={page} totalPages={totalPages} onPageChange={gotoPage} />
 
-          {/* Page numbers: show up to 7 buttons with current centered when possible */}
-          <div className="flex items-center gap-1">
-            {(() => {
-              const buttons = [];
-              const maxButtons = 7;
-              let start = Math.max(1, safePage - Math.floor(maxButtons / 2));
-              let end = start + maxButtons - 1;
-              if (end > totalPages) {
-                end = totalPages;
-                start = Math.max(1, end - maxButtons + 1);
-              }
-              for (let p = start; p <= end; p++) {
-                buttons.push(
-                  <button
-                    key={p}
-                    onClick={() => gotoPage(p)}
-                    aria-current={p === safePage ? "page" : undefined}
-                    className={`px-2 py-1 border rounded ${p === safePage ? "bg-gray-200" : ""}`}
-                  >
-                    {p}
-                  </button>
-                );
-              }
-              return buttons;
-            })()}
-          </div>
-
-          <button
-            onClick={() => gotoPage(page + 1)}
-            disabled={safePage >= totalPages}
-            className="px-2 py-1 border rounded disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-sm">Page</span>
-          <select
-            value={pageSize}
-            onChange={(e) => { setPageSize(parseInt(e.target.value, 10)); setPage(1); }}
-            className="border rounded px-2 py-1"
-          >
-            {[5,10,20,50].map(n => <option key={n} value={n}>{n} / page</option>)}
-          </select>
-          <span className="text-sm">Showing {Math.min(totalReports, (safePage - 1) * pageSize + 1)}-{Math.min(totalReports, safePage * pageSize)} of {totalReports}</span>
-        </div>
-      </div>
-
+      {/* display the reports that fit the selections */}
       <div className="flex flex-col gap-2 py-[3%]">
         {(viewableReports && viewableReports.length === 0) ? (
           <div>No reports match the selected filters.</div>
@@ -348,44 +298,8 @@ export default function ReportsClient({ initialReports, users }: {initialReports
         )}
       </div>
 
-      {/* Pagination controls (bottom) */}
-      <div className="flex items-center justify-between mt-4 gap-4">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => gotoPage(1)}
-            disabled={safePage <= 1}
-            className="px-2 py-1 border rounded disabled:opacity-50"
-          >
-            First
-          </button>
-          <button
-            onClick={() => gotoPage(page - 1)}
-            disabled={safePage <= 1}
-            className="px-2 py-1 border rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
-        </div>
+      <PaginationBar currentPage={page} totalPages={totalPages} onPageChange={gotoPage} />
 
-        <div className="text-sm">Page {safePage} of {totalPages}</div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => gotoPage(page + 1)}
-            disabled={safePage >= totalPages}
-            className="px-2 py-1 border rounded disabled:opacity-50"
-          >
-            Next
-          </button>
-          <button
-            onClick={() => gotoPage(totalPages)}
-            disabled={safePage >= totalPages}
-            className="px-2 py-1 border rounded disabled:opacity-50"
-          >
-            Last
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
