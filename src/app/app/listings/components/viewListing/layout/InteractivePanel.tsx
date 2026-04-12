@@ -9,6 +9,9 @@ import { useEffect, useState } from "react";
 import { getLandlordFromListing } from "../../../prisma/clientServices";
 import ErrorMessage from "@/components/shared/ErrorMessage";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ReportButton from "@/app/app/reports/ReportButton";
+import ReportPanel from "@/app/app/reports/ReportPanel";
+import Link from "next/link";
 
 type InteractivePanelProps = {
   listingId: string;
@@ -21,6 +24,7 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
   const [landlordId, setLandlordId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [landlordIsOwner, setLandlordIsOwner] = useState<boolean>(false);
+  const [isReportOpen, setIsReportOpen] = useState<boolean>(false)
   // single loading flag covers both fetches — panel is ready once both resolve
   const [panelLoading, setPanelLoading] = useState(true);
   const totalReviews = 12;
@@ -58,48 +62,60 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
   }, [listingId]);
 
   return (
-    <aside className="flex flex-col gap-6 w-full h-full bg-white/[0.05] rounded-[1.5rem] py-6 px-6">
-      {/* Apply + message landlord */}
-      <div className="flex-1 flex flex-col gap-6 items-center justify-center">
+    <>
+    {/* report panel in case if user wants to report listing */}
+      <ReportPanel onOpenChange={setIsReportOpen} open={isReportOpen} targetType="listing" targetId={Number(listingId)} onError={setError}
+      targetUserId={landlordId}/>
 
-        {/* Loading state while ownership + landlord ID are being fetched */}
-        {panelLoading && <LoadingSpinner text="Loading listing actions…" />}
+      <aside className="flex flex-col gap-6 w-full h-full bg-white/[0.05] rounded-[1.5rem] py-6 px-6">
+        {/* small report button */}
+        <div className="flex items-center gap-2 justify-between">
+          <span className="text-xs text-white/30">Report this listing</span>
+          <ReportButton onClick={() => {setError(null), setIsReportOpen(true)}} />
+        </div>
 
-        {/* Fetch error for landlord ID, shown inline so the rest of the panel still renders */}
-        {!panelLoading && error && <ErrorMessage text={error} />}
+        {/* Apply + message landlord */}
+        <div className="flex-1 flex flex-col gap-6 items-center justify-center">
 
-        {!panelLoading && isConsultant && (
-          <>
-            <button className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
-             onClick={()=>router.push(`/app/applications/submit-application?listingId=${listingId}`)}>
-            Apply Now {/* this button will need to use listingId to go to propery application page */}
-            </button>
+          {/* Loading state while ownership + landlord ID are being fetched */}
+          {panelLoading && <LoadingSpinner text="Loading listing actions…" />}
 
-            <div className="flex flex-col items-center gap-1">
-              <p className="text-sm text-white/50">Have questions?</p>
-              <button className="text-sm text-white/60 hover:text-white underline underline-offset-4 transition"
-              onClick={()=>router.push(`/app/profile/${landlordId}`)}>
-                Message landlord
-              </button>
-            </div>
-          </>
-        )}
+          {/* Fetch error for landlord ID, shown inline so the rest of the panel still renders */}
+          {!panelLoading && error && <ErrorMessage text={error} />}
 
-        {!panelLoading && isLandlord && landlordIsOwner && (
-          <button className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
-          onClick={()=>router.push(`/app/listings/edit/${listingId}`)}>{/* pass in id so it can rehydrate the info with the listing info*/}
-          Edit Listing
-        </button>
-        )}
-      </div>
+          {!panelLoading && isConsultant && (
+            <>
+              <Link className="w-full py-6 rounded-2xl bg-primary text-black text-center text-lg font-semibold hover:brightness-110 transition"
+              href={`/app/applications/submit-application?listingId=${listingId}`}>
+              Apply Now {/* this button will need to use listingId to go to propery application page */}
+              </Link>
 
-      {/* Reviews */}
-      <h3 className="text-lg font-bold text-white/50 text-center">Reviews</h3>
-      <ReviewSlider
-        reviews={reviews}
-        totalReviews={totalReviews}
-        averageRating={averageRating}
-      />
-    </aside>
+              <div className="flex flex-col items-center gap-1">
+                <p className="text-sm text-white/50">Have questions?</p>
+                <Link className="text-sm text-white/60 hover:text-white underline underline-offset-4 transition"
+                href={`/app/profile/${landlordId}`}>
+                  Message landlord
+                </Link>
+              </div>
+            </>
+          )}
+
+          {!panelLoading && isLandlord && landlordIsOwner && (
+            <Link className="w-full py-6 text-center rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
+            href={`/app/listings/edit/${listingId}`}>{/* pass in id so it can rehydrate the info with the listing info*/}
+            Edit Listing
+          </Link>
+          )}
+        </div>
+
+        {/* Reviews */}
+        <h3 className="text-lg font-bold text-white/50 text-center">Reviews</h3>
+        <ReviewSlider
+          reviews={reviews}
+          totalReviews={totalReviews}
+          averageRating={averageRating}
+        />
+      </aside>
+    </>
   );
 }

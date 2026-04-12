@@ -40,7 +40,7 @@ export default function LandlordCard({ app, onAction,}: props) {
 
         {/* Row 2: applicant profile */}
         <ProfileButton role="Applicant" username={app.applicantName} profileUrl={app.applicantAvatar}
-         onClick={()=>router.push(`/app/profile/${app.applicantId}`)}// user can check out the corresponding landlord profile
+         href={`/app/profile/${app.applicantId}`}// user can check out the corresponding landlord profile
          />
 
         {/* Row 3: confirmed move-in */}

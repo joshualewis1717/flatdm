@@ -56,10 +56,17 @@ async function resolveConversationTarget( userId: number, targetId: number): Pro
   };
 }
 
-async function resolveListingTarget( userId: number, targetId: number, providedTargetUserId: number | null ): Promise<ResolvedReportTarget> {
+async function resolveListingTarget(targetId: number,providedTargetUserId: number | null): Promise<ResolvedReportTarget> {
+  const listing = await prisma.propertyListing.findUnique({  
+    where: { id: targetId },
+    select: { id: true },
+  });
+
+  if (!listing) throw new Error("Listing not found"); 
+
   return {
     conversationId: null,
-    listingId: null,
+    listingId: targetId, 
     reviewId: null,
     targetUserId: providedTargetUserId,
   };
@@ -117,7 +124,7 @@ export async function POST(req: NextRequest) {
     if (targetType === "conversation") {
       resolvedTarget = await resolveConversationTarget(userId, targetId);
     } else if (targetType === "listing") {
-      resolvedTarget = await resolveListingTarget(userId, targetId, providedTargetUserId);
+      resolvedTarget = await resolveListingTarget(targetId, providedTargetUserId);
     } else {
       resolvedTarget = await resolveReviewTarget(userId, targetId, providedTargetUserId);
     }
@@ -125,7 +132,7 @@ export async function POST(req: NextRequest) {
     const report = await prisma.report.create({
       data: {
         reporterId: userId,
-        targetUserId: resolvedTarget.targetUserId,
+        targetUserId: resolvedTarget.targetUserId ?? undefined,
         conversationId: resolvedTarget.conversationId,
         listingId: resolvedTarget.listingId,
         reviewId: resolvedTarget.reviewId,
@@ -143,6 +150,7 @@ export async function POST(req: NextRequest) {
     console.error(error);
 
     if (error instanceof Error) {
+      // conversation specific error messages  
       if (error.message === "Conversation not found") {
         return jsonError("Conversation not found", 404);
       }
@@ -153,6 +161,11 @@ export async function POST(req: NextRequest) {
 
       if (error.message === "Conversation not available") {
         return jsonError("Conversation not available", 404);
+      }
+
+      // listing specific error messages
+      if (error.message === "Listing not found") {
+        return jsonError("Listing not found", 404);
       }
     }
 

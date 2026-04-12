@@ -41,7 +41,7 @@ export default function ConfirmedCard({ app }: props) {
                 {app.landlordName && (
                   <div className="flex-1 min-w-0">
                     <ProfileButton role="Landlord" username={app.landlordName} profileUrl={app.landlordAvatar}
-                     onClick={()=>router.push(`/app/profile/${app.landlordId}`)}// user can check out the corresponding applicant profile
+                     href={`/app/profile/${app.landlordId}`}// user can check out the corresponding applicant profile
                      />
                   </div>
                 )}

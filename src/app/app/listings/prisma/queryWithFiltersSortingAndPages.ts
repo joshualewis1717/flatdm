@@ -2,6 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import { AmenityType, FurnishedType, Prisma } from "@prisma/client";
 import { ListingParameters } from "../types";
+import { getAvailableFrom } from "./mappers";
 
 export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
 	// from ListingParameters, this query considers:
@@ -30,29 +31,6 @@ export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
 		};
 	};
 
-	const getAvailableFrom = (
-		occupants: { moveIn: Date; moveOut: Date | null }[],
-		maxOccupants: number,
-	) => {
-		const currentOccupants = occupants.filter(
-			(occupant) => occupant.moveIn <= now && (!occupant.moveOut || occupant.moveOut > now),
-		).length;
-
-		if (currentOccupants < maxOccupants) {
-			return now;
-		}
-
-		const moveOuts = occupants
-			.map((occupant) => occupant.moveOut)
-			.filter((moveOut): moveOut is Date => !!moveOut && moveOut > now)
-			.sort((a, b) => a.getTime() - b.getTime());
-
-		if (moveOuts.length === 0) {
-			return null;
-		}
-
-		return moveOuts[0];
-	};
 
 	const availableFromFilter = (() => {
 		if (!LP.available_from) {

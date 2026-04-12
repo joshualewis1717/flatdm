@@ -5,6 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import ErrorMessage from "@/components/shared/ErrorMessage";
+import Link from "next/link";
 
 
 type props={
@@ -44,11 +45,11 @@ export default function ViewListingButton({applicationId, setError}: props){
             {/* Show inline error only when no parent error handler was supplied */}
             {localError && <ErrorMessage text={localError} />}
 
-            <button className="flex items-center gap-1.5 text-[11px] text-white/35 hover:text-white transition-colors font-medium"
-            onClick={()=>router.push(`/app/listings/${listingId}`)}>
+            <Link className="flex items-center gap-1.5 text-[11px] text-white/35 hover:text-white transition-colors font-medium"
+            href={`/app/listings/${listingId}`}>
                 <ArrowUpRight className="w-3.5 h-3.5" />
                 View listing
-            </button>
+            </Link>
         </>
     )
 

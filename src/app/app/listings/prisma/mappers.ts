@@ -3,8 +3,12 @@
 import { Amenity, FurnishedType, Occupant } from "@prisma/client";
 import { AmenityUI, ExistingProperty, ListingInfoData, MyPropertyListingData, OccupantUI, OccupantWithUser } from "../types";
 import { queryListingById, queryListingsForLandlord, queryPropertiesForLandlord } from "./rawQueries";
+import { useAllItemsState } from "../state/AllItemsStateProvider";
 
 /********** helper functions ************/
+
+type CachedListing = ReturnType<typeof useAllItemsState>["ListingsResults"][number];// wtype of what our cached listing stors
+
 
 // function to convert images into an url
 function toImageUrl(img: { id: number }): string {
@@ -147,5 +151,46 @@ export function mapToMyPropertyListing(listing: Awaited<ReturnType<typeof queryL
     },
     currentOccupants,
     upcomingOccupants,
+  };
+}
+
+
+
+
+// function to map our cached listing data to our normal listing data
+export function mapCachedListingToListingData(listing: CachedListing): ListingInfoData {
+  const thumbnail = listing.images.find((img) => img.isThumbnail) ?? null;
+
+  return {
+    propertyId: listing.propertyId,
+    id: listing.id,
+    flatNumber: listing.flatNumber ?? null,
+    description: listing.description,
+    rent: listing.rent,
+    availableFrom: listing.availableFrom,
+    totalRooms: listing.rooms,
+    bedrooms: listing.bedrooms,
+    bathrooms: listing.bathrooms,
+    furnishedLevel: listing.furnished_type,
+    maxOccupants: listing.maxOccupants,
+    area: listing.area,
+    minStay: listing.minStay,
+    lastUpdated: new Date(listing.updatedAt),
+    thumbnail: thumbnail ? `/api/images/${thumbnail.id}` : null,
+    images: listing.images
+      .filter((img) => !img.isThumbnail)
+      .map((img) => `/api/images/${img.id}`),
+    buildingName: listing.property.title,
+    streetName: listing.property.streetName,
+    city: listing.property.city,
+    postcode: listing.property.postcode,
+    landlordName: listing.property.landlord.username,
+    amenities: listing.property.amenities.map((amenity) => ({
+      id: `cached-amenity-${amenity.id}`,
+      dbId: amenity.id,
+      name: amenity.name,
+      type: amenity.type,
+      distance: amenity.distance ?? -1,
+    })),
   };
 }
