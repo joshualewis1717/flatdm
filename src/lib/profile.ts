@@ -11,6 +11,7 @@ export type ProfilePageData = {
   role: ProfileRole;
   createdAt: Date;
   phone: string | null;
+  description: string | null;
   bio: string | null;
   stats: {
     applications: number;
@@ -20,12 +21,15 @@ export type ProfilePageData = {
     reviews: number;
     averageReview: number | null;
     reports: number;
+    reportsInProcess: number;
+    unopenedReports: number;
+    totalReportsHandled: number;
     rentalHistory: number;
   };
 };
 
 export async function getProfilePageData(userId: number): Promise<ProfilePageData | null> {
-  const [user, unreadMessages, reviewAggregate] = await Promise.all([
+  const [user, unreadMessages, reviewAggregate, reportsInProcess, unopenedReports, totalReportsHandled] = await Promise.all([
     prisma.user.findFirst({
       where: { id: userId, isDeleted: false },
       select: {
@@ -71,6 +75,23 @@ export async function getProfilePageData(userId: number): Promise<ProfilePageDat
         rating: true,
       },
     }),
+    prisma.report.count({
+      where: {
+        assignedModeratorId: userId,
+        status: "UNDER_REVIEW",
+      },
+    }),
+    prisma.report.count({
+      where: {
+        status: "OPEN",
+      },
+    }),
+    prisma.report.count({
+      where: {
+        assignedModeratorId: userId,
+        status: "RESOLVED",
+      },
+    }),
   ]);
 
   if (!user) return null;
@@ -84,6 +105,7 @@ export async function getProfilePageData(userId: number): Promise<ProfilePageDat
     role: user.role as ProfileRole,
     createdAt: user.createdAt,
     phone: user.profile?.phone ?? null,
+    description: null,
     bio: user.profile?.bio ?? null,
     stats: {
       applications: user._count.applications,
@@ -93,6 +115,9 @@ export async function getProfilePageData(userId: number): Promise<ProfilePageDat
       reviews: user._count.reviewsReceived,
       averageReview: reviewAggregate._avg.rating ?? null,
       reports: user._count.reportsMade,
+      reportsInProcess,
+      unopenedReports,
+      totalReportsHandled,
       rentalHistory: user._count.occupants,
     },
   };
