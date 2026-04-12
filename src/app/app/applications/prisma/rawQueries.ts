@@ -467,3 +467,14 @@ export async function getListingIdFromApplicationQuery(applicationId: number) {
     },
   });
 }
+
+
+// function to retrieve profile of passed in user id
+export async function getUserProfileByUserId(userId: number) {
+  return prisma.profile.findUnique({
+    where: { userId },
+    include: {
+      user: true,
+    },
+  });
+}
