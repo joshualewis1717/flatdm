@@ -12,35 +12,51 @@ import {deleteReport, getUser} from '@/app/app/reports/db_access';
 import { prisma } from "@/lib/prisma";
 
 export default function ReportOverviewItem( {report, reporter, targetUser} : {report:Report, reporter: User, targetUser : User}){
-    console.log("item report: " + report);
+    
     // depending on what value 'status' holds, the status bar will appear a different colour
     // theme is passed into the Status component to style it
-    const statusTheme =
-      report['status'] === 'RESOLVED' ? 'green' :
-      report['status'] === 'UNDER_REVIEW' ? 'amber' :
-      report['status'] === 'OPEN' ? 'red' :
-    'neutral';
-
-    const severityTheme =
-      report['severity'] === 'LOW' ? 'green' :
-      report['severity'] === 'MEDIUM' ? 'amber' :
-      report['severity'] === 'HIGH' ? 'red' :
-    'neutral';
-
-    console.log("reporter:")
-    console.log(reporter);
+    const themeMap = {
+        "RESOLVED":"green",
+        "UNDER_REVIEW":"amber",
+        "OPEN":"red",
+        "LOW":"green",
+        "MEDIUM":"amber",
+        "HIGH":"red",
+        "UNRANKED":"neutral"
+    }
 
 
+    const wordMap = {
+        "RESOLVED":"Resolved",
+        "UNDER_REVIEW":"Under Review",
+        "OPEN":"Open",
+        "LOW":"Low",
+        "MEDIUM":"Medium",
+        "HIGH":"High",
+        "UNRANKED":"Unranked",
+        "INAPPROPRIATE_CONTENT": "Inappropriate Content",
+        "FRAUD": "Fraud",
+        "HARASSMENT": "Harassment",
+        "FAKE_INFORMATION": "Fake Information",
+        "IMPERSONATION": "Impersonation",
+        "OTHER": "Other"
+    }
+
+
+    let severity = report['severity'];
+    if (!severity || severity === null || severity == undefined){
+        severity = "UNRANKED"
+    }
 
     return(
         <section className="px-[7%]">
-            <div className="bg-black/70 rounded-[0.5rem] grid-cols-[4fr_1fr] p-4 grid grid-cols-2 items-start gap-4">
+            <div className="bg-black/20 border border-white/10 hover:border-[#c9fb00] focus:border-[#c9fb00] transition-colors rounded-[0.5rem] grid-cols-[4fr_1fr] p-4 grid grid-cols-2 items-start gap-4">
                 <div className="flex flex-col gap-1">
-                    <h1 className="text-white font-bold text-lg">[{report['id']}, {report['category']}] {targetUser.username} : {report['reason']}</h1>
-                    <h2 className="italic text-gray-400">{`Submitted by ${reporter.username} at ${report['createdAt']}`}</h2>
+                    <h1 className="text-white font-bold text-lg">{targetUser.username} : {report['reason']} ({wordMap[report['category']]})</h1>
+                    <h2 className="italic text-gray-300">{`Submitted by ${reporter.username} at ${report['createdAt'].slice(0,10)}`}</h2>
                     <div className="flex flex-row gap-2">
-                        <Status theme={statusTheme} text={"Status: " + report['status']} />
-                        <Status theme={severityTheme} text={"Severity: " + report['severity']} />
+                        <Status theme={themeMap[report['status']]} text={"Status: " + wordMap[report['status']]} />
+                        <Status theme={themeMap[severity]} text={"Severity: " + wordMap[severity]} />
                     </div>
 
                 </div>

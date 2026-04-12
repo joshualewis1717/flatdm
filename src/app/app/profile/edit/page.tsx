@@ -1,13 +1,18 @@
 import Link from "next/link";
 import { ArrowLeft, PencilLine } from "lucide-react";
+import { notFound } from "next/navigation";
 
+import EditProfileForm from "@/app/app/profile/edit/edit-profile-form";
 import { Button } from "@/components/ui/button";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 const fieldLabels: Record<string, string> = {
   fullName: "full name",
   username: "username",
   email: "email",
   phone: "phone number",
+  // description: "description",
   bio: "bio",
 };
 
@@ -16,7 +21,33 @@ export default async function EditProfilePage({
 }: {
   searchParams: Promise<{ field?: string }>;
 }) {
+  const session = await auth();
   const { field } = await searchParams;
+
+  if (!session?.user?.id) {
+    notFound();
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: Number(session.user.id) },
+    select: {
+      firstName: true,
+      lastName: true,
+      username: true,
+      email: true,
+      profile: {
+        select: {
+          phone: true,
+          bio: true,
+        },
+      },
+    },
+  });
+
+  if (!user) {
+    notFound();
+  }
+
   const label = field ? fieldLabels[field] ?? "profile details" : "profile details";
 
   return (
@@ -26,24 +57,37 @@ export default async function EditProfilePage({
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
           Update your {label}
         </h1>
-        <p className="mt-4 max-w-3xl text-sm leading-7 text-white/68">
-          This is the edit hub for profile fields. The buttons from your profile now route here so we can add field-specific forms next without changing the profile layout again.
-        </p>
+        {/* <p className="mt-4 max-w-3xl text-sm leading-7 text-white/68">
+          Keep your core account details current so your profile, sidebar identity card, and trust signals stay accurate across the app.
+        </p> */}
 
         <div className="mt-6 flex flex-wrap gap-3">
-          <Button asChild size="lg" className="rounded-2xl px-5">
+          <Button asChild size="lg" variant="outline" className="rounded-2xl border-white/12 bg-white/[0.03] px-5 text-white hover:bg-white/[0.06]">
             <Link href="/app/profile">
               <ArrowLeft />
               Back to profile
             </Link>
           </Button>
-          <Button asChild size="lg" variant="outline" className="rounded-2xl border-white/12 bg-white/[0.03] px-5 text-white hover:bg-white/[0.06]">
+          {/* <Button asChild size="lg" variant="outline" className="rounded-2xl border-white/12 bg-white/[0.03] px-5 text-white hover:bg-white/[0.06]">
             <Link href="/app/profile/edit">
               <PencilLine />
               Edit another field
             </Link>
-          </Button>
+          </Button> */}
         </div>
+
+        <EditProfileForm
+          initialValues={{
+            firstName: user.firstName,
+            lastName: user.lastName,
+            username: user.username,
+            email: user.email,
+            phone: user.profile?.phone ?? "",
+            // description: "",
+            bio: user.profile?.bio ?? "",
+          }}
+          focusField={field}
+        />
       </section>
     </div>
   );

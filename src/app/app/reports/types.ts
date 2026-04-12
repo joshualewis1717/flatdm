@@ -83,7 +83,7 @@ type Property = {
 
 type Status = "OPEN" | "UNDER_REVIEW" | "RESOLVED";
 
-type Severity = "LOW" | "MEDIUM" | "HIGH";
+type Severity = "UNRANKED" | "LOW" | "MEDIUM" | "HIGH";
 
 type Category = "FAKE_INFORMATION" | "IMPERSONATION" | "INAPPROPRIATE_BEHAVIOUR" | "OTHER";
 

@@ -17,9 +17,19 @@ const themeMap = {
     "OPEN":"red",
     "LOW":"green",
     "MEDIUM":"amber",
-    "HIGH":"red"
+    "HIGH":"red",
+    "UNRANKED":"neutral"
 }
 
+const wordMap = {
+    "RESOLVED":"Resolved",
+    "UNDER_REVIEW":"Under Review",
+    "OPEN":"Open",
+    "LOW":"Low",
+    "MEDIUM":"Medium",
+    "HIGH":"High",
+    "UNRANKED":"Unranked"
+}
 
 export default function SelectedReportClient({report, target, reporter, moderators} : {report : Report, target : User, reporter : User, moderators : User[]}){
 
@@ -34,15 +44,15 @@ export default function SelectedReportClient({report, target, reporter, moderato
     const [severity, setSeverity] = useState(report['severity']);
 
 
-    function assignModeratorWrap({setVis, vis}): void {
+    function assignModeratorWrap({setVis, vis} : {setVis:Function, vis:boolean}): void {
         setVis(!vis);
     }
 
-    function changeStatusWrap({setVis, vis}): void {
+    function changeStatusWrap({setVis, vis} : {setVis:Function, vis:boolean}): void {
         setVis(!vis);
     }
 
-    function changeSeverityWrap({setVis, vis}): void {
+    function changeSeverityWrap({setVis, vis} : {setVis:Function, vis:boolean}): void {
         setVis(!vis)
     }
 
@@ -70,8 +80,8 @@ export default function SelectedReportClient({report, target, reporter, moderato
 
                     {/* status and severity */}
                     <div className="flex flex-col gap-1 justify-center items-right">
-                        <Status theme={themeMap[status]} text={"Status: " + status} />
-                        <Status theme={themeMap[severity]} text={"Severity: " + severity} />
+                        <Status theme={themeMap[status]} text={"Status: " + wordMap[status]} />
+                        <Status theme={themeMap[severity]} text={"Severity: " + wordMap[severity]} />
                     </div>
                 </div>
 
@@ -105,24 +115,45 @@ export default function SelectedReportClient({report, target, reporter, moderato
                     {/* button options */}
                     <div className="flex flex-col items-center space-x-4 gap-5 justify-center">
                         {/* assign moderator */}
-                        <button onClick={() => assignModeratorWrap({setVis:setAssignModVis, vis:assignModVis})} className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground">
-                            Assign Moderator
-                        </button>
+                        {!assignModVis &&
+                            <button onClick={() => assignModeratorWrap({setVis:setAssignModVis, vis:assignModVis})} className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground">
+                                Assign Moderator
+                            </button>
+                        }
+                        
+                        {assignModVis &&
+                            <ModeratorSelector moderators={moderators} report={report} setVis={setAssignModVis} />
+                        }
 
                         {/* change status */}
-                        <button onClick={() => changeStatusWrap({setVis:setChangeStatusVis, vis:changeStatusVis})} className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground">
-                            Change Status
-                        </button>
+                        {!changeStatusVis &&
+                            <button onClick={() => changeStatusWrap({setVis:setChangeStatusVis, vis:changeStatusVis})} className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground">
+                                Change Status
+                            </button>
+                        }
+
+                        {changeStatusVis &&
+                            <StatusSelector report={report} setStatus={setStatus} setVis={setChangeStatusVis} />
+                        }
+                        
 
                         {/* change severity */}
-                        <button onClick={() => changeSeverityWrap({setVis:setChangeSeverityVis, vis:changeSeverityVis})} className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground">
-                            Change Severity
-                        </button>
+                        {!changeSeverityVis &&
+                            <button onClick={() => changeSeverityWrap({setVis:setChangeSeverityVis, vis:changeSeverityVis})} className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground">
+                                Change Severity
+                            </button>
+                        }
+
+                        {changeSeverityVis &&
+                            <SeveritySelector report={report} setSeverity={setSeverity} setVis={setChangeSeverityVis} />
+                        }
+                        
                     </div>
 
                     {/* interactive change severity, status, assigned mod */}
                     <div className="">
-                        {assignModVis &&
+
+                        {/* {assignModVis &&
                             <ModeratorSelector moderators={moderators} report={report} setVis={setAssignModVis} />
                         }
                         
@@ -132,17 +163,10 @@ export default function SelectedReportClient({report, target, reporter, moderato
 
                         {changeSeverityVis &&
                             <SeveritySelector report={report} setSeverity={setSeverity} setVis={setChangeSeverityVis} />
-                        }
+                        } */}
                     </div>
 
                 </div>
-
-
-    
-
-
-
-
 
             </section>
 

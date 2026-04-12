@@ -1,45 +1,46 @@
-// app/reports/ReportsClient.tsx
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import ReportOverviewItem from "@/components/shared/ReportOverviewItem";
 import {Report, Status, User, Severity, Category} from '@/app/app/reports/types'
-import { prisma } from "@/lib/prisma";
 import { getReportsFilteredSorted } from "./db_access";
+import { Checkbox } from "@/components/ui/checkbox";
+import PaginationBar from '@/app/app/listings/components/PaginationBar'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-
-async function getUserById({users, userId} : {users: User[], userId : number}){
-  console.log(users);
-  console.log(userId);
+// map users by their ids. so userMap[3] returns the user with userId 3
+function mapUsers({users}:{users: User[]}) {
+  const userMap: Record<number, User | undefined> = {};
   for (let i = 0; i < users.length; i++){
-    if (users[i].id == userId){
-      console.log("found " + users[i])
-      return users[i];
-    }
+    userMap[users[i].id] = users[i];
   }
-  console.log("user with id " + userId + " not found");
-  return undefined;
+  return userMap;
 }
 
-async function getUsers({users, reports} : {users:User[], reports:Report[]}){
-  const ret = [];
-
-  for (let i = 0; i < reports.length; i++){
-    ret.push([getUserById(reports[i].reporterID), getUserById(reports[i].targetUserId)]);
-  }
-
-  return ret;
+// map words eg FRAUD to human nice words like Fraud
+const wordMap = {
+    "RESOLVED":"Resolved",
+    "UNDER_REVIEW":"Under Review",
+    "OPEN":"Open",
+    "LOW":"Low",
+    "MEDIUM":"Medium",
+    "HIGH":"High",
+    "UNRANKED":"Unranked",
+    "INAPPROPRIATE_CONTENT": "Inappropriate Content",
+    "FRAUD": "Fraud",
+    "HARASSMENT": "Harassment",
+    "FAKE_INFORMATION": "Fake Information",
+    "IMPERSONATION": "Impersonation",
+    "OTHER": "Other"
 }
+
+
 
 export default function ReportsClient({ initialReports, users }: {initialReports: Report[], users: User[]}) {
 
-  console.log("received")
-  console.log(initialReports)
+  // initially all reports viewable since user has made no selections yet
+  const [viewableReports, setViewableReports] = useState<Report[]>(initialReports);
+  const userMap = mapUsers({users});
 
-  const [viewableReports, setViewableReports] = useState(initialReports);
-  console.log(viewableReports)
-  // const [viewableUsers, setViewableUsers] = useState(getUsers({users, reports:initialReports}));
-
-  // parse dates lazily when needed
   const [selectedStatuses, setSelectedStatuses] = useState<Record<Status, boolean>>({
     "OPEN": true,
     "UNDER_REVIEW": true,
@@ -47,6 +48,7 @@ export default function ReportsClient({ initialReports, users }: {initialReports
   });
 
   const [selectedSeverities, setSelectedSeverities] = useState<Record<Severity, boolean>>({
+    "UNRANKED": true,
     "LOW": true,
     "MEDIUM": true,
     "HIGH": true,
@@ -61,11 +63,10 @@ export default function ReportsClient({ initialReports, users }: {initialReports
     "OTHER": true,
   });
 
-
   const [sortField, setSortField] = useState<"modifiedAt" | "createdAt">("modifiedAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
-  // Local working copy so user can toggle controls before pressing Search
+  // working values for sorting and filtering
   const [workingStatuses, setWorkingStatuses] = useState(selectedStatuses);
   const [workingSeverities, setWorkingSeverities] = useState(selectedSeverities);
   const [workingCategories, setWorkingCategories] = useState(selectedCategories);
@@ -84,160 +85,242 @@ export default function ReportsClient({ initialReports, users }: {initialReports
     setWorkingCategories(prev => ({ ...prev, [category]: !prev[category] }));
   }
 
+  // called when search button pressed, get the viewable results with the user's selection in their order choice
   async function handleApplyFilters() {
-    const resultReports = await getReportsFilteredSorted({selectedStatuses:workingStatuses, selectedSeverities:workingSeverities, selectedCategories:workingCategories, sortField:workingSortField, sortDirection:workingSortDirection});
+    const resultReports = await getReportsFilteredSorted({
+      selectedStatuses: workingStatuses,
+      selectedSeverities: workingSeverities,
+      selectedCategories: workingCategories,
+      sortField: workingSortField,
+      sortDirection: workingSortDirection
+    });
     setViewableReports(resultReports);
-    // setViewableUsers( getUsers({users, resultReports}) );
-
     return;
   }
 
 
+
+  // pagination logic
+
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+
+  useEffect(() => {
+    // reset to first page whenever the data set changes
+    setPage(1);
+  }, [viewableReports.length]);
+
+
+  // derived pagination values
+  const totalReports = viewableReports?.length || 0;
+  const totalPages = Math.max(1, Math.ceil(totalReports / pageSize));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+
+  const currentPageReports = useMemo(() => {
+    const start = (safePage - 1) * pageSize;
+    const end = start + pageSize;
+    return (viewableReports || []).slice(start, end);
+  }, [viewableReports, safePage, pageSize]);
+
+  function gotoPage(p: number) {
+    console.log("passed: " + p)
+    const clamped = Math.min(Math.max(1, p), totalPages);
+    console.log("clamped: " + clamped)
+    setPage(clamped);
+  }
+
   return (
     <div className="p-4">
       <div className="mb-4 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <fieldset className="flex flex-col gap-2">
-          <legend className="font-semibold">Filter by status</legend>
-          {(["OPEN", "UNDER_REVIEW", "RESOLVED"] as Status[]).map(status => (
-            <label key={status} className="inline-flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={workingStatuses[status]}
-                onChange={() => toggleStatus(status)}
-                className="w-4 h-4"
-              />
-              <span>{status}</span>
-            </label>
-          ))}
-        </fieldset>
 
+        {/* filter and sorting panel */}
+        <div className="flex flex-row gap-10 rounded-xl border border-white/10 bg-[#1e1e1e] px-5 py-4 text-white">
+
+          {/* selection for statuses */}
           <fieldset className="flex flex-col gap-2">
-          <legend className="font-semibold">Filter by severity</legend>
-          {(["LOW", "MEDIUM", "HIGH"] as Severity[]).map(severity => (
-            <label key={severity} className="inline-flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={workingSeverities[severity]}
-                onChange={() => toggleSeverity(severity)}
-                className="w-4 h-4"
-              />
-              <span>{severity}</span>
-            </label>
-          ))}
-        </fieldset>
+            <legend className="font-semibold">Filter by status</legend>
 
-        <fieldset className="flex flex-col gap-2">
-          <legend className="font-semibold">Filter by category</legend>
-          {(["INAPPROPRIATE_CONTENT","FRAUD","HARASSMENT","FAKE_INFORMATION","IMPERSONATION","OTHER"] as Category[]).map(category => (
-            <label key={category} className="inline-flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={workingCategories[category]}
-                onChange={() => toggleCategory(category)}
+            {/* iterate through each option to make a checkbox and label */}
+            {(["OPEN", "UNDER_REVIEW", "RESOLVED"] as Status[]).map((status) => (
+              <label key={status} className="inline-flex items-center gap-2">
+                <Checkbox
+                checked={!!workingStatuses[status]}
+                onCheckedChange={() => toggleStatus(status)}
                 className="w-4 h-4"
-              />
-              <span>{category}</span>
-            </label>
-          ))}
-        </fieldset>
+                />
+                <span>{wordMap[status]}</span>
+              </label>
+            ))}
+          </fieldset>
 
-        <div className="flex items-center gap-4">
-          <div>
-            <label className="block text-sm font-medium">Sort by</label>
-            <select
-              value={workingSortField}
-              onChange={(e) => setWorkingSortField(e.target.value as "modifiedAt" | "createdAt")}
-              className="border rounded px-2 py-1"
-            >
-              <option value="modifiedAt">Modified At</option>
-              <option value="createdAt">Created At</option>
-            </select>
+          {/* selection for severities */}
+          <fieldset className="flex flex-col gap-2">
+            <legend className="font-semibold">Filter by severity</legend>
+
+            {/* iterate through all severities and make a checkbox and label */}
+            {(["UNRANKED", "LOW", "MEDIUM", "HIGH"] as Severity[]).map((severity) => (
+              <label key={severity} className="inline-flex items-center gap-2">
+                <Checkbox
+                  checked={!!workingSeverities[severity]}
+                  onCheckedChange={() => toggleSeverity(severity)}
+                  className="w-4 h-4"
+                />
+                <span>{wordMap[severity]}</span>
+              </label>
+            ))}
+          </fieldset>
+
+          {/* selection for categories */}
+          <fieldset className="flex flex-col gap-2">
+            <legend className="font-semibold">Filter by category</legend>
+
+            {/* iterate through options and make checbox and label for each */}
+            {(["INAPPROPRIATE_CONTENT","FRAUD","HARASSMENT","FAKE_INFORMATION","IMPERSONATION","OTHER"] as Category[]
+            ).map((category) => (
+              <label key={category} className="inline-flex items-center gap-2">
+                <Checkbox
+                  checked={!!workingCategories[category]}
+                  onCheckedChange={() => toggleCategory(category)}
+                  className="w-4 h-4"
+                />
+                <span>{wordMap[category]}</span>
+              </label>
+            ))}
+          </fieldset>
+
+          {/* sorting, search and reset buttons */}
+          <div className="flex items-center gap-4">
+            
+              {/* drop down menu for choosing option to sort by (modified at or created at) */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="border rounded px-2 py-1 flex items-center gap-2">
+                    <span className="text-sm font-medium">Sort by</span>
+                    <span className="text-sm">
+                      {workingSortField === "modifiedAt" ? "Modified At" : "Created At"}
+                    </span>
+                  </button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="start" sideOffset={8}>
+                  <DropdownMenuGroup>
+                    <DropdownMenuRadioGroup
+                      value={workingSortField}
+                      onValueChange={(val: "modifiedAt" | "createdAt") =>
+                        setWorkingSortField(val)
+                      }
+                    >
+                      <DropdownMenuRadioItem value="modifiedAt">
+                        Modified At
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="createdAt">
+                        Created At
+                      </DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+
+              {/* drop down menu for order of sorting (desc or asc) */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="border rounded px-2 py-1 flex items-center gap-2">
+                    <span className="text-sm font-medium">Direction</span>
+                    <span className="text-sm">
+                      {workingSortDirection === "desc" ? "Newest first" : "Oldest first"}
+                    </span>
+                  </button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="start" sideOffset={8}>
+                  <DropdownMenuGroup>
+                    <DropdownMenuRadioGroup
+                      value={workingSortDirection}
+                      onValueChange={(val: "asc" | "desc") =>
+                        setWorkingSortDirection(val)
+                      }
+                    >
+                      <DropdownMenuRadioItem value="desc">
+                        Newest first
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="asc">
+                        Oldest first
+                      </DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* search and reset buttons */}
+              <div className="flex gap-2">
+
+                {/* "search" button that actually just sorts and filters the reports */}
+                <button
+                  onClick={handleApplyFilters}
+                  className="bg-blue-600 text-white px-3 py-1 rounded"
+                >
+                  Search
+                </button>
+
+                {/* reset to original settings where all options wanted */}
+                <button
+                  onClick={() => {
+                    setWorkingStatuses({
+                      "OPEN": true,
+                      "UNDER_REVIEW": true,
+                      "RESOLVED": true,
+                    });
+
+                    setWorkingSeverities({
+                      "UNRANKED": true,
+                      "LOW": true,
+                      "MEDIUM": true,
+                      "HIGH": true,
+                    });
+
+                    setWorkingCategories({
+                      "INAPPROPRIATE_CONTENT": true,
+                      "FRAUD": true,
+                      "HARASSMENT": true,
+                      "FAKE_INFORMATION": true,
+                      "IMPERSONATION": true,
+                      "OTHER": true,
+                    });
+                    setWorkingSortField("modifiedAt");
+                    setWorkingSortDirection("desc");
+                    handleApplyFilters();
+                  }}
+                  className="border px-3 py-1 rounded"
+                >
+                  Reset
+                </button>
+              </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium">Direction</label>
-            <select
-              value={workingSortDirection}
-              onChange={(e) => setWorkingSortDirection(e.target.value as "asc" | "desc")}
-              className="border rounded px-2 py-1"
-            >
-              <option value="desc">Newest first</option>
-              <option value="asc">Oldest first</option>
-            </select>
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              onClick={handleApplyFilters}
-              className="bg-blue-600 text-white px-3 py-1 rounded"
-            >
-              Search
-            </button>
-            <button
-              onClick={() => {
-                // reset working controls to show all
-              setWorkingStatuses({
-                  "OPEN": true,
-                  "UNDER_REVIEW": true,
-                  "RESOLVED": true,
-                });
-
-                setWorkingSeverities({
-                  "LOW": true,
-                  "MEDIUM": true,
-                  "HIGH": true,
-                });
-
-                setWorkingCategories({
-                  "INAPPROPRIATE_CONTENT": true,
-                  "FRAUD": true,
-                  "HARASSMENT": true,
-                  "FAKE_INFORMATION": true,
-                  "IMPERSONATION": true,
-                  "OTHER": true,
-                });
-                setWorkingSortField("modifiedAt");
-                setWorkingSortDirection("desc");
-                handleApplyFilters();
-              }}
-              className="border px-3 py-1 rounded"
-            >
-              Reset
-            </button>
           </div>
         </div>
-      </div>
 
-      {/* <div className="flex flex-col gap-2 py-[3%]">
-        {viewableReports.length === 0 ? (
-          <div>No reports match the selected filters.</div>
-        ) : (
-          {
-            for (let i = 0; )
-            viewableReports.map(report => (
-            <ReportOverviewItem key={report.id} report={report} />
-          ))
-          }
 
-        )}
-      </div> */}
+      <PaginationBar currentPage={page} totalPages={totalPages} onPageChange={gotoPage} />
+
+      {/* display the reports that fit the selections */}
       <div className="flex flex-col gap-2 py-[3%]">
         {(viewableReports && viewableReports.length === 0) ? (
           <div>No reports match the selected filters.</div>
         ) : (
-          (() => {
-            const items = [];
-            const list = viewableReports || [];
-            for (let i = 0; i < list.length; i++) {
-              const report = list[i];
-              const targetUser = getUserById({ users, userId: report.reporterId });
-              const reporter = getUserById({ users, userId: report.targetUserId });
-              items.push(<ReportOverviewItem key={report.id} report={report} reporter={reporter} targetUser={targetUser} />);
-            }
-            return items;
-          })()
+          currentPageReports.map(report => (
+            <ReportOverviewItem
+              key={report.id}
+              report={report}
+              reporter={userMap[report.reporterId]}
+              targetUser={userMap[report.targetUserId]}
+            />
+          ))
         )}
       </div>
+
+      <PaginationBar currentPage={page} totalPages={totalPages} onPageChange={gotoPage} />
 
     </div>
   );
