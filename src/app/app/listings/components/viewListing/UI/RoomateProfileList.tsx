@@ -4,6 +4,7 @@ import { Roommate } from "../../../types";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ListingInfoData } from "../../../types";
+import Link from "next/link";
 
 type RoommateAvatarsProps = {
   roomates: ListingInfoData['currentOccupants'];
@@ -28,18 +29,18 @@ export default function RoommateProfileList({ roomates, maxVisible = 10 }: Roomm
 
       <div className="flex -space-x-3">
         {visibleRoommates.map((rm) => (
-          <div
+          <Link
             key={rm.id}
             title={rm.name}
             // clicking on a profile will redirect user to the actual profile page where they can see the info
-            onClick={() => router.push(`/app/profile/${rm.userId}`)}
+            href={`/app/profile/${rm.userId}`}
             className="w-10 h-10 rounded-full border-2 border-white/20 hover:border-primary cursor-pointer bg-white/10 flex items-center justify-center text-xs text-white/70 font-medium transition-colors"
           >
             {rm.name
               .split(" ")
               .map((n) => n[0])
               .join("")}
-          </div>
+          </Link>
         ))}
 
         {/* Expand button */}

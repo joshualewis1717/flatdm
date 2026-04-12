@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import ConfirmModal from '@/components/shared/ConfirmModal';
+import Link from 'next/link';
 
 // modal to show when a speciific user is expected to move in/ when they moved into a speciic property + when they are planning
 // to move out
@@ -93,12 +94,12 @@ export default function OccupantModal({occupant,property,onClose, onRemove}: pro
         {/* Date rows */}
         <div className="flex flex-col gap-2.5">
 
-          <button
-            onClick={() => router.push(`/app/profile/${occupant.userId}`)}
+          <Link
+            href={`/app/profile/${occupant.userId}`}
             className="mt-5 w-full px-3 py-2 rounded-[10px] bg-[#c9fb00] text-black text-[13px] font-semibold hover:opacity-90 transition"
           >
             View Profile
-          </button>
+          </Link>
 
           {isApplicant ? (
             <>

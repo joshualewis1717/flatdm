@@ -42,7 +42,7 @@ export default function ApplicantCard({ application,onAction, }: props) {
           {/* Row 2: landlord profile */}
           {application.landlordName && (
             <ProfileButton role="Landlord" username={application.landlordName} profileUrl={application.landlordAvatar} 
-            onClick={()=>router.push(`/app/profile/${application.landlordId}`)}// user can check out the corresponding landlord profile
+            href={`/app/profile/${application.landlordId}`}// user can check out the corresponding landlord profile
             />
           )}
   

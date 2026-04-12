@@ -15,6 +15,7 @@ import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import ConfirmModal from '@/components/shared/ConfirmModal';
 import PaginationBar from '../components/PaginationBar';
+import Link from 'next/link';
 
 const PAGE_SIZE = 10;// how much listings should  be shown per page
 
@@ -182,13 +183,13 @@ export default function Page() {
             <h1 className="text-xl font-semibold">My Listings</h1>
             <p className="text-white/45 text-sm">Manage your listings</p>
           </div>
-          <button
-            onClick={() => router.push('new')}
+          <Link
+            href={'new'}
             className="flex items-center gap-2 px-4 py-2 rounded-[10px] bg-[#c9fb00] text-black text-[13px] font-semibold hover:opacity-90 transition"
           >
             <Plus className="w-4 h-4" />
             Add Property
-          </button>
+          </Link>
         </header>
 
         {/* Delete/fetch error banner */}

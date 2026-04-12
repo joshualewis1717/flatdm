@@ -11,6 +11,7 @@ import ErrorMessage from "@/components/shared/ErrorMessage";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ReportButton from "@/app/app/reports/ReportButton";
 import ReportPanel from "@/app/app/reports/ReportPanel";
+import Link from "next/link";
 
 type InteractivePanelProps = {
   listingId: string;
@@ -83,26 +84,26 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
 
           {!panelLoading && isConsultant && (
             <>
-              <button className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
-              onClick={()=>router.push(`/app/applications/submit-application?listingId=${listingId}`)}>
+              <Link className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
+              href={`/app/applications/submit-application?listingId=${listingId}`}>
               Apply Now {/* this button will need to use listingId to go to propery application page */}
-              </button>
+              </Link>
 
               <div className="flex flex-col items-center gap-1">
                 <p className="text-sm text-white/50">Have questions?</p>
-                <button className="text-sm text-white/60 hover:text-white underline underline-offset-4 transition"
-                onClick={()=>router.push(`/app/profile/${landlordId}`)}>
+                <Link className="text-sm text-white/60 hover:text-white underline underline-offset-4 transition"
+                href={`/app/profile/${landlordId}`}>
                   Message landlord
-                </button>
+                </Link>
               </div>
             </>
           )}
 
           {!panelLoading && isLandlord && landlordIsOwner && (
-            <button className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
-            onClick={()=>router.push(`/app/listings/edit/${listingId}`)}>{/* pass in id so it can rehydrate the info with the listing info*/}
+            <Link className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
+            href={`/app/listings/edit/${listingId}`}>{/* pass in id so it can rehydrate the info with the listing info*/}
             Edit Listing
-          </button>
+          </Link>
           )}
         </div>
 
