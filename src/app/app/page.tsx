@@ -28,7 +28,7 @@ const roleContent = {
   CONSULTANT: {
     intro:
       "Track open applications, keep landlord conversations moving, and stay close to placement logistics without digging across tabs.",
-    primaryCta: { href: "/app/applications", label: "Review my applications" },
+    primaryCta: { href: "/app/applications/dashboard", label: "Review my applications" },
     secondaryCta: { href: "/app/messages", label: "Open inbox" },
     metrics: [
       { label: "Active applications", value: "08" },

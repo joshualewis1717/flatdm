@@ -85,7 +85,7 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
 
           {!panelLoading && isConsultant && (
             <>
-              <Link className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
+              <Link className="w-full py-6 rounded-2xl bg-primary text-black text-center text-lg font-semibold hover:brightness-110 transition"
               href={`/app/applications/submit-application?listingId=${listingId}`}>
               Apply Now {/* this button will need to use listingId to go to propery application page */}
               </Link>
@@ -101,7 +101,7 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
           )}
 
           {!panelLoading && isLandlord && landlordIsOwner && (
-            <Link className="w-full py-6 rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
+            <Link className="w-full py-6 text-center rounded-2xl bg-primary text-black text-lg font-semibold hover:brightness-110 transition"
             href={`/app/listings/edit/${listingId}`}>{/* pass in id so it can rehydrate the info with the listing info*/}
             Edit Listing
           </Link>
