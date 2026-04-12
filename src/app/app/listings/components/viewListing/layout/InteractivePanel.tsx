@@ -64,7 +64,8 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
   return (
     <>
     {/* report panel in case if user wants to report listing */}
-      <ReportPanel onOpenChange={setIsReportOpen} open={isReportOpen} targetType="listing" targetId={Number(listingId)} onError={setError}/>
+      <ReportPanel onOpenChange={setIsReportOpen} open={isReportOpen} targetType="listing" targetId={Number(listingId)} onError={setError}
+      targetUserId={landlordId}/>
 
       <aside className="flex flex-col gap-6 w-full h-full bg-white/[0.05] rounded-[1.5rem] py-6 px-6">
         {/* small report button */}

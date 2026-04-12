@@ -56,7 +56,7 @@ async function resolveConversationTarget( userId: number, targetId: number): Pro
   };
 }
 
-async function resolveListingTarget(userId: number,targetId: number,providedTargetUserId: number | null): Promise<ResolvedReportTarget> {
+async function resolveListingTarget(targetId: number,providedTargetUserId: number | null): Promise<ResolvedReportTarget> {
   const listing = await prisma.propertyListing.findUnique({  
     where: { id: targetId },
     select: { id: true },
@@ -68,7 +68,7 @@ async function resolveListingTarget(userId: number,targetId: number,providedTarg
     conversationId: null,
     listingId: targetId, 
     reviewId: null,
-    targetUserId: targetId,
+    targetUserId: providedTargetUserId,
   };
 }
 
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
     if (targetType === "conversation") {
       resolvedTarget = await resolveConversationTarget(userId, targetId);
     } else if (targetType === "listing") {
-      resolvedTarget = await resolveListingTarget(userId, targetId, providedTargetUserId);
+      resolvedTarget = await resolveListingTarget(targetId, providedTargetUserId);
     } else {
       resolvedTarget = await resolveReviewTarget(userId, targetId, providedTargetUserId);
     }
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
     const report = await prisma.report.create({
       data: {
         reporterId: userId,
-        targetUserId: resolvedTarget.targetUserId,
+        targetUserId: resolvedTarget.targetUserId ?? undefined,
         conversationId: resolvedTarget.conversationId,
         listingId: resolvedTarget.listingId,
         reviewId: resolvedTarget.reviewId,
