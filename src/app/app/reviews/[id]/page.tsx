@@ -2,9 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Home, Star, UserRound } from "lucide-react";
 import ReviewActions from "./ReviewActions";
-
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
+import ErrorMessage from "@/components/shared/ErrorMessage";
+import { auth } from "@/lib/auth"
+import DeleteReviewButton from "./DeleteReviewButton";
 
 function formatDate(value: Date) {
   return new Intl.DateTimeFormat("en-GB", {
@@ -45,7 +47,9 @@ export default async function ReviewPage({
   if (Number.isNaN(reviewId)) {
     notFound();
   }
-  const review = await prisma.review.findFirst({
+  let review;
+  try {
+   review = await prisma.review.findFirst({
     where: {
       id: reviewId,
       isDeleted: false,
@@ -94,10 +98,17 @@ export default async function ReviewPage({
       },
     },
   });
+} catch(err) {
+  return <ErrorMessage text="Database Error"/>;
+}
 
   if (!review) {
     notFound();
   }
+
+  const session = await auth();
+  const viewerId = Number(session.user.id);
+  const isAuthor = viewerId === Number(review.author.id) 
 
   const type = getReviewType(review);
   const authorName =
@@ -149,6 +160,9 @@ export default async function ReviewPage({
             size="lg"
             className="rounded-2xl px-5"
           />
+          {isAuthor && (
+            <DeleteReviewButton reviewId={Number(review.id)} />
+          )}
         </div>
       </section>
 

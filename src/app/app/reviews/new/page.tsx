@@ -344,11 +344,6 @@ export default async function NewReviewPage({
               {config.title}
             </h1>
             <p className="mt-4 text-sm leading-7 text-white/68">{config.description}</p>
-            {/* {hasTargetContext ? (
-              <p className="mt-3 text-sm text-white/50">
-                Review type was selected automatically from where you opened this page.
-              </p>
-            ) : null} */}
           </div>
           <div className="flex size-14 items-center justify-center rounded-[1.35rem] border border-white/10 bg-black/20 text-white/85">
             <Icon />
@@ -460,7 +455,7 @@ export default async function NewReviewPage({
               name="comment"
               rows={7}
               className="mt-3 rounded-[1.5rem] border-white/10 bg-black/15 px-4 py-3 text-white placeholder:text-white/35"
-              placeholder="What stood out? Mention communication, accuracy, cleanliness, fairness, or anything another person should know."
+              placeholder="Describe your experience living here. Review should be relevant to the property itself and not about the landlord or other tenants."
             />
           </div>
 
@@ -497,17 +492,6 @@ export default async function NewReviewPage({
             </div>
           </section>
 
-          <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6">
-            <div className="flex items-center gap-3">
-              <div className="flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-black/20 text-white/85">
-                <ClipboardList />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white">Need a different target?</p>
-                <p className="text-sm text-white/60">Open a profile or listing first, then launch the review flow from there.</p>
-              </div>
-            </div>
-
             <div className="mt-5 flex flex-wrap gap-3">
               <Button
                 asChild
@@ -515,7 +499,7 @@ export default async function NewReviewPage({
                 variant="outline"
                 className="rounded-xl border-white/12 bg-white/[0.03] text-white hover:bg-white/[0.06]"
               >
-                <Link href="/app/reviews">Back to review types</Link>
+                <Link href="/app/reviews">Back to review page</Link>
               </Button>
               <Button
                 asChild
@@ -526,7 +510,6 @@ export default async function NewReviewPage({
                 <Link href="/app/listings">Browse listings</Link>
               </Button>
             </div>
-          </section>
         </aside>
       </section>
     </div>
