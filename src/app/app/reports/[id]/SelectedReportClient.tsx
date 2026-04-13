@@ -59,7 +59,7 @@ export default function SelectedReportClient({error, report, target, reporter, m
     }
 
     return (
-        <main className="relative min-h-screen overflow-hidden bg-background text-foreground">
+        <main>
 
             <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
 

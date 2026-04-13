@@ -6,6 +6,7 @@ import { getReportsFilteredSorted } from "./db_access";
 import { Checkbox } from "@/components/ui/checkbox";
 import PaginationBar from '@/app/app/listings/components/PaginationBar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import ErrorMessage from "@/components/shared/ErrorMessage";
 
 // map users by their ids. so userMap[3] returns the user with userId 3
 function mapUsers({users}:{users: User[]}) {
@@ -35,7 +36,10 @@ const wordMap = {
 
 
 
-export default function ReportsClient({ initialReports, users }: {initialReports: Report[], users: User[]}) {
+export default function ReportsClient({ error, initialReports, users }: {error : string | null, initialReports: Report[], users: User[]}) {
+
+  // first check if an error was found
+  const errorFound = error !== null;
 
   // initially all reports viewable since user has made no selections yet
   const [viewableReports, setViewableReports] = useState<Report[]>(initialReports);
@@ -305,20 +309,26 @@ export default function ReportsClient({ initialReports, users }: {initialReports
       <PaginationBar currentPage={page} totalPages={totalPages} onPageChange={gotoPage} />
 
       {/* display the reports that fit the selections */}
-      <div className="flex flex-col gap-2 py-[3%]">
-        {(viewableReports && viewableReports.length === 0) ? (
-          <div>No reports match the selected filters.</div>
-        ) : (
-          currentPageReports.map(report => (
-            <ReportOverviewItem
-              key={report.id}
-              report={report}
-              reporter={userMap[report.reporterId]}
-              targetUser={userMap[report.targetUserId]}
-            />
-          ))
-        )}
-      </div>
+      {!errorFound && (
+        <div className="flex flex-col gap-2 py-[3%]">
+          {(viewableReports && viewableReports.length === 0) ? (
+            <div>No reports match the selected filters.</div>
+          ) : (
+            currentPageReports.map(report => (
+              <ReportOverviewItem
+                key={report.id}
+                report={report}
+                reporter={userMap[report.reporterId]}
+                targetUser={userMap[report.targetUserId]}
+              />
+            ))
+          )}
+        </div>
+      )}
+      {errorFound && (
+        <ErrorMessage text={error} />
+      )}
+
 
       <PaginationBar currentPage={page} totalPages={totalPages} onPageChange={gotoPage} />
 

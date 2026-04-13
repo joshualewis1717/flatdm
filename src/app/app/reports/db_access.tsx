@@ -347,6 +347,17 @@ export async function getAllReports(): Promise<DbReturnType<any[]>> {
   }
 }
 
+export async function getAllUsers(): Promise<DbReturnType<any[]>> {
+  try {
+    const users = await prisma.user.findMany();
+    return ok(users);
+  } catch (error: any) {
+    console.error("error occured: " + error.message);
+    return err(error);
+  }
+}
+
+
 
 
 
