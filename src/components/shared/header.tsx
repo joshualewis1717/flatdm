@@ -54,6 +54,8 @@ export default function Header({ onMenuClick } : { onMenuClick: () => void; }) {
         ? headers["/app/profile"]
       : pathname.startsWith("/app/reviews/new")
         ? headers["/app/reviews/new"]
+      : pathname.startsWith("/app/reviews/")
+        ? headers["/app/reviews"]
         : headers[pathname] ?? headers["/app"];
 
   return (

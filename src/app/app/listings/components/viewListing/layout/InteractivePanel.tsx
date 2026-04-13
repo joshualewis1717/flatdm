@@ -1,6 +1,5 @@
 // component to handle all interactive elements that a user can do within a specicc listing page e.g apply, see reviews ec (links to other pages)
 'use client'
-import { useRouter } from "next/navigation";
 import ReviewSlider from "../UI/ReviewSlider";
 import { ListingReview} from "../../../types";
 import { useSessionContext } from "@/components/shared/app-frame";
@@ -18,7 +17,6 @@ type InteractivePanelProps = {
 };
 
 export default function InteractivePanel({ listingId}: InteractivePanelProps) {
-  const router = useRouter();
   // Mock data — replace with db fetch via listingId
   const {isConsultant, isLandlord} = useSessionContext();
   const [landlordId, setLandlordId] = useState<number | null>(null)
@@ -71,7 +69,12 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
         {/* small report button */}
         <div className="flex items-center gap-2 justify-between">
           <span className="text-xs text-white/30">Report this listing</span>
-          <ReportButton onClick={() => {setError(null), setIsReportOpen(true)}} />
+          <ReportButton
+            onClick={() => {
+              setError(null);
+              setIsReportOpen(true);
+            }}
+          />
         </div>
 
         {/* Apply + message landlord */}
@@ -88,6 +91,13 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
               <Link className="w-full py-6 rounded-2xl bg-primary text-black text-center text-lg font-semibold hover:brightness-110 transition"
               href={`/app/applications/submit-application?listingId=${listingId}`}>
               Apply Now {/* this button will need to use listingId to go to propery application page */}
+              </Link>
+
+              <Link
+                className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-center text-sm font-medium text-white transition hover:border-white/20 hover:bg-white/[0.06]"
+                href={`/app/reviews/new?listingId=${listingId}&from=/app/listings/${listingId}`}
+              >
+                Review this listing
               </Link>
 
               <div className="flex flex-col items-center gap-1">
