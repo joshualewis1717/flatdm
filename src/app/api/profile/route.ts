@@ -19,6 +19,7 @@ export async function PATCH(req: Request) {
     const username = body?.username?.trim();
     const email = body?.email?.trim()?.toLowerCase();
     const phone = body?.phone?.trim() || null;
+    const description = body?.description?.trim() || null
     const bio = body?.bio?.trim() || null;
 
     if (!firstName || !lastName || !username || !email) {
@@ -52,8 +53,9 @@ export async function PATCH(req: Request) {
         email,
         profile: {
           upsert: {
-            create: { phone, bio },
-            update: { phone, bio },
+            create: { phone, description, bio },
+            update: { phone, description, bio },
+
           },
         },
       },
