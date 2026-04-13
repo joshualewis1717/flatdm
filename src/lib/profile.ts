@@ -43,6 +43,7 @@ export async function getProfilePageData(userId: number): Promise<ProfilePageDat
         profile: {
           select: {
             phone: true,
+            description:true,
             bio: true,
           },
         },
@@ -105,7 +106,7 @@ export async function getProfilePageData(userId: number): Promise<ProfilePageDat
     role: user.role as ProfileRole,
     createdAt: user.createdAt,
     phone: user.profile?.phone ?? null,
-    description: null,
+    description: user.profile?.description ?? null,
     bio: user.profile?.bio ?? null,
     stats: {
       applications: user._count.applications,

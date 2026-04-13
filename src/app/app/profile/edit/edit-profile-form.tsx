@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
+import PhoneInputField from "@/app/app/applications/components/Submitform/UI/PhoneInputField";
 import ErrorMessage from "@/components/shared/ErrorMessage";
 import SuccessMessage from "@/components/shared/SuccessMessage";
 import { Button } from "@/components/ui/button";
@@ -15,7 +17,7 @@ type EditProfileFormProps = {
     username: string;
     email: string;
     phone: string;
-    // description: string;
+    description: string;
     bio: string;
   };
   focusField?: string;
@@ -30,6 +32,7 @@ export default function EditProfileForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   function updateField<K extends keyof typeof form>(field: K, value: (typeof form)[K]) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -40,6 +43,13 @@ export default function EditProfileForm({
     setIsSaving(true);
     setError(null);
     setSuccess(null);
+    setPhoneError(null);
+
+    if (form.phone && !isValidPhoneNumber(form.phone)) {
+      setPhoneError("Enter a valid phone number including the country code.");
+      setIsSaving(false);
+      return;
+    }
 
     const response = await fetch("/api/profile", {
       method: "PATCH",
@@ -106,23 +116,28 @@ export default function EditProfileForm({
           />
         </label>
 
-        <label className="space-y-2 sm:col-span-2">
-          <span className="text-xs uppercase tracking-[0.28em] text-white/45">Phone</span>
-          <Input
+        <div className="space-y-2 sm:col-span-2">
+          <PhoneInputField
+            label="Phone"
             value={form.phone}
-            onChange={(event) => updateField("phone", event.target.value)}
-            autoFocus={focusField === "phone"}
+            onValueChange={(value) => {
+              updateField("phone", value);
+              if (phoneError) {
+                setPhoneError(null);
+              }
+            }}
           />
-        </label>
+          {phoneError ? <p className="text-sm text-red-400">{phoneError}</p> : null}
+        </div>
 
-        {/* <label className="space-y-2 sm:col-span-2">
+        <label className="space-y-2 sm:col-span-2">
           <span className="text-xs uppercase tracking-[0.28em] text-white/45">Description</span>
           <Input
             value={form.description}
             onChange={(event) => updateField("description", event.target.value)}
             autoFocus={focusField === "description"}
           />
-        </label> */}
+        </label>
 
         <label className="space-y-2 sm:col-span-2">
           <span className="text-xs uppercase tracking-[0.28em] text-white/45">Bio</span>
