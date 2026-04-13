@@ -107,7 +107,7 @@ export default async function ReviewPage({
   }
 
   const session = await auth();
-  const viewerId = Number(session.user.id);
+  const viewerId = Number(session?.user?.id);
   const isAuthor = viewerId === Number(review.author.id) 
 
   const type = getReviewType(review);

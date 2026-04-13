@@ -5,6 +5,7 @@ import { ArrowLeft, Star } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { ReviewCard } from "../../review-ui";
+import ErrorMessage from "@/components/shared/ErrorMessage";
 
 export default async function UserReviewsPage({
   params,
@@ -17,26 +18,33 @@ export default async function UserReviewsPage({
   if (Number.isNaN(userId)) {
     notFound();
   }
-
-  const user = await prisma.user.findFirst({
-    where: {
-      id: userId,
-      isDeleted: false,
-    },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      username: true,
-      role: true,
-    },
-  });
+  let user;
+  try{
+      user = await prisma.user.findFirst({
+      where: {
+        id: userId,
+        isDeleted: false,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        username: true,
+        role: true,
+      },
+    });
+  } catch(err) {
+    return <ErrorMessage text="Database Error"/>
+  }
 
   if (!user) {
     notFound();
   }
 
-  const reviews = await prisma.review.findMany({
+  let reviews;
+
+  try {
+    reviews = await prisma.review.findMany({
     where: {
       isDeleted: false,
       targetUserId: user.id,
@@ -75,6 +83,9 @@ export default async function UserReviewsPage({
       },
     },
   });
+} catch(err) {
+  return <ErrorMessage text="Database Error"/>
+}
 
   const userName = `${user.firstName} ${user.lastName}`.trim() || `@${user.username}`;
 

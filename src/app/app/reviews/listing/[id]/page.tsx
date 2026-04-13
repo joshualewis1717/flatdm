@@ -5,6 +5,8 @@ import { ArrowLeft, Star } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { ReviewCard } from "../../review-ui";
+import ErrorMessage from "@/components/shared/ErrorMessage";
+import { tr } from "date-fns/locale";
 
 export default async function ListingReviewsPage({
   params,
@@ -17,68 +19,76 @@ export default async function ListingReviewsPage({
   if (Number.isNaN(listingId)) {
     notFound();
   }
-
-  const listing = await prisma.propertyListing.findFirst({
-    where: {
-      id: listingId,
-      isDeleted: false,
-    },
-    select: {
-      id: true,
-      flatNumber: true,
-      property: {
-        select: {
-          title: true,
-          streetName: true,
-          city: true,
+  let listing;
+  try{
+    listing = await prisma.propertyListing.findFirst({
+      where: {
+        id: listingId,
+        isDeleted: false,
+      },
+      select: {
+        id: true,
+        flatNumber: true,
+        property: {
+          select: {
+            title: true,
+            streetName: true,
+            city: true,
+          },
         },
       },
-    },
-  });
+    });
+  } catch(err) {
+    return <ErrorMessage text="Database Error"/>
+  }
 
   if (!listing) {
     notFound();
   }
-
-  const reviews = await prisma.review.findMany({
-    where: {
-      isDeleted: false,
-      listingId: listing.id,
-    },
-    orderBy: { createdAt: "desc" },
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          username: true,
-          role: true,
-        },
+  let reviews;
+  try{
+    reviews = await prisma.review.findMany({
+      where: {
+        isDeleted: false,
+        listingId: listing.id,
       },
-      targetUser: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          username: true,
-          role: true,
+      orderBy: { createdAt: "desc" },
+      include: {
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            username: true,
+            role: true,
+          },
         },
-      },
-      listing: {
-        select: {
-          id: true,
-          flatNumber: true,
-          property: {
-            select: {
-              title: true,
-              city: true,
+        targetUser: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            username: true,
+            role: true,
+          },
+        },
+        listing: {
+          select: {
+            id: true,
+            flatNumber: true,
+            property: {
+              select: {
+                title: true,
+                city: true,
+              },
             },
           },
         },
       },
-    },
-  });
+    });
+  } catch(err) {
+    return <ErrorMessage text="Database Error"/>
+  }
 
   const listingName = `${listing.property.title}${
     listing.flatNumber ? `, Flat ${listing.flatNumber}` : ""

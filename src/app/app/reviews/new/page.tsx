@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import ErrorMessage from "@/components/shared/ErrorMessage";
 
 const reviewModes = {
   "landlord-user": {
@@ -161,11 +162,15 @@ async function createReview(formData: FormData) {
         }),
       );
     }
-
-    const listing = await prisma.propertyListing.findFirst({
-      where: { id: listingId, isDeleted: false },
-      select: { id: true },
-    });
+    let listing;
+    try{
+      listing = await prisma.propertyListing.findFirst({
+        where: { id: listingId, isDeleted: false },
+        select: { id: true },
+      });
+    } catch(err) {
+      return <ErrorMessage text="Database Error"/>
+    }
 
     if (!listing) {
       redirect(
@@ -177,15 +182,18 @@ async function createReview(formData: FormData) {
         }),
       );
     }
-
-    await prisma.review.create({
-      data: {
-        authorId,
-        listingId,
-        rating: ratingValue,
-        comment,
-      },
-    });
+    try {
+      await prisma.review.create({
+        data: {
+          authorId,
+          listingId,
+          rating: ratingValue,
+          comment,
+        },
+      });
+    } catch(err) {
+      throw new Error("Database Error")
+    }
 
     redirect("/app/reviews?success=1");
   }
@@ -210,11 +218,15 @@ async function createReview(formData: FormData) {
       }),
     );
   }
-
-  const targetUser = await prisma.user.findFirst({
-    where: { id: userId, isDeleted: false },
-    select: { id: true, role: true },
-  });
+  let targetUser;
+  try{
+    targetUser = await prisma.user.findFirst({
+      where: { id: userId, isDeleted: false },
+      select: { id: true, role: true },
+    });
+  } catch(err) {
+    return <ErrorMessage text="Database Error"/>
+  }
 
   if (!targetUser) {
     redirect(
@@ -244,14 +256,18 @@ async function createReview(formData: FormData) {
     );
   }
 
-  await prisma.review.create({
-    data: {
-      authorId,
-      targetUserId: userId,
-      rating: ratingValue,
-      comment,
-    },
-  });
+  try{
+    await prisma.review.create({
+      data: {
+        authorId,
+        targetUserId: userId,
+        rating: ratingValue,
+        comment,
+      },
+    });
+  } catch(err) {
+    throw new Error("Database Error")
+  }
 
   redirect("/app/reviews?success=1");
 }
@@ -277,43 +293,94 @@ export default async function NewReviewPage({
   const requestedType = isReviewMode(params.type) ? params.type : undefined;
   const userId = params.userId ? Number(params.userId) : null;
   const listingId = params.listingId ? Number(params.listingId) : null;
-  const targetUser =
-    userId && !Number.isNaN(userId)
-      ? await prisma.user.findFirst({
-          where: { id: userId, isDeleted: false },
-          select: {
+  // const targetUser =
+  //   userId && !Number.isNaN(userId)
+  //     ? await prisma.user.findFirst({
+  //         where: { id: userId, isDeleted: false },
+  //         select: {
+  //           id: true,
+  //           firstName: true,
+  //           lastName: true,
+  //           role: true,
+  //           username: true,
+  //         },
+  //       })
+  //     : null;
+  let targetUser = null;
+  try {
+    const parsedUserId = Number(userId);
+
+    if (!Number.isNaN(parsedUserId)) {
+      targetUser = await prisma.user.findFirst({
+        where: { id: parsedUserId, isDeleted: false },
+        select: {
             id: true,
             firstName: true,
             lastName: true,
             role: true,
             username: true,
           },
-        })
-      : null;
-  const listing =
-    listingId && !Number.isNaN(listingId)
-      ? await prisma.propertyListing.findFirst({
-          where: { id: listingId, isDeleted: false },
-          select: {
-            id: true,
-            flatNumber: true,
-            property: {
-              select: {
-                title: true,
-                streetName: true,
-                city: true,
-              },
-            },
-            landlord: {
-              select: {
-                firstName: true,
-                lastName: true,
-                username: true,
-              },
+      });
+    }
+  } catch (err) {
+    throw new Error("Database error");
+  }
+  let listing = null;
+
+  const parsedListingId = Number(listingId);
+
+  if (!Number.isNaN(parsedListingId)) {
+    try {
+      listing = await prisma.propertyListing.findFirst({
+        where: { id: parsedListingId, isDeleted: false },
+        select: {
+          id: true,
+          flatNumber: true,
+          property: {
+            select: {
+              title: true,
+              streetName: true,
+              city: true,
             },
           },
-        })
-      : null;
+          landlord: {
+            select: {
+              firstName: true,
+              lastName: true,
+              username: true,
+            },
+          },
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      throw new Error("Database error");
+    }
+  }
+  // const listing =
+  //   listingId && !Number.isNaN(listingId)
+  //     ? await prisma.propertyListing.findFirst({
+  //         where: { id: listingId, isDeleted: false },
+  //         select: {
+  //           id: true,
+  //           flatNumber: true,
+  //           property: {
+  //             select: {
+  //               title: true,
+  //               streetName: true,
+  //               city: true,
+  //             },
+  //           },
+  //           landlord: {
+  //             select: {
+  //               firstName: true,
+  //               lastName: true,
+  //               username: true,
+  //             },
+  //           },
+  //         },
+  //       })
+  //     : null;
   const type = inferReviewType({
     authorRole: session.user.role,
     targetRole: targetUser?.role as UserRole | undefined,

@@ -1,8 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { ReviewCard } from "./review-ui";
+import ErrorMessage from "@/components/shared/ErrorMessage";
 
 export default async function ReviewsPage() {
-  const reviews = await prisma.review.findMany({
+  let reviews;
+  try{
+    reviews = await prisma.review.findMany({
     where: { isDeleted: false },
     orderBy: { createdAt: "desc" },
     include: {
@@ -38,6 +41,9 @@ export default async function ReviewsPage() {
       },
     },
   });
+} catch(err) {
+  return <ErrorMessage text="Database Error"/>
+}
 
   return (
     <div className="space-y-6">
