@@ -94,3 +94,9 @@ type FilterSearchProps = {
   sortField: 'modifiedAt' | 'createdAt';
   sortDirection: 'asc' | 'desc';
 };
+
+
+type DbReturnType<T> = {
+  error: Error | null;
+  result: T | null;
+}
