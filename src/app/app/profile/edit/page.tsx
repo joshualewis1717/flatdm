@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, PencilLine } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import EditProfileForm from "@/app/app/profile/edit/edit-profile-form";
@@ -12,7 +12,7 @@ const fieldLabels: Record<string, string> = {
   username: "username",
   email: "email",
   phone: "phone number",
-  // description: "description",
+  description: "description",
   bio: "bio",
 };
 
@@ -38,6 +38,7 @@ export default async function EditProfilePage({
       profile: {
         select: {
           phone: true,
+          description: true,
           bio: true,
         },
       },
@@ -57,9 +58,9 @@ export default async function EditProfilePage({
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
           Update your {label}
         </h1>
-        {/* <p className="mt-4 max-w-3xl text-sm leading-7 text-white/68">
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-white/68">
           Keep your core account details current so your profile, sidebar identity card, and trust signals stay accurate across the app.
-        </p> */}
+        </p>
 
         <div className="mt-6 flex flex-wrap gap-3">
           <Button asChild size="lg" variant="outline" className="rounded-2xl border-white/12 bg-white/[0.03] px-5 text-white hover:bg-white/[0.06]">
@@ -83,7 +84,7 @@ export default async function EditProfilePage({
             username: user.username,
             email: user.email,
             phone: user.profile?.phone ?? "",
-            // description: "",
+            description: user.profile?.description ?? "",
             bio: user.profile?.bio ?? "",
           }}
           focusField={field}
