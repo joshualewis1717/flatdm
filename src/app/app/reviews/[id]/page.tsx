@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Home, Star, UserRound } from "lucide-react";
+import ReviewActions from "./ReviewActions";
 
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,6 @@ export default async function ReviewPage({
   if (Number.isNaN(reviewId)) {
     notFound();
   }
-
   const review = await prisma.review.findFirst({
     where: {
       id: reviewId,
@@ -143,6 +143,12 @@ export default async function ReviewPage({
               Back to reviews
             </Link>
           </Button>
+          <ReviewActions
+            reviewId={Number(review.id)}
+            reviewerId={Number(review.author.id)}
+            size="lg"
+            className="rounded-2xl px-5"
+          />
         </div>
       </section>
 
