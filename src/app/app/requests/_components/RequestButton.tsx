@@ -1,6 +1,8 @@
 "use client";
 
+import ErrorMessage from "@/components/shared/ErrorMessage";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 type Parameters = {
   receiverId: number;
@@ -8,8 +10,10 @@ type Parameters = {
 };
 
 export default function RequestButton({receiverId, className}: Parameters) {
+  const  [error, setError] = useState<string | null>(null)
   const handleCreateRequest = async () => {
     try {
+      setError(null)
       const response = await fetch("/api/requests", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -23,16 +27,29 @@ export default function RequestButton({receiverId, className}: Parameters) {
         throw new Error(data?.error ?? `Failed to create request (${response.status})`);
       }
     } catch (error) {
-      console.error(error);
+      if (error instanceof Error) {
+        console.error(error);
+        setError(error.message);
+      }
+
     }
   };
 
   return (
-    <Button
-      type="button"
-      onClick={handleCreateRequest}
-      className={className}> {/* Styling */}
+    <>
+    <div className="flex gap-2">
+      <Button
+        type="button"
+        onClick={handleCreateRequest}
+        className={className}
+      >
         Send Request
-    </Button>
+      </Button>
+
+      {error && (
+        <ErrorMessage text={error} />
+      )}
+    </div>
+    </>
   );
 }

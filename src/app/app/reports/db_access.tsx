@@ -3,11 +3,10 @@
 import { prisma } from "@/lib/prisma";
 import {DbReturnType, User, Report, Review, PropertyApplication, Property, PropertyListing, Status, Severity, Category, FilterSearchProps} from '@/app/app/reports/types';
 import {sendEmail} from '@/app/app/reports/sendEmail'
-import { use } from "react";
-import { isErrored } from "stream";
 import {ConfirmFunction} from '@/app/app/reports/types';
-import { Database, UnfoldHorizontal } from "lucide-react";
-import { error } from "console";
+
+
+// functions not exporte are not to be used externally. use the exported functions found below
 
 // delete all properties (and all associated listings and applications) by a given landlord id
 async function rawDeletePropertiesByLandlord({landlordId} : {landlordId : number}){
@@ -31,7 +30,6 @@ async function rawDeletePropertiesByLandlord({landlordId} : {landlordId : number
 
     return;
 }
-
 
 // set status to "WITHDRAWN" for all property applications made by a given user id
 async function rawDeletePropertyApplicationsByUser({ userId }: { userId: number }) {
@@ -59,6 +57,7 @@ async function rawDeletePropertyApplicationsByListing({ listingId }: { listingId
   return;
 }
 
+// given a landlord id, delete all associated property listings
 async function rawDeletePropertyListingByLandlord({landlordId} : {landlordId : number}){
 
     // get all property listings ids where the landlord id is landlordId
@@ -85,6 +84,7 @@ async function rawDeletePropertyListingByLandlord({landlordId} : {landlordId : n
     return;
 }
 
+// delete review given the id
 async function rawDeleteReview({reviewId} : {reviewId : number}){
     try{
         await prisma.review.updateMany({
@@ -98,7 +98,6 @@ async function rawDeleteReview({reviewId} : {reviewId : number}){
 
     return;
 }
-
 
 // delete all reviews written by this user or about this user
 async function rawDeleteReviewByUser({userId} : {userId : number}){
@@ -138,6 +137,8 @@ async function rawDeleteUser({userId} : {userId:number}){
 
 
 
+
+
 // helper functions for the return object //////////////////////////////////////////////////////
 
 function ok<T>(result: T): DbReturnType<T> {
@@ -148,16 +149,12 @@ function err<T = null>(error: Error): DbReturnType<T> {
   return { error, result: null };
 }
 
+
+
+
 // functions to be used externally /////////////////////////////////////////////////////////////
 
-
-
-
-
-
-
-
-
+// add an offence to a user
 export const addOffence: ConfirmFunction = async ({ user, text }): Promise<DbReturnType<void>> => {
   try {
     const result = await prisma.offenceRecord.create({
@@ -170,10 +167,8 @@ export const addOffence: ConfirmFunction = async ({ user, text }): Promise<DbRet
   }
 };
 
-export async function changeReportSeverity({
-  reportId,
-  newSeverity,
-}): Promise<DbReturnType<void>> {
+// change the severity of a report
+export async function changeReportSeverity({reportId, newSeverity}): Promise<DbReturnType<void>> {
   try {
     const result = await prisma.report.update({
       where: { id: reportId },
@@ -186,6 +181,7 @@ export async function changeReportSeverity({
   }
 }
 
+// change the status of a report
 export async function changeReportStatus({
   reportId,
   newStatus,
@@ -202,6 +198,7 @@ export async function changeReportStatus({
   }
 }
 
+// unassign moderators from a report
 export async function unassignReport({ reportId }): Promise<DbReturnType<void>> {
   try {
     const result = await prisma.report.update({
@@ -215,10 +212,8 @@ export async function unassignReport({ reportId }): Promise<DbReturnType<void>> 
   }
 }
 
-export async function assignModToReport({
-  reportId,
-  userId,
-}): Promise<DbReturnType<void>> {
+// assign a moderator id to a report
+export async function assignModToReport({reportId, userId}): Promise<DbReturnType<void>> {
   try {
     const userRole = await prisma.user.findFirst({
       where: { id: userId },
@@ -242,6 +237,7 @@ export async function assignModToReport({
   }
 }
 
+// delete a report given the id
 export async function deleteReport({ report }: { report: any }): Promise<DbReturnType<void>> {
   try {
     const result = await prisma.report.delete({
@@ -254,6 +250,7 @@ export async function deleteReport({ report }: { report: any }): Promise<DbRetur
   }
 }
 
+// get all moderator users
 export async function getModerators(): Promise<DbReturnType<any[]>> {
   try {
     const mods = await prisma.user.findMany({
@@ -266,6 +263,7 @@ export async function getModerators(): Promise<DbReturnType<any[]>> {
   }
 }
 
+// get a report given the id
 export async function getReport({ reportId }: any): Promise<DbReturnType<any | undefined>> {
   if (reportId == undefined) {
     const e = new Error("trying to get report with undefined id");
@@ -281,6 +279,7 @@ export async function getReport({ reportId }: any): Promise<DbReturnType<any | u
   }
 }
 
+// get reports that pass through filters, sorted
 export async function getReportsFilteredSorted({
   selectedStatuses,
   selectedSeverities,
@@ -317,36 +316,8 @@ export async function getReportsFilteredSorted({
   }
 }
 
-export async function getUsers(): Promise<DbReturnType<any[]>> {
-  try {
-    const users = await prisma.user.findMany();
-    return ok(users);
-  } catch (error: any) {
-    console.error("error occured: " + error.message);
-    return err(error);
-  }
-}
 
-export async function getUser({ userId }: any): Promise<DbReturnType<any>> {
-  try {
-    const user = await prisma.user.findFirst({ where: { id: userId } });
-    return ok(user);
-  } catch (error: any) {
-    console.error("error occured: " + error.message);
-    return err(error);
-  }
-}
-
-export async function getAllReports(): Promise<DbReturnType<any[]>> {
-  try {
-    const reports = await prisma.report.findMany();
-    return ok(reports);
-  } catch (error: any) {
-    console.error("error occured: " + error.message);
-    return err(error);
-  }
-}
-
+// get all users
 export async function getAllUsers(): Promise<DbReturnType<any[]>> {
   try {
     const users = await prisma.user.findMany();
@@ -357,7 +328,29 @@ export async function getAllUsers(): Promise<DbReturnType<any[]>> {
   }
 }
 
+// get a user given their id
+export async function getUser({ userId }: any): Promise<DbReturnType<any>> {
+  try {
+    const user = await prisma.user.findFirst({ where: { id: userId } });
+    return ok(user);
+  } catch (error: any) {
+    console.error("error occured: " + error.message);
+    return err(error);
+  }
+}
 
+// get all reports
+export async function getAllReports(): Promise<DbReturnType<any[]>> {
+  try {
+    const reports = await prisma.report.findMany();
+    return ok(reports);
+  } catch (error: any) {
+    console.error("error occured: " + error.message);
+    return err(error);
+  }
+}
+
+// get all users who have not been deleted
 export async function getAllAliveUsers(): Promise<DbReturnType<any[]>> {
   try {
     const users = await prisma.user.findMany({
@@ -370,12 +363,7 @@ export async function getAllAliveUsers(): Promise<DbReturnType<any[]>> {
   }
 }
 
-
-
-
-
-
-
+// delete a user given the id
 export async function deleteUser({ user }: { user: User }): Promise<DbReturnType<void>> {
   try {
     if (user.role === "LANDLORD") {
@@ -397,6 +385,7 @@ export async function deleteUser({ user }: { user: User }): Promise<DbReturnType
   }
 }
 
+// delete a review given the id
 export async function deleteReview({ review }: { review: Review }): Promise<DbReturnType<void>> {
   try {
     const result = await rawDeleteReview({ reviewId: review.id });
@@ -407,6 +396,7 @@ export async function deleteReview({ review }: { review: Review }): Promise<DbRe
   }
 }
 
+// get a review given the id
 export async function deleteReviewById({ reviewId }: { reviewId: number }): Promise<DbReturnType<void>> {
   try {
     const result = await rawDeleteReview({ reviewId });
@@ -416,262 +406,3 @@ export async function deleteReviewById({ reviewId }: { reviewId: number }): Prom
     return err<void>(error);
   }
 }
-
-
-
-
-
-
-
-// export const addOffence: ConfirmFunction = async ({ user, text }) => {
-
-//     try{
-//         await prisma.offenceRecord.create({
-//             data: {
-//                 reason: text,
-//                 userId: user.id
-//             },
-//         }); 
-//     }
-//     catch (error){
-//         console.error("error occured: " + error.message);
-//     }
-
-//     return;
-// }
-
-// // change the severity of a report
-// export async function changeReportSeverity({reportId, newSeverity}){
-
-//     try{
-//         await prisma.report.update({
-//             where: {id: reportId},
-//             data: {severity: newSeverity}
-//         });
- 
-//     }
-//     catch (error){
-//         console.error("error occured: " + error.message);
-//     }
-
-//     return;
-// }
-
-
-
-// // change the status of a report
-// export async function changeReportStatus({reportId, newStatus}){
-
-//     try{
-//         await prisma.report.update({
-//             where: {id: reportId},
-//             data: {status: newStatus}
-//         });
- 
-//     }
-//     catch (error){
-//         console.error("error occured: " + error.message);
-//     }
-
-//     return;
-// }
-
-// // assign no mod to a report
-// export async function unassignReport({reportId}){
-//     await prisma.report.update({
-//         where: {id: reportId},
-//         data: {assignedModeratorId: null}
-//     });
-// }
-
-
-// // assign a moderator to a report
-// export async function assignModToReport({reportId, userId}){
-
-//     try{
-//         // make sure the user is actually a moderator
-//         const userRole = await prisma.user.findFirst({
-//             where: {id: userId},
-//             select: {role: true}
-//         })
-
-//         if (String(userRole.role) == "MODERATOR"){      
-//             await prisma.report.update({
-//                 where: { id: reportId },
-//                 data: { assignedModeratorId: userId },
-//             });
-//         }
-//         else{
-//             console.log("report assignment denied since user " + userId + " is not a moderator")
-//         }
-//     }
-//     catch (error){
-//         console.error("error occured: " + error.message);
-//     }
-
-//     return;
-// }
-
-
-
-
-// export async function deleteReport({report} : Report){
-
-//     try{
-//         // delete from database
-//         await prisma.report.delete({
-//             where: {id: report['id']}
-//         });
-//     }
-//     catch (error){
-//         console.error("error occured: " + error.message);
-//     }
-
-//     return;
-// }
-
-// export async function getModerators() {
-//     try {
-//         const mods = await prisma.user.findMany({
-//         where: {
-//             role: "MODERATOR",
-//             isDeleted: false
-//         }
-//         });
-//         return mods;
-//     } catch (error: any) {
-//         console.error("error occured: " + error.message);
-//         return [];
-//     }
-// }
-
-
-// export async function getReport({reportId}: any){
-//     if (reportId == undefined){
-//         console.log("trying to get report with undefined id")
-//         return undefined;
-//     }
-
-//     try{
-//         const report = await prisma.report.findFirst({
-//             where: {id: reportId}
-//         })
-//         return report;
-//     }
-//     catch (error){
-//         console.error("error occured: " + error.message);
-//     }
-// }
-
-
-// export async function getReportsFilteredSorted({selectedStatuses, selectedSeverities, selectedCategories, sortField, sortDirection} : FilterSearchProps){
-
-//     const STATUSES = ["OPEN", "UNDER_REVIEW", "RESOLVED"];
-//     const SEVERITIES = ["LOW", "MEDIUM", "HIGH"];
-//     const CATEGORIES = ["INAPPROPRIATE_CONTENT", "FRAUD", "HARASSMENT", "FAKE_INFORMATION", "IMPERSONATION", "OTHER"]
-
-//     // map to array containing only selected fields
-//     const statuses: Status[] = STATUSES.filter(s => selectedStatuses[s]);
-//     const severities: Severity[] = SEVERITIES.filter(s => selectedSeverities[s]);
-//     const categories: Category[] = CATEGORIES.filter(c => selectedCategories[c]);
-
-
-//     // get reports that fit the requirements
-//     try{
-//         const reports = await prisma.report.findMany({
-//             where: {
-//                 AND: [
-//                     {status: {in: statuses}},
-//                     {severity: {in: severities}},
-//                     {category: {in: categories}},
-//                 ]
-//             },
-//             orderBy: { [sortField]: sortDirection },
-//         });
-
-//         return reports; 
-//     }
-//     catch (error){
-//         console.error("error occured: " + error.message);
-//     }
-// }
-
-// export async function getUsers(){
-//     try{
-//         const users = await prisma.user.findMany();
-//         return users;
-//     }
-//     catch (error){
-//         console.error("error occured: " + error.message);
-//     }
-// }
-
-// export async function getUser({userId} : any){
-//     try{
-//         const user = await prisma.user.findFirst({
-//             where: { id: userId }
-//         });
-//         return user;
-//     }
-//     catch (error){
-//         console.error("error occured: " + error.message);
-//     }
-//     return await prisma.user.findFirst({where:{id:userId}});
-// }
-
-
-
-
-// export async function getAllReports(){
-//     try{   
-//         const reports = await prisma.report.findMany();
-//         return reports;
-//     }
-//     catch (error){
-//         console.error("error occured: " + error.message);
-//     }
-// }
-
-
-// export async function deleteUser({user} : User){
-
-//     try{   
-//         if (user['role'] == "LANDLORD"){
-//             // delete properties (-> delete property listings (-> delete associated property applications) )
-//             await rawDeletePropertiesByLandlord({landlordId:user.id});        
-//         }
-//         else if (user['role'] == "CONSULTANT"){
-
-//             // delete property applications made
-//             await rawDeletePropertyApplicationsByUser({userId:user.id});
-//         }
-
-//         // for both roles, 'delete' reviews made about them and by them
-//         await rawDeleteReviewByUser({userId:user.id});
-
-
-//         // 'delete' from database by setting isDeleted to true
-//         rawDeleteUser({userId:user.id});
-
-//         const text : string = "Your account has been deleted";
-//         sendEmail({user, text});
-
-//         // confirm in logs
-//         console.log("deleted user with id: " + user['id']);
-//     }
-//     catch (error){
-//         console.error("error occured: " + error.message);
-//     }
-
-//     return;
-// }
-
-// export async function deleteReview({ review }: Review) {
-//     await rawDeleteReview({ reviewId: review.id });
-//     return;
-// }
-
-// export async function deleteReviewById({ reviewId }: { reviewId: number }) {
-//     await rawDeleteReview({ reviewId: reviewId });
-//     return;
-// }

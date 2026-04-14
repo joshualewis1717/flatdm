@@ -142,6 +142,7 @@ export default function MessagesClient({conversations, requests, error=null}: Pa
 
   const acceptRequest = async (requestId: number) => {
     try {
+      setInboxError(null)
       const response = await fetch("/api/requests", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -164,11 +165,13 @@ export default function MessagesClient({conversations, requests, error=null}: Pa
       setSelectedConversation(data.conversation.id);
     } catch (error) {
       console.error(error);
+      setInboxError("failed to accept message request")
     }
   };
 
   const declineRequest = async (requestId: number) => {
     try {
+      setInboxError(null)
       const response = await fetch("/api/requests", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -182,6 +185,7 @@ export default function MessagesClient({conversations, requests, error=null}: Pa
       setAllRequests((current) => current.filter((request) => request.id !== requestId));
     } catch (error) {
       console.error(error);
+      setInboxError("failed to reject message request")
     }
   };
 
