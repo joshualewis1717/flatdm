@@ -64,7 +64,9 @@ const defaultCategories: Record<Category, boolean> = {
 export default function ReportsClient({ error, initialReports, users }: {error : string | null, initialReports: Report[], users: User[]}) {
 
   // first check if an error was found
-  const errorFound = error !== null;
+  const [errorFound, setErrorFound] = useState(error !== null);
+  const [errorMessage, setErrorMessage] = useState(error)
+
 
   // initially all reports viewable since user has made no selections yet
   const [viewableReports, setViewableReports] = useState<Report[]>(initialReports);
@@ -91,17 +93,38 @@ export default function ReportsClient({ error, initialReports, users }: {error :
 
   // called when search button pressed, get the viewable results with the user's selection in their order choice
   async function handleApplyFilters() {
-    const resultReports = await getReportsFilteredSorted({
-      selectedStatuses: workingStatuses,
-      selectedSeverities: workingSeverities,
-      selectedCategories: workingCategories,
-      sortField: workingSortField,
-      sortDirection: workingSortDirection
-    });
-    setViewableReports(resultReports);
-    setPage(1);
+
+
+    let resultReports = null;
+
+    try{
+      resultReports = await getReportsFilteredSorted({
+        selectedStatuses: workingStatuses,
+        selectedSeverities: workingSeverities,
+        selectedCategories: workingCategories,
+        sortField: workingSortField,
+        sortDirection: workingSortDirection
+      });
+
+      // no error found
+      if (resultReports.error == null){
+        resultReports = resultReports.result;
+        setViewableReports(resultReports);
+        setPage(1);
+      }
+      else{
+        setErrorFound(true);
+        setErrorMessage("Error fetching reports. Refresh to try again");
+      }
+    }
+    catch (error){
+      setErrorFound(true);
+      setErrorMessage(String(error));
+    }
+
     return;
   }
+                   
 
 
 
@@ -119,13 +142,12 @@ export default function ReportsClient({ error, initialReports, users }: {error :
   const currentPageReports = useMemo(() => {
     const start = (safePage - 1) * pageSize;
     const end = start + pageSize;
+    console.log(viewableReports)
     return (viewableReports || []).slice(start, end);
   }, [viewableReports, safePage, pageSize]);
 
   function gotoPage(p: number) {
-    console.log("passed: " + p)
     const clamped = Math.min(Math.max(1, p), totalPages);
-    console.log("clamped: " + clamped)
     setPage(clamped);
   }
 
@@ -288,15 +310,34 @@ export default function ReportsClient({ error, initialReports, users }: {error :
                     setWorkingCategories(defaultCategories);
                     setWorkingSortField("modifiedAt");
                     setWorkingSortDirection("desc");
-                    const resultReports = await getReportsFilteredSorted({
-                      selectedStatuses: defaultStatuses,
-                      selectedSeverities: defaultSeverities,
-                      selectedCategories: defaultCategories,
-                      sortField: "modifiedAt",
-                      sortDirection: "desc"
-                    });
-                    setViewableReports(resultReports);
-                    setPage(1);
+
+                    let resultReports = null;
+
+                    try{
+                      resultReports = await getReportsFilteredSorted({
+                        selectedStatuses: defaultStatuses,
+                        selectedSeverities: defaultSeverities,
+                        selectedCategories: defaultCategories,
+                        sortField: "modifiedAt",
+                        sortDirection: "desc"
+                      });
+
+                      // no error found
+                      if (resultReports.error == null){
+                        resultReports = resultReports.result;
+                        setViewableReports(resultReports);
+                        setPage(1);
+                      }
+                      else{
+                        setErrorFound(true);
+                        setErrorMessage("Error fetching reports. Refresh to try again");
+                      }
+                    }
+                    catch (error){
+                      setErrorFound(true);
+                      setErrorMessage(String(error));
+                    }
+                   
                   }}
                   className="rounded-lg border-white/12 bg-white/[0.03] px-3 text-white hover:bg-white/[0.06]"
                 >
@@ -332,7 +373,7 @@ export default function ReportsClient({ error, initialReports, users }: {error :
         </div>
       )}
       {errorFound && (
-        <ErrorMessage text={error} />
+        <ErrorMessage text={errorMessage} />
       )}
 
 
