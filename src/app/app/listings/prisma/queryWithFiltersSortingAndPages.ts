@@ -1,23 +1,29 @@
 'use server'
 import { prisma } from "@/lib/prisma";
+import { runService } from "../../clientService/prisma/prismaUtils";
 import { AmenityType, FurnishedType, Prisma } from "@prisma/client";
 import { ListingParameters } from "../types";
 import { getAvailableFrom } from "./mappers";
 
 export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
+	return runService(async () => {
 	// from ListingParameters, this query considers:
 	// rent_min, rent_max, maxoccupants_max, minstay_max, bedrooms_min, bedrooms_max, bathrooms_min, bathrooms_max, area_min, area_max, has_photo, furnished_level, transport_nearby, healthcare_nearby, recreation_nearby, other_nearby, available_from
-	const now = new Date();
+
+
+	// Base where clause (only non-deleted listings)
 	const where: Prisma.PropertyListingWhereInput = {
 		isDeleted: false,
 	};
 	const andFilters: Prisma.PropertyListingWhereInput[] = [];
 
+	// Helper to convert various filter inputs to Prisma-compatible filters
 	const toFiniteNumber = (value: unknown) => {
 		const parsed = Number(value);
 		return Number.isFinite(parsed) ? parsed : null;
 	};
 
+	// Helper to create range filters for Prisma
 	const getRangeFilter = (minRaw: unknown, maxRaw: unknown) => {
 		const min = toFiniteNumber(minRaw);
 		const max = toFiniteNumber(maxRaw);
@@ -32,6 +38,8 @@ export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
 	};
 
 
+	// available_from filter (special handling for "now" and invalid dates)
+	const now = new Date();
 	const availableFromFilter = (() => {
 		if (!LP.available_from) {
 			return null;
@@ -133,10 +141,12 @@ export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
 		);
 	}
 
+	// Add filters to prisma query
 	if (andFilters.length > 0) {
 		where.AND = andFilters;
 	}
 
+	// Call prisma query
 	const items = await prisma.propertyListing.findMany({
 		where,
 		include: {
@@ -165,6 +175,8 @@ export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
 		},
 	});
 
+	// Add availableFrom field based on occupants and maxOccupants, then filter by available_from if provided
+	// and return
 	return items
 		.map((item) => ({
 			...item,
@@ -177,4 +189,5 @@ export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
 
 			return item.availableFrom !== null && item.availableFrom <= availableFromFilter;
 		});
+	});
 }
