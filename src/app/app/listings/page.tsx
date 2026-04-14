@@ -10,6 +10,29 @@ import { useListingsState } from "./state/ListingsStateProvider";
 import { useAllItemsState } from "./state/AllItemsStateProvider";
 import { queryWithFiltersSortingAndPages } from "./prisma/queryWithFiltersSortingAndPages";
 
+const EARTH_RADIUS_MILES = 3958.8;
+
+const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
+
+const haversineDistanceMiles = (
+  fromLat: number,
+  fromLng: number,
+  toLat: number,
+  toLng: number,
+) => {
+  const dLat = toRadians(toLat - fromLat);
+  const dLng = toRadians(toLng - fromLng);
+  const lat1 = toRadians(fromLat);
+  const lat2 = toRadians(toLat);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return EARTH_RADIUS_MILES * c;
+};
+
 export default function ListingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -142,6 +165,10 @@ export default function ListingsPage() {
     const sortBy = listingParameters.sort_by ?? "updated_at";
     const sortOrder = listingParameters.sort_order === "asc" ? "asc" : "desc";
     const sorted = [...ListingsResults];
+    const locationLat = Number(listingParameters.location_lat);
+    const locationLng = Number(listingParameters.location_lng);
+    const hasLocationForDistanceSort =
+      Number.isFinite(locationLat) && Number.isFinite(locationLng);
 
     const compareNumber = (a: number, b: number) =>
       sortOrder === "asc" ? a - b : b - a;
@@ -165,15 +192,27 @@ export default function ListingsPage() {
         case "available_from":
           return compareDate(a.availableFrom ?? new Date(0), b.availableFrom ?? new Date(0));
         case "distance":
-          // Distance sorting is intentionally not implemented yet.
-          return compareDate(a.updatedAt, b.updatedAt);
+          if (!hasLocationForDistanceSort) {
+            return compareDate(a.updatedAt, b.updatedAt);
+          }
+
+          return compareNumber(
+            haversineDistanceMiles(locationLat, locationLng, a.property.lat, a.property.lng),
+            haversineDistanceMiles(locationLat, locationLng, b.property.lat, b.property.lng),
+          );
         default:
           return 0;
       }
     });
 
     return sorted;
-  }, [ListingsResults, listingParameters.sort_by, listingParameters.sort_order]);
+  }, [
+    ListingsResults,
+    listingParameters.location_lat,
+    listingParameters.location_lng,
+    listingParameters.sort_by,
+    listingParameters.sort_order,
+  ]);
 
   // Get current page listings
   // Factors in pagination and sorting, but not filtering (since most filtering is done server-side)
