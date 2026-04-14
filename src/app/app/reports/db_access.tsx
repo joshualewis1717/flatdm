@@ -358,7 +358,17 @@ export async function getAllUsers(): Promise<DbReturnType<any[]>> {
 }
 
 
-
+export async function getAllAliveUsers(): Promise<DbReturnType<any[]>> {
+  try {
+    const users = await prisma.user.findMany({
+        where: {isDeleted: false}
+    });
+    return ok(users);
+  } catch (error: any) {
+    console.error("error occured: " + error.message);
+    return err(error);
+  }
+}
 
 
 

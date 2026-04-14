@@ -3,24 +3,49 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 import {getAllReports} from '@/app/app/reports/db_access'
+import ErrorMessage from "@/components/shared/ErrorMessage";
 
 
-// get numbers for consultant page
-const reports = await getAllReports();
+// get numbers for moderator page
+
+let reports = null;
+let dataError : string | null = null;
+
+try{
+  reports = await getAllReports();
+
+  if (reports.error == null){
+    reports = reports.result
+  }
+  else{
+    dataError = reports.error;
+  }
+}
+catch (error){
+  dataError = "Error accessing the database. Refresh to try again."
+}
+
+
 let resolvedCount = 0;
 let activeCount = 0;
 
-for (let i = 0; i < reports.length; i++){
-  const rep = reports[i];
-  if (rep.status == "RESOLVED"){
-    resolvedCount++;
+if (dataError == null){
+  for (let i = 0; i < reports.length; i++){
+    const rep = reports[i];
+    if (rep.status == "RESOLVED"){
+      resolvedCount++;
+    }
+    else if (rep.status == "UNDER_REVIEW" || rep.status == "OPEN"){
+      activeCount++;
+    }
+    else{
+      console.log("error: " + rep.status + " is not a valid report status");
+    }
   }
-  else if (rep.status == "UNDER_REVIEW" || rep.status == "OPEN"){
-    activeCount++;
-  }
-  else{
-    console.log("error: " + rep.status + " is not a valid report status");
-  }
+}
+else{
+  resolvedCount = (<ErrorMessage text={dataError} />);
+  activeCount = (<ErrorMessage text={dataError} />);
 }
 
 //fake stats for now - will integrate real ones in a future iteration when we have more data flowing in.
