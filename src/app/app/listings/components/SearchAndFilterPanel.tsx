@@ -92,7 +92,7 @@ export default function SearchAndFilterPanel() {
           <div className="flex min-w-0 flex-1 items-stretch">
             <SearchWithSuggestions
               searchValue={searchValue}
-              hasSearchChanged={listingParameters.has_search_changed === true}
+              hasSearchChanged={listingParameters.has_search_changed == true}
               onSearchChange={(value) =>
                 setListingParameters((prev) => ({
                   ...prev,
@@ -252,11 +252,12 @@ function SearchWithSuggestions({
 }) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchBarRef = useRef<HTMLDivElement>(null);
-  const { locationSuggestions, locationSuggestionsError } = useLocationSuggestions({
+  const { locationSuggestions, locationSuggestionsError, isLoadingSuggestions } = useLocationSuggestions({
     isSearchFocused,
     searchValue,
   });
   const showSuggestions = isSearchFocused && hasSearchChanged;
+  const showEmptySuggestionState = searchValue.trim().length >= 2;
 
   return (
     <div className="relative min-w-0 flex-1">
@@ -276,6 +277,8 @@ function SearchWithSuggestions({
           anchorRef={searchBarRef}
           suggestions={locationSuggestions}
           errorMessage={locationSuggestionsError}
+          isLoading={isLoadingSuggestions}
+          showEmptyState={showEmptySuggestionState}
           onSelect={onSuggestionSelect}
         />
       ) : null}
@@ -292,6 +295,7 @@ function useLocationSuggestions({
 }) {
   const [locationSuggestions, setLocationSuggestions] = useState<CompleteSuggestionResult[]>([]);
   const [locationSuggestionsError, setLocationSuggestionsError] = useState<string | null>(null);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
 
   // Fetch location suggestions with debouncing whenever the search value changes and is focused
   useEffect(() => {
@@ -302,11 +306,13 @@ function useLocationSuggestions({
     if (!isSearchFocused || query.length < 2) {
       setLocationSuggestions([]);
       setLocationSuggestionsError(null);
+      setIsLoadingSuggestions(false);
       return;
     }
 
     setLocationSuggestions([]);
     setLocationSuggestionsError(null);
+    setIsLoadingSuggestions(true);
 
     debounceTimer = setTimeout(() => {
       const loadSuggestions = async () => {
@@ -328,6 +334,10 @@ function useLocationSuggestions({
 
           setLocationSuggestions([]);
           setLocationSuggestionsError("Database error, please try again later.");
+        } finally {
+          if (!isCancelled) {
+            setIsLoadingSuggestions(false);
+          }
         }
       };
 
@@ -342,5 +352,5 @@ function useLocationSuggestions({
     };
   }, [isSearchFocused, searchValue]);
 
-  return { locationSuggestions, locationSuggestionsError };
+  return { locationSuggestions, locationSuggestionsError, isLoadingSuggestions };
 }

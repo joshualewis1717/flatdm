@@ -5,10 +5,34 @@ import { AmenityType, FurnishedType, Prisma } from "@prisma/client";
 import { ListingParameters } from "../types";
 import { getAvailableFrom } from "./mappers";
 
+const EARTH_RADIUS_MILES = 3958.8;
+
+const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
+
+const haversineDistanceMiles = (
+	fromLat: number,
+	fromLng: number,
+	toLat: number,
+	toLng: number
+) => {
+	const dLat = toRadians(toLat - fromLat);
+	const dLng = toRadians(toLng - fromLng);
+	const lat1 = toRadians(fromLat);
+	const lat2 = toRadians(toLat);
+
+	const a =
+		Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+		Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+	return EARTH_RADIUS_MILES * c;
+};
+
 export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
 	return runService(async () => {
 	// from ListingParameters, this query considers:
 	// rent_min, rent_max, maxoccupants_max, minstay_max, bedrooms_min, bedrooms_max, bathrooms_min, bathrooms_max, area_min, area_max, has_photo, furnished_level, transport_nearby, healthcare_nearby, recreation_nearby, other_nearby, available_from
+	// + distance_to_location, location_lat, location_lng
 
 
 	// Base where clause (only non-deleted listings)
@@ -40,6 +64,7 @@ export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
 
 	// available_from filter (special handling for "now" and invalid dates)
 	const now = new Date();
+
 	const availableFromFilter = (() => {
 		if (!LP.available_from) {
 			return null;
@@ -52,6 +77,42 @@ export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
 		const parsed = new Date(LP.available_from);
 		return Number.isNaN(parsed.getTime()) ? null : parsed;
 	})();
+
+	// first distance filter (JS/TS later does haversine)
+	// simple bounding box
+	const distanceToLocation = toFiniteNumber(LP.distance_to_location);
+	const locationLat = toFiniteNumber(LP.location_lat);
+	const locationLng = toFiniteNumber(LP.location_lng);
+	
+	const hasDistanceFilter =
+		distanceToLocation !== null &&
+		distanceToLocation > 0 &&
+		locationLat !== null &&
+		locationLng !== null;
+
+	if (hasDistanceFilter) {
+		const latDelta = distanceToLocation / 69;
+		const cosLat = Math.cos(toRadians(locationLat));
+		const safeCosLat = Math.max(Math.abs(cosLat), 0.01);
+		const lngDelta = distanceToLocation / (69 * safeCosLat);
+		const latRange = {
+			gte: locationLat - latDelta,
+			lte: locationLat + latDelta,
+		};
+		const lngRange = {
+			gte: locationLng - lngDelta,
+			lte: locationLng + lngDelta,
+		};
+
+		andFilters.push({
+			property: {
+				is: {
+					lat: latRange,
+					lng: lngRange,
+				},
+			},
+		});
+	}
 
 	// numeric min/max filters
     // rent_min, rent_max
@@ -183,6 +244,19 @@ export async function queryWithFiltersSortingAndPages(LP: ListingParameters) {
 			availableFrom: getAvailableFrom(item.occupants, item.maxOccupants),
 		}))
 		.filter((item) => {
+			if (hasDistanceFilter) {
+				const propertyDistanceMiles = haversineDistanceMiles(
+					locationLat,
+					locationLng,
+					item.property.lat,
+					item.property.lng
+				);
+
+				if (propertyDistanceMiles > distanceToLocation) {
+					return false;
+				}
+			}
+
 			if (!availableFromFilter) {
 				return true;
 			}

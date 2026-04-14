@@ -209,7 +209,7 @@ export type ListingParameters = Record<string, unknown> & {
   //
   //
   // Distance Searching
-  distance_to_location?: number; // in km, for filtering by distance to a specific location (e.g. city center)
+  distance_to_location?: number; // in miles, for filtering by distance to a specific location (e.g. city center)
   location_lat?: number; // for distance filtering
   location_lng?: number; // for distance filtering
   search?: string;

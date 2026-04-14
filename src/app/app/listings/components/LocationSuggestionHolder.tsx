@@ -10,6 +10,8 @@ type LocationSuggestionHolderProps = {
   anchorRef: RefObject<HTMLDivElement | null>;
   suggestions: CompleteSuggestionResult[];
   errorMessage?: string | null;
+  isLoading?: boolean;
+  showEmptyState?: boolean;
   onSelect: (item: CompleteSuggestionResult) => void;
 };
 
@@ -23,6 +25,8 @@ export default function LocationSuggestionHolder({
   anchorRef,
   suggestions,
   errorMessage,
+  isLoading = false,
+  showEmptyState = false,
   onSelect,
 }: LocationSuggestionHolderProps) {
   const [position, setPosition] = useState<FloatingPosition | null>(null);
@@ -46,7 +50,7 @@ export default function LocationSuggestionHolder({
 
   useLayoutEffect(() => {
     updatePosition();
-  }, [anchorRef, suggestions.length, errorMessage]);
+  }, [anchorRef, suggestions.length, errorMessage, isLoading]);
 
   useEffect(() => {
     if (!anchorRef.current) {
@@ -66,7 +70,7 @@ export default function LocationSuggestionHolder({
     };
   }, [anchorRef]);
 
-  if (suggestions.length === 0 && !errorMessage) {
+  if (suggestions.length === 0 && !errorMessage && !isLoading && !showEmptyState) {
     return null;
   }
 
@@ -80,7 +84,7 @@ export default function LocationSuggestionHolder({
       style={{ left: position.left, top: position.top, width: position.width }}
     >
       <div className="border-b border-white/13 bg-white/3 px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-white/70">
-        {errorMessage ? "Error" : "Results"}
+        {errorMessage ? "Error" : isLoading ? "Loading" : "Results"}
       </div>
       <div className="max-h-60 overflow-y-auto">
         {errorMessage ? (
@@ -88,6 +92,13 @@ export default function LocationSuggestionHolder({
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-300" aria-hidden="true" />
             <span>{errorMessage}</span>
           </div>
+        ) : isLoading ? (
+          <div className="flex items-center gap-2 px-3 py-3 text-sm text-white/70">
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-[#c9fb00]" />
+            <span>Loading results...</span>
+          </div>
+        ) : suggestions.length === 0 ? (
+          <div className="px-3 py-3 text-sm text-white/70">No suggestions</div>
         ) : (
           suggestions.map((item) => (
             <LocationSuggestion
