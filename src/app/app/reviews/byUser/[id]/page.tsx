@@ -47,7 +47,7 @@ export default async function UserReviewsPage({
     reviews = await prisma.review.findMany({
     where: {
       isDeleted: false,
-      targetUserId: user.id,
+      authorId: user.id,
     },
     orderBy: { createdAt: "desc" },
     include: {
@@ -87,7 +87,7 @@ export default async function UserReviewsPage({
   return <ErrorMessage text="Database Error"/>
 }
 
-  const userName = user.role==="LANDLORD"? `${user.firstName} ${user.lastName}`.trim() || `@${user.username}`: `@${user.username}`;
+  const userName = `@${user.username}`;
 
   return (
     <div className="space-y-6">
@@ -96,10 +96,10 @@ export default async function UserReviewsPage({
           User reviews
         </p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-          Reviews for {userName}
+          Reviews by {userName}
         </h1>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-white/68">
-          Browse all reviews submitted about this user.
+          Browse all reviews submitted by this user.
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">
