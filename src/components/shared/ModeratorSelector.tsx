@@ -18,7 +18,7 @@ type Props = {
   setVis: (value: boolean) => void;
 };
 
-export function ModeratorSelector({ moderators, report, setVis }: Props) {
+export default function ModeratorSelector({ moderators, report, setVis }: Props) {
   const reportId = report.id;
   const [selectedUserId, setSelectedUserId] = useState<string | number | "">(
     moderators.length > 0 ? moderators[0].id : ""
@@ -49,11 +49,11 @@ export function ModeratorSelector({ moderators, report, setVis }: Props) {
          String(selectedUserId));
 
   return (
-    <div className="flex items-center m-3 py-2 gap-3 border border-gray-300 rounded-md p-2">
-      <label className="whitespace-nowrap">Assign Moderator:</label>
+    <div className="space-y-3 rounded-lg border border-white/10 bg-black/20 p-3">
+      <label className="block text-xs font-semibold uppercase tracking-[0.22em] text-white/45">Assign moderator</label>
 
       <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger className="px-3 py-2 border border-gray-200 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-gray-200">
+        <DropdownMenuTrigger className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
           <span className="text-left">{currentLabel}</span>
         </DropdownMenuTrigger>
 
@@ -96,22 +96,22 @@ export function ModeratorSelector({ moderators, report, setVis }: Props) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <button
-        onClick={handleSave}
-        disabled={loading || (moderators.length === 0 && selectedUserId !== "Unassigned")}
-        className="px-4 py-2 bg-[#c9fb00] text-black rounded-md text-base"
-      >
-        {loading ? "Saving..." : "Save"}
-      </button>
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          onClick={handleSave}
+          disabled={loading || (moderators.length === 0 && selectedUserId !== "Unassigned")}
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {loading ? "Saving..." : "Save"}
+        </button>
 
-      <button
-        onClick={handleHide}
-        className="px-4 py-2 border border-white text-white rounded-md text-base"
-      >
-        Hide
-      </button>
+        <button
+          onClick={handleHide}
+          className="rounded-lg border border-white/12 bg-white/[0.03] px-4 py-2 text-sm font-medium text-white hover:bg-white/[0.06]"
+        >
+          Hide
+        </button>
+      </div>
     </div>
   );
 }
-
-export default ModeratorSelector;

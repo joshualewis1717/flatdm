@@ -79,8 +79,12 @@ const headers: Record<string, HeaderMeta> = {
     description: "Track incoming reviews, leave feedback, and build trust across the platform.",
   },
   "/app/reports": {
-    title: "Reports",
-    description: "Monitor flagged content, review details, and take action to keep the marketplace healthy.",
+    title: "Report queue",
+    description: "Triage open reports, assign moderators, and move resolved cases out of the queue.",
+  },
+  "/app/reports/users": {
+    title: "All users",
+    description: "Review account details, open profiles, and apply moderation actions from one place.",
   },
   "/app/reports/*": {
     title: "Reports",

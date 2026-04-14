@@ -1,8 +1,8 @@
 "use client"
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { changeReportSeverity } from "@/app/app/reports/db_access";
-import { User, Report } from "@/app/app/reports/types";
+import { Report } from "@/app/app/reports/types";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -14,19 +14,15 @@ import {
 
 type Props = {
   report: Report;
-  setSeverity: Function;
-  setVis: Function;
+  setSeverity: (value: string) => void;
+  setVis: (value: boolean) => void;
 };
 
-export function SeveritySelector({ report, setSeverity, setVis }: Props) {
+export default function SeveritySelector({ report, setSeverity, setVis }: Props) {
   const reportId = report.id;
   const [loading, setLoading] = useState(false);
-  const [selectedSeverity, setSelectedSeverity] = useState(report.severity);
+  const [selectedSeverity, setSelectedSeverity] = useState(report.severity ?? "UNRANKED");
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    setSelectedSeverity(report.severity);
-  }, [report.severity]);
 
   const handleSave = async () => {
     setLoading(true);
@@ -44,16 +40,15 @@ export function SeveritySelector({ report, setSeverity, setVis }: Props) {
     HIGH: "High",
   };
 
-  function handleHide(){
-    setVis(false);
-  }
+  function handleHide() { setVis(false); }
+  
 
   return (
-    <div className="flex items-center m-3 py-2 gap-3 border border-gray-300 rounded-md p-2">
-      <label className="whitespace-nowrap">Select Severity:</label>
+    <div className="space-y-3 rounded-lg border border-white/10 bg-black/20 p-3">
+      <label className="block text-xs font-semibold uppercase tracking-[0.22em] text-white/45">Select severity</label>
 
       <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger className="px-3 py-2 border border-gray-200 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-gray-200">
+        <DropdownMenuTrigger className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
           <span className="text-left">{labelMap[selectedSeverity] ?? selectedSeverity}</span>
         </DropdownMenuTrigger>
 
@@ -100,22 +95,22 @@ export function SeveritySelector({ report, setSeverity, setVis }: Props) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <button
-        className="px-4 py-2 bg-[#c9fb00] text-black rounded-md text-base"
-        onClick={handleSave}
-        disabled={loading}
-      >
-        {loading ? "Saving..." : "Save"}
-      </button>
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+          onClick={handleSave}
+          disabled={loading}
+        >
+          {loading ? "Saving..." : "Save"}
+        </button>
 
-      <button
-        onClick={handleHide}
-        className="px-4 py-2 border border-white text-white rounded-md text-base"
-      >
-        Hide
-      </button>
+        <button
+          onClick={handleHide}
+          className="rounded-lg border border-white/12 bg-white/[0.03] px-4 py-2 text-sm font-medium text-white hover:bg-white/[0.06]"
+        >
+          Hide
+        </button>
+      </div>
     </div>
   );
 }
-
-export default SeveritySelector;

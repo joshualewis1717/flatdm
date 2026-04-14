@@ -15,6 +15,7 @@ export type Report = {
   reporterId: number;
   targetUserId: number;
   listingId: number;
+  assignedModeratorId?: number | null;
   category?: string;
   severity?: string;
 };

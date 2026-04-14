@@ -1,8 +1,4 @@
-import { Button } from '@/components/ui/button';
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import {getModerators, getReport, getUser, getUsers} from '@/app/app/reports/db_access'
-import Status from '@/components/shared/Status';
+import {getModerators, getReport, getUser} from '@/app/app/reports/db_access'
 import SelectedReportClient from './SelectedReportClient';
 
 
@@ -43,7 +39,7 @@ export default async function ReportPage({ params } : { params: Promise<{id: num
     }
 
   }
-  catch (error){
+  catch {
     dataError="Error accessing the database. Refresh to try again.";
   }
 

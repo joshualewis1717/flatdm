@@ -1,8 +1,8 @@
 "use client"
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { changeReportStatus } from "@/app/app/reports/db_access";
-import { User, Report } from "@/app/app/reports/types";
+import { Report } from "@/app/app/reports/types";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -14,19 +14,15 @@ import {
 
 type Props = {
   report: Report;
-  setStatus: Function;
-  setVis: Function;
+  setStatus: (value: string) => void;
+  setVis: (value: boolean) => void;
 };
 
-export function StatusSelector({ report, setStatus, setVis }: Props) {
+export default function StatusSelector({ report, setStatus, setVis }: Props) {
   const reportId = report.id;
   const [loading, setLoading] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState(report.status);
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    setSelectedStatus(report.status);
-  }, [report.status]);
 
   const handleSave = async () => {
     setLoading(true);
@@ -48,11 +44,11 @@ export function StatusSelector({ report, setStatus, setVis }: Props) {
   }
 
   return (
-    <div className="flex items-center m-3 py-2 gap-3 border border-gray-300 rounded-md p-2">
-      <label className="whitespace-nowrap">Select Status:</label>
+    <div className="space-y-3 rounded-lg border border-white/10 bg-black/20 p-3">
+      <label className="block text-xs font-semibold uppercase tracking-[0.22em] text-white/45">Select status</label>
 
       <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger className="px-3 py-2 border border-gray-200 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-gray-200">
+        <DropdownMenuTrigger className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
           <span className="text-left">{labelMap[selectedStatus] ?? selectedStatus}</span>
         </DropdownMenuTrigger>
 
@@ -87,22 +83,22 @@ export function StatusSelector({ report, setStatus, setVis }: Props) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <button
-        onClick={handleSave}
-        disabled={loading}
-        className="px-4 py-2 bg-[#c9fb00] text-black rounded-md text-base"
-      >
-        {loading ? "Saving..." : "Save"}
-      </button>
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          onClick={handleSave}
+          disabled={loading}
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {loading ? "Saving..." : "Save"}
+        </button>
 
-      <button
-        onClick={handleHide}
-        className="px-4 py-2 border border-white text-white rounded-md text-base"
-      >
-        Hide
-      </button>
+        <button
+          onClick={handleHide}
+          className="rounded-lg border border-white/12 bg-white/[0.03] px-4 py-2 text-sm font-medium text-white hover:bg-white/[0.06]"
+        >
+          Hide
+        </button>
+      </div>
     </div>
   );
 }
-
-export default StatusSelector;
