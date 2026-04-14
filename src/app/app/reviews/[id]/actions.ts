@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { REVIEWS_DATABASE_ERROR_MESSAGE } from "@/lib/reviews";
 
 export async function deleteReview(reviewId: number) {
   const session = await auth();
@@ -15,9 +16,8 @@ export async function deleteReview(reviewId: number) {
     where: { id: reviewId, isDeleted: false },
     select: { authorId: true },
     });
-  } catch(err) {
-    console.error(err);
-    throw new Error("Database Error")
+  } catch {
+    throw new Error(REVIEWS_DATABASE_ERROR_MESSAGE);
   }
   if (!review) {
     throw new Error("Review not found");
@@ -32,8 +32,7 @@ export async function deleteReview(reviewId: number) {
       where: { id: reviewId },
       data: { isDeleted: true },
     });
-  } catch (err) {
-    console.error(err);
-    throw new Error("Failed to delete review");
+  } catch {
+    throw new Error(REVIEWS_DATABASE_ERROR_MESSAGE);
   }
 }

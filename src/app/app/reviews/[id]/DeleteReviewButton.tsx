@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
+import ErrorMessage from "@/components/shared/ErrorMessage";
 import { Button } from "@/components/ui/button";
 import { deleteReview } from "./actions";
+import { REVIEWS_DATABASE_ERROR_MESSAGE } from "@/lib/reviews";
 
 type Props = {
   reviewId: number;
@@ -26,8 +28,8 @@ export default function DeleteReviewButton({ reviewId, size = "lg", className }:
       await deleteReview(reviewId);
       setDone(true);
       setTimeout(() => router.push("/app/reviews"), 2000);
-    } catch {
-      setError("Failed to delete review. Please try again.");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : REVIEWS_DATABASE_ERROR_MESSAGE);
       setDeleting(false);
       setConfirming(false);
     }
@@ -76,7 +78,7 @@ export default function DeleteReviewButton({ reviewId, size = "lg", className }:
           Delete review
         </Button>
       )}
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error ? <ErrorMessage text={error} /> : null}
     </div>
   );
 }
