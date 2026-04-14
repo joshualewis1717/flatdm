@@ -1,6 +1,6 @@
 'use client'
 import { useState } from "react";
-import StarRating from "./StarRating";
+import StarRating, { StarRatingIndividual } from "./StarRating";
 //import { Review } from "../types";
 import { Review } from "@prisma/client";
 import { ListingReview } from "../../../types";
@@ -30,14 +30,22 @@ export default function ReviewSlider({
     <section className="flex-1 flex flex-col bg-white/[0.03] border border-white/10 rounded-[1.5rem] p-4 space-y-3">
       <StarRating rating={averageRating} totalReviews={totalReviews} />
 
+
       {/* Current review */}
       <div className="flex-1 flex flex-col justify-center items-start border-t border-white/10 pt-3">
-        <p className="text-sm text-white/70 font-medium">
-          {reviews[currentIndex].username}{/* back end service route to derive user from this */}
+
+        <div className="mt-1">
+          <StarRatingIndividual rating={reviews[currentIndex].rating} totalReviews={reviews.length} />
+        </div>
+
+        <p className="text-sm text-white/70 font-medium mt-2">
+          {reviews[currentIndex].username}
         </p>
-        <p className="text-sm text-white/50 mt-1">
+
+        <p className="text-sm text-white/50 mt-2">
           {reviews[currentIndex].comment}
         </p>
+        
       </div>
 
       {/* Navigation */}
