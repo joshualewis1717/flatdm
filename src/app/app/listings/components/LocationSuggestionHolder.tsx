@@ -1,19 +1,16 @@
 "use client";
 
 import LocationSuggestion from "./LocationSuggestion";
+import { AlertTriangle } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useState, type RefObject } from "react";
-
-type LocationSuggestionItem = {
-  id: string;
-  label: string;
-  subtitle?: string;
-};
+import type { CompleteSuggestionResult } from "../ors/GetSuggestions";
 
 type LocationSuggestionHolderProps = {
   anchorRef: RefObject<HTMLDivElement | null>;
-  suggestions: LocationSuggestionItem[];
-  onSelect: (item: LocationSuggestionItem) => void;
+  suggestions: CompleteSuggestionResult[];
+  errorMessage?: string | null;
+  onSelect: (item: CompleteSuggestionResult) => void;
 };
 
 type FloatingPosition = {
@@ -25,6 +22,7 @@ type FloatingPosition = {
 export default function LocationSuggestionHolder({
   anchorRef,
   suggestions,
+  errorMessage,
   onSelect,
 }: LocationSuggestionHolderProps) {
   const [position, setPosition] = useState<FloatingPosition | null>(null);
@@ -48,7 +46,7 @@ export default function LocationSuggestionHolder({
 
   useLayoutEffect(() => {
     updatePosition();
-  }, [anchorRef, suggestions.length]);
+  }, [anchorRef, suggestions.length, errorMessage]);
 
   useEffect(() => {
     if (!anchorRef.current) {
@@ -68,7 +66,7 @@ export default function LocationSuggestionHolder({
     };
   }, [anchorRef]);
 
-  if (suggestions.length === 0) {
+  if (suggestions.length === 0 && !errorMessage) {
     return null;
   }
 
@@ -82,17 +80,24 @@ export default function LocationSuggestionHolder({
       style={{ left: position.left, top: position.top, width: position.width }}
     >
       <div className="border-b border-white/13 bg-white/3 px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-white/70">
-        Results
+        {errorMessage ? "Error" : "Results"}
       </div>
       <div className="max-h-60 overflow-y-auto">
-        {suggestions.map((item) => (
-          <LocationSuggestion
-            key={item.id}
-            label={item.label}
-            subtitle={item.subtitle}
-            onSelect={() => onSelect(item)}
-          />
-        ))}
+        {errorMessage ? (
+          <div className="flex items-start gap-2 px-3 py-3 text-sm text-red-200">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-300" aria-hidden="true" />
+            <span>{errorMessage}</span>
+          </div>
+        ) : (
+          suggestions.map((item) => (
+            <LocationSuggestion
+              key={item.id}
+              label={item.label}
+              subtitle={item.subtitle}
+              onSelect={() => onSelect(item)}
+            />
+          ))
+        )}
       </div>
     </div>,
     document.body,

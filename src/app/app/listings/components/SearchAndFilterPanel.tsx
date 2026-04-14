@@ -7,8 +7,10 @@ import FiltersSheet from "./FiltersSheet";
 import LocationSuggestionHolder from "./LocationSuggestionHolder";
 import { useListingsState } from "../state/ListingsStateProvider";
 import type { ListingParameters } from "../types";
+import { CompleteSuggestion, type CompleteSuggestionResult } from "../ors/GetSuggestions";
 
 const DISTANCE_OPTIONS_MILES = [0.25, 0.5, 1, 3, 5, 10, 15, 20, 30, 40] as const;
+const SUGGESTION_DEBOUNCE_MS = 300;
 const SORT_OPTIONS: Array<{
   value: string;
   label: string;
@@ -25,13 +27,6 @@ const SORT_OPTIONS: Array<{
     sortOrder: "desc",
   },
   { value: "closest", label: "Closest", sortBy: "distance", sortOrder: "asc" },
-];
-
-const MOCK_LOCATION_SUGGESTIONS = [
-  { id: "downtown-la", label: "Downtown Los Angeles", subtitle: "Los Angeles, CA" },
-  { id: "santa-monica", label: "Santa Monica", subtitle: "Santa Monica, CA" },
-  { id: "pasadena", label: "Pasadena", subtitle: "Pasadena, CA" },
-  { id: "long-beach", label: "Long Beach", subtitle: "Long Beach, CA" },
 ];
 
 function hasActiveFilters(listingParameters: ListingParameters): boolean {
@@ -55,8 +50,6 @@ export default function SearchAndFilterPanel() {
   const { listingParameters, setListingParameters } = useListingsState();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [stickyTopOffset, setStickyTopOffset] = useState(96);
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const searchBarRef = useRef<HTMLDivElement>(null);
   const searchValue =
     typeof listingParameters.search === "string" ? listingParameters.search : "";
   const distanceValue =
@@ -64,9 +57,8 @@ export default function SearchAndFilterPanel() {
       ? String(listingParameters.distance_to_location)
       : "";
   const sortValue = getSortPresetValue(listingParameters);
-  const showSuggestions =
-    isSearchFocused && Boolean(listingParameters.has_search_changed);
 
+  // Calculate and set the top offset for the sticky header based on the height of the page header
   useEffect(() => {
     const header = document.getElementById("app-page-header");
 
@@ -98,39 +90,34 @@ export default function SearchAndFilterPanel() {
       >
         <section className="flex w-full flex-col-reverse items-stretch gap-2 py-2 sm:flex-row sm:items-center">
           <div className="flex min-w-0 flex-1 items-stretch">
-            <div className="relative min-w-0 flex-1">
-              <SearchBar
-                ref={searchBarRef}
-                value={searchValue}
-                placeholder="Search Location..."
-                onChange={(value) =>
-                  setListingParameters((prev) => ({
-                    ...prev,
-                    search: value,
-                    has_search_changed: true,
-                  }))
-                }
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-                containerClassName="min-w-0 flex-1"
-                inputClassName="rounded-r-none border-r-[0.5px] focus:relative focus:z-10"
-              />
+            <SearchWithSuggestions
+              searchValue={searchValue}
+              hasSearchChanged={listingParameters.has_search_changed === true}
+              onSearchChange={(value) =>
+                setListingParameters((prev) => ({
+                  ...prev,
+                  search: value,
+                  location_lat: undefined,
+                  location_lng: undefined,
+                  has_search_changed: true,
+                }))
+              }
+              onSuggestionSelect={(item) => {
+                setListingParameters((prev) => ({
+                  ...prev,
+                  search: item.label,
+                  location_lat: item.lat,
+                  location_lng: item.long,
+                  page: 1,
+                  has_search_changed: false,
+                }));
 
-              {showSuggestions ? (
-                <LocationSuggestionHolder
-                  anchorRef={searchBarRef}
-                  suggestions={MOCK_LOCATION_SUGGESTIONS}
-                  onSelect={(item) => {
-                    setListingParameters((prev) => ({
-                      ...prev,
-                      search: item.label,
-                      has_search_changed: false,
-                    }));
-                    // setIsSearchFocused(false);
-                  }}
-                />
-              ) : null}
-            </div>
+                setListingParameters((prev) => ({
+                  ...prev,
+                  has_search_changed: false,
+                }));
+              }}
+            />
 
             <DistanceDropdown
               value={distanceValue}
@@ -250,4 +237,110 @@ function FiltersButton({ onClick, hasFilters }: { onClick: () => void; hasFilter
       <span className={`${hasFilters? "text-[#c9fb00]" : ""}`}>Filters</span>
     </button>
   );
+}
+
+function SearchWithSuggestions({
+  searchValue,
+  hasSearchChanged,
+  onSearchChange,
+  onSuggestionSelect,
+}: {
+  searchValue: string;
+  hasSearchChanged: boolean;
+  onSearchChange: (value: string) => void;
+  onSuggestionSelect: (item: CompleteSuggestionResult) => void;
+}) {
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchBarRef = useRef<HTMLDivElement>(null);
+  const { locationSuggestions, locationSuggestionsError } = useLocationSuggestions({
+    isSearchFocused,
+    searchValue,
+  });
+  const showSuggestions = isSearchFocused && hasSearchChanged;
+
+  return (
+    <div className="relative min-w-0 flex-1">
+      <SearchBar
+        ref={searchBarRef}
+        value={searchValue}
+        placeholder="Search Location..."
+        onChange={onSearchChange}
+        onFocus={() => setIsSearchFocused(true)}
+        onBlur={() => setIsSearchFocused(false)}
+        containerClassName="min-w-0 flex-1"
+        inputClassName="rounded-r-none border-r-[0.5px] focus:relative focus:z-10"
+      />
+
+      {showSuggestions ? (
+        <LocationSuggestionHolder
+          anchorRef={searchBarRef}
+          suggestions={locationSuggestions}
+          errorMessage={locationSuggestionsError}
+          onSelect={onSuggestionSelect}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function useLocationSuggestions({
+  isSearchFocused,
+  searchValue,
+}: {
+  isSearchFocused: boolean;
+  searchValue: string;
+}) {
+  const [locationSuggestions, setLocationSuggestions] = useState<CompleteSuggestionResult[]>([]);
+  const [locationSuggestionsError, setLocationSuggestionsError] = useState<string | null>(null);
+
+  // Fetch location suggestions with debouncing whenever the search value changes and is focused
+  useEffect(() => {
+    let isCancelled = false;
+    const query = searchValue.trim();
+    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+
+    if (!isSearchFocused || query.length < 2) {
+      setLocationSuggestions([]);
+      setLocationSuggestionsError(null);
+      return;
+    }
+
+    setLocationSuggestions([]);
+    setLocationSuggestionsError(null);
+
+    debounceTimer = setTimeout(() => {
+      const loadSuggestions = async () => {
+        try {
+          const results = await CompleteSuggestion(query);
+
+          if (isCancelled) {
+            return;
+          }
+
+          setLocationSuggestions(results.slice(0, 4));
+          setLocationSuggestionsError(null);
+        } catch (error) {
+          console.error("Error fetching location suggestions for query:", query);
+          console.error("Error details:", error);
+          if (isCancelled) {
+            return;
+          }
+
+          setLocationSuggestions([]);
+          setLocationSuggestionsError("Database error, please try again later.");
+        }
+      };
+
+      void loadSuggestions();
+    }, SUGGESTION_DEBOUNCE_MS);
+
+    return () => {
+      isCancelled = true;
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+    };
+  }, [isSearchFocused, searchValue]);
+
+  return { locationSuggestions, locationSuggestionsError };
 }
