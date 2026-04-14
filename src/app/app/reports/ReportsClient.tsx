@@ -14,6 +14,7 @@ function mapUsers({users}:{users: User[]}) {
   for (let i = 0; i < users.length; i++){
     userMap[users[i].id] = users[i];
   }
+
   return userMap;
 }
 
@@ -131,6 +132,15 @@ export default function ReportsClient({ error, initialReports, users }: {error :
     const clamped = Math.min(Math.max(1, p), totalPages);
     console.log("clamped: " + clamped)
     setPage(clamped);
+  }
+
+
+  function getMod(report: Report): User | null {
+    if (report.assignedModeratorId == null){
+      return null;
+    }
+    
+    return userMap[report.assignedModeratorId]
   }
 
   return (
@@ -320,6 +330,7 @@ export default function ReportsClient({ error, initialReports, users }: {error :
                 report={report}
                 reporter={userMap[report.reporterId]}
                 targetUser={userMap[report.targetUserId]}
+                moderator={getMod(report)}
               />
             ))
           )}
