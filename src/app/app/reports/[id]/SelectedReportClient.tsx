@@ -32,6 +32,24 @@ const wordMap = {
     "UNRANKED":"Unranked"
 }
 
+// map users by their ids. so userMap[3] returns the user with userId 3
+function mapUsers({users}:{users: User[]}) {
+  const userMap: Record<number, User | undefined> = {};
+  for (let i = 0; i < users.length; i++){
+    userMap[users[i].id] = users[i];
+  }
+
+  return userMap;
+}
+
+// get moderator given userMap and userId
+function getMod({userId, userMap} : {userId : number, userMap : any}){
+    if (userId == null){
+        return null;
+    }
+    return userMap[userId];
+}
+
 export default function SelectedReportClient({error, report, target, reporter, moderators} : {error:string|null, report : Report, target : User, reporter : User, moderators : User[]}){
 
     // first check if an error was found
@@ -41,10 +59,14 @@ export default function SelectedReportClient({error, report, target, reporter, m
     const [assignModVis, setAssignModVis] = useState(false);
     const [changeStatusVis, setChangeStatusVis] = useState(false);
     const [changeSeverityVis, setChangeSeverityVis] = useState(false);
+    
+   
+    const userMap = mapUsers({users:moderators});
 
     // variables for the status for easier processing (for the theme of the Status component)
     const [status, setStatus] = useState(report['status']);
     const [severity, setSeverity] = useState(report['severity']);
+    const [moderator, setModerator] = useState(getMod({userId:report.assignedModeratorId, userMap:userMap}))
 
     function assignModeratorWrap({setVis, vis} : {setVis:Function, vis:boolean}): void {
         setVis(!vis);
@@ -87,6 +109,20 @@ export default function SelectedReportClient({error, report, target, reporter, m
                                     {/* Submitted by User {reporter['username']} at {String(report['createdAt'])} */}
                                     Submitted by User {reporter.username} at {String(report.createdAt)}
                                 </p>
+
+                                {/* moderator not assigned */}
+                                {moderator == null && (
+                                    <p className="mt-3 text-sm text-white/60 truncate">
+                                        No Assigned Moderator
+                                    </p>
+                                )}
+                                {/* moderator is assigned */}
+                                {moderator != null && (
+                                    <p className="mt-3 text-sm text-white/60 truncate">
+                                        Assigned Moderator: {moderator.username}
+                                    </p>
+                                )}
+                               
                             </div>
 
                             {/* status and severity */}
