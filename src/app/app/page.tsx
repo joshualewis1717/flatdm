@@ -2,66 +2,40 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
-import {getAllReports} from '@/app/app/reports/db_access'
+import { getOverviewStats, isOverviewRole, type OverviewMetric } from "@/lib/overview";
 
-
-// get numbers for consultant page
-const reports = await getAllReports();
-let resolvedCount = 0;
-let activeCount = 0;
-
-for (let i = 0; i < reports.length; i++){
-  const rep = reports[i];
-  if (rep.status == "RESOLVED"){
-    resolvedCount++;
-  }
-  else if (rep.status == "UNDER_REVIEW" || rep.status == "OPEN"){
-    activeCount++;
-  }
-  else{
-    console.log("error: " + rep.status + " is not a valid report status");
-  }
-}
-
-//fake stats for now - will integrate real ones in a future iteration when we have more data flowing in.
 const roleContent = {
   CONSULTANT: {
     intro:
       "Track open applications, keep landlord conversations moving, and stay close to placement logistics without digging across tabs.",
     primaryCta: { href: "/app/applications/dashboard", label: "Review my applications" },
     secondaryCta: { href: "/app/messages", label: "Open inbox" },
-    metrics: [
-      { label: "Active applications", value: "08" },
-      { label: "Unread threads", value: "03" },
-    ],
   },
   LANDLORD: {
     intro:
       "Manage live stock, review incoming applicants quickly, and keep conversations moving from initial interest through move-in.",
     primaryCta: { href: "/app/listings/new", label: "Create a new listing" },
     secondaryCta: { href: "/app/applications", label: "Review applicants" },
-    metrics: [
-      { label: "Live listings", value: "12" },
-      { label: "Message backlog", value: "05" },
-    ],
   },
   MODERATOR: {
     intro:
       "Keep the marketplace healthy by monitoring supply, resolving conversations, and stepping into application flows when escalation is needed.",
     primaryCta: { href: "/app/reports", label: "Open report queue" },
     secondaryCta: { href: "/app/reports/users", label: "View All Users" },
-    metrics: [
-      { label: "Reports", value: activeCount},
-      { label: "Resolved Issues", value:  resolvedCount},
-    ],
   },
 } as const;
 
+const fallbackMetrics = [
+  { key: "activeApplications", label: "Active applications", value: 0 },
+  { key: "unreadMessages", label: "Unread messages", value: 0 },
+] satisfies OverviewMetric[];
 
 export default async function AppHomePage() {
   const session = await auth();
-  const role = session?.user?.role ?? "CONSULTANT";
+  const userId = Number(session?.user?.id);
+  const role = isOverviewRole(session?.user?.role) ? session.user.role : "CONSULTANT";
   const content = roleContent[role as keyof typeof roleContent] ?? roleContent.CONSULTANT;
+  const metrics = Number.isInteger(userId) && userId > 0 ? (await getOverviewStats({ userId, role })).metrics : fallbackMetrics;
 
   return (
     <div className="space-y-6">
@@ -87,8 +61,8 @@ export default async function AppHomePage() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-            {content.metrics.map((metric) => (
-              <div key={metric.label} className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
+            {metrics.map((metric) => (
+              <div key={metric.key} className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
                 <p className="text-sm text-white/55">{metric.label}</p>
                 <p className="mt-3 text-3xl font-semibold tracking-tight text-white">{metric.value}</p>
               </div>
