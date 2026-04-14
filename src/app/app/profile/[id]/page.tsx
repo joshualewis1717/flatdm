@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
+import type { RequestStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import ErrorMessage from "@/components/shared/ErrorMessage";
 import ProfileView from "@/components/shared/profile-view";
 import { auth } from "@/lib/auth";
-import { getProfilePageData } from "@/lib/profile";
+import { getProfilePageData, PROFILE_DATABASE_ERROR_MESSAGE } from "@/lib/profile";
 
 export default async function PublicProfilePage({
   params,
@@ -23,23 +25,56 @@ export default async function PublicProfilePage({
     notFound();
   }
 
-  const profile = await getProfilePageData(profileId);
+  let profile = null;
+  let conversation: { id: number } | null = null;
+  let latestRequest: { status: RequestStatus } | null = null;
 
-  if (!profile) {
-  notFound();
+  try {
+    profile = await getProfilePageData(profileId);
+
+    if (profile) {
+      [conversation, latestRequest] = await Promise.all([
+        prisma.conversation.findFirst({
+          where: {
+            OR: [
+              { userAId: viewerId, userBId: profileId },
+              { userAId: profileId, userBId: viewerId },
+            ],
+          },
+          select: { id: true },
+        }),
+        viewerId === profileId
+          ? Promise.resolve(null)
+          : prisma.messageRequest.findFirst({
+              where: {
+                senderId: viewerId,
+                receiverId: profileId,
+              },
+              orderBy: {
+                modifiedAt: "desc",
+              },
+              select: {
+                status: true,
+              },
+            }),
+      ]);
+    }
+  } catch {
+    return <ErrorMessage text={PROFILE_DATABASE_ERROR_MESSAGE} />;
   }
 
-  const conversation = await prisma.conversation.findFirst({
-  where: {
-    OR: [
-      { userAId: viewerId, userBId: profileId },
-      { userAId: profileId, userBId: viewerId },
-    ],
-  },
-    select: { id: true },
-    });
+  if (!profile) {
+    notFound();
+  }
 
+  const requestStatus: RequestStatus | null = latestRequest?.status ?? null;
 
-
-  return <ProfileView profile={profile} isOwnProfile={viewerId === profileId} hasExistingConversation={!!conversation} viewerId={viewerId} />;
+  return (
+    <ProfileView
+      profile={profile}
+      isOwnProfile={viewerId === profileId}
+      hasExistingConversation={!!conversation}
+      requestStatus={requestStatus}
+    />
+  );
 }

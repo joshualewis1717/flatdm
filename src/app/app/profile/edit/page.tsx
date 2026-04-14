@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import ErrorMessage from "@/components/shared/ErrorMessage";
+import { PROFILE_DATABASE_ERROR_MESSAGE } from "@/lib/profile";
 
 const fieldLabels: Record<string, string> = {
   fullName: "full name",
@@ -46,8 +47,8 @@ export default async function EditProfilePage({
         },
       },
     });
-  } catch(err) {
-      return <ErrorMessage text="Database error" />;
+  } catch {
+      return <ErrorMessage text={PROFILE_DATABASE_ERROR_MESSAGE} />;
   }
 
   if (!user) {
