@@ -1,12 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import {DbReturnType, User, Review, Status, Severity, Category, FilterSearchProps} from '@/app/app/reports/types';
-import {User, Report, Review, Status, Severity, Category, FilterSearchProps} from '@/app/app/reports/types';
-import {sendEmail} from '@/app/app/reports/sendEmail'
-import {ConfirmFunction} from '@/app/app/reports/types';
-import { Database, UnfoldHorizontal } from "lucide-react";
-import { error } from "console";
+import type { DbReturnType, User, Review, Status, Severity, Category, FilterSearchProps, ConfirmFunction } from '@/app/app/reports/types';
+import { sendEmail } from '@/app/app/reports/sendEmail'
 
 function getErrorMessage(error: unknown) {
     return error instanceof Error ? error.message : String(error);
@@ -251,78 +247,78 @@ export async function deleteReport({ report }: { report: any }): Promise<DbRetur
   }
 }
 
-export async function getModerators(): Promise<DbReturnType<any[]>> {
-  try {
-    const mods = await prisma.user.findMany({
-      where: { role: "MODERATOR", isDeleted: false },
-    });
-    return ok(mods);
-  } catch (error: any) {
-    console.error("error occured: " + error.message);
-    return err(error);
-  }
-}
+// export async function getModerators(): Promise<DbReturnType<any[]>> {
+//   try {
+//     const mods = await prisma.user.findMany({
+//       where: { role: "MODERATOR", isDeleted: false },
+//     });
+//     return ok(mods);
+//   } catch (error: any) {
+//     console.error("error occured: " + error.message);
+//     return err(error);
+//   }
+// }
 
-export async function getReport({ reportId }: any): Promise<DbReturnType<any | undefined>> {
-  if (reportId == undefined) {
-    const e = new Error("trying to get report with undefined id");
-    console.log(e.message);
-    return err(e);
-  }
-  try {
-    const report = await prisma.report.findFirst({ where: { id: reportId } });
-    return ok(report);
-  } catch (error: any) {
-    console.error("error occured: " + error.message);
-    return err(error);
-  }
-}
+// export async function getReport({ reportId }: any): Promise<DbReturnType<any | undefined>> {
+//   if (reportId == undefined) {
+//     const e = new Error("trying to get report with undefined id");
+//     console.log(e.message);
+//     return err(e);
+//   }
+//   try {
+//     const report = await prisma.report.findFirst({ where: { id: reportId } });
+//     return ok(report);
+//   } catch (error: any) {
+//     console.error("error occured: " + error.message);
+//     return err(error);
+//   }
+// }
 
-export async function getReportsFilteredSorted({
-  selectedStatuses,
-  selectedSeverities,
-  selectedCategories,
-  sortField,
-  sortDirection,
-}: FilterSearchProps): Promise<DbReturnType<any[]>> {
-  const STATUSES = ["OPEN", "UNDER_REVIEW", "RESOLVED"];
-  const SEVERITIES = ["LOW", "MEDIUM", "HIGH"];
-  const CATEGORIES = [
-    "INAPPROPRIATE_CONTENT",
-    "FRAUD",
-    "HARASSMENT",
-    "FAKE_INFORMATION",
-    "IMPERSONATION",
-    "OTHER",
-  ];
+// export async function getReportsFilteredSorted({
+//   selectedStatuses,
+//   selectedSeverities,
+//   selectedCategories,
+//   sortField,
+//   sortDirection,
+// }: FilterSearchProps): Promise<DbReturnType<any[]>> {
+//   const STATUSES = ["OPEN", "UNDER_REVIEW", "RESOLVED"];
+//   const SEVERITIES = ["LOW", "MEDIUM", "HIGH"];
+//   const CATEGORIES = [
+//     "INAPPROPRIATE_CONTENT",
+//     "FRAUD",
+//     "HARASSMENT",
+//     "FAKE_INFORMATION",
+//     "IMPERSONATION",
+//     "OTHER",
+//   ];
 
-  const statuses: Status[] = STATUSES.filter((s) => selectedStatuses[s]);
-  const severities: Severity[] = SEVERITIES.filter((s) => selectedSeverities[s]);
-  const categories: Category[] = CATEGORIES.filter((c) => selectedCategories[c]);
+//   const statuses: Status[] = STATUSES.filter((s) => selectedStatuses[s]);
+//   const severities: Severity[] = SEVERITIES.filter((s) => selectedSeverities[s]);
+//   const categories: Category[] = CATEGORIES.filter((c) => selectedCategories[c]);
 
-  try {
-    const reports = await prisma.report.findMany({
-      where: {
-        AND: [{ status: { in: statuses } }, { severity: { in: severities } }, { category: { in: categories } }],
-      },
-      orderBy: { [sortField]: sortDirection },
-    });
-    return ok(reports);
-  } catch (error: any) {
-    console.error("error occured: " + error.message);
-    return err(error);
-  }
-}
+//   try {
+//     const reports = await prisma.report.findMany({
+//       where: {
+//         AND: [{ status: { in: statuses } }, { severity: { in: severities } }, { category: { in: categories } }],
+//       },
+//       orderBy: { [sortField]: sortDirection },
+//     });
+//     return ok(reports);
+//   } catch (error: any) {
+//     console.error("error occured: " + error.message);
+//     return err(error);
+//   }
+// }
 
-export async function getUsers(): Promise<DbReturnType<any[]>> {
-  try {
-    const users = await prisma.user.findMany();
-    return ok(users);
-  } catch (error: any) {
-    console.error("error occured: " + error.message);
-    return err(error);
-  }
-}
+// export async function getUsers(): Promise<DbReturnType<any[]>> {
+//   try {
+//     const users = await prisma.user.findMany();
+//     return ok(users);
+//   } catch (error: any) {
+//     console.error("error occured: " + error.message);
+//     return err(error);
+//   }
+// }
 
 export async function getUser({ userId }: any): Promise<DbReturnType<any>> {
   try {
