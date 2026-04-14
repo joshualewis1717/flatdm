@@ -311,7 +311,7 @@ export default function AuthModal({
                 <p>{activeNotice.message}</p>
                 {activeNotice.actionLink ? (
                   <p className="mt-2">
-                    Dev link:{" "}
+                    For demonstration purposes only here is the link sent by email:{" "}
                     <Link href={activeNotice.actionLink} className="underline underline-offset-4">
                       {activeNotice.actionLabel ?? "open link"}
                     </Link>

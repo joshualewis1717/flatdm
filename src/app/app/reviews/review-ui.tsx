@@ -61,11 +61,12 @@ function TypeIcon({ type }: { type: string }) {
 
 export function ReviewCard({ review }: { review: ReviewListItem }) {
   const type = getReviewType(review);
-  const authorName =
-    `${review.author.firstName} ${review.author.lastName}`.trim() || `@${review.author.username}`;
+  const authorName = review.author.role === "LANDLORD"?
+    `${review.author.firstName} ${review.author.lastName}`.trim() || `@${review.author.username}`:`@${review.author.username}`
   const targetName = review.targetUser
-    ? `${review.targetUser.firstName} ${review.targetUser.lastName}`.trim() ||
-      `@${review.targetUser.username}`
+    ? 
+      review.targetUser.role ==='LANDLORD'? `${review.targetUser.firstName} ${review.targetUser.lastName}`.trim() ||
+      `@${review.targetUser.username}` : `@${review.targetUser?.username}` 
     : review.listing
       ? `${review.listing.property.title}${
           review.listing.flatNumber ? `, Flat ${review.listing.flatNumber}` : ""

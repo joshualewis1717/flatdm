@@ -21,15 +21,15 @@ function getReviewType(review: {
   targetUser: { role: string } | null;
   listingId: number | null;
 }) {
-  if (review.listingId) return "user-listing";
-  if (!review.targetUser) return "review";
-  if (review.author.role === "LANDLORD") return "landlord-user";
-  if (review.targetUser.role === "LANDLORD") return "user-landlord";
-  return "user-user";
+  if (review.listingId) return "User-Listing";
+  if (!review.targetUser) return "Review";
+  if (review.author.role === "LANDLORD") return "Landlord-User";
+  if (review.targetUser.role === "LANDLORD") return "User-Landlord";
+  return "User-User";
 }
 
 function TypeIcon({ type }: { type: string }) {
-  if (type === "user-listing") {
+  if (type === "User-Listing") {
     return <Home />;
   }
 
@@ -112,9 +112,10 @@ export default async function ReviewPage({
 
   const type = getReviewType(review);
   const authorName =
-    `${review.author.firstName} ${review.author.lastName}`.trim() || `@${review.author.username}`;
+    `@${review.author.username}`;
   const targetName = review.targetUser
-    ? `${review.targetUser.firstName} ${review.targetUser.lastName}`.trim() ||
+    ? 
+    //`${review.targetUser.firstName} ${review.targetUser.lastName}`.trim() ||
       `@${review.targetUser.username}`
     : review.listing
       ? `${review.listing.property.title}${
@@ -128,10 +129,10 @@ export default async function ReviewPage({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-3xl">
             <p className="text-xs font-medium uppercase tracking-[0.35em] text-primary/85">
-              {type}
+              Review Type
             </p>
             <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              Review #{review.id}
+              {type} Review
             </h1>
             <p className="mt-4 text-sm leading-7 text-white/68">
               {authorName} reviewed {targetName} on {formatDate(review.createdAt)}.
@@ -196,8 +197,14 @@ export default async function ReviewPage({
             <p className="text-xs font-medium uppercase tracking-[0.3em] text-primary/85">
               Author
             </p>
-            <p className="mt-3 text-xl font-semibold text-white">{authorName}</p>
-            <p className="mt-2 text-sm text-white/60">@{review.author.username} • {review.author.role.toLowerCase()}</p>
+            <div className="mt-3 flex items-center gap-2">
+              <p className="text-xl font-semibold text-white">
+                {authorName}
+              </p>
+              <p className="text-sm text-white/60">
+                • {review.author.role.toLowerCase()}
+              </p>
+            </div>
             <Button
               asChild
               size="sm"
@@ -214,10 +221,14 @@ export default async function ReviewPage({
             </p>
             {review.targetUser ? (
               <>
-                <p className="mt-3 text-xl font-semibold text-white">{targetName}</p>
-                <p className="mt-2 text-sm text-white/60">
-                  @{review.targetUser.username} • {review.targetUser.role.toLowerCase()}
-                </p>
+                <div className="mt-3 flex items-center gap-2">
+                  <p className="text-xl font-semibold text-white">
+                    {targetName}
+                  </p>
+                  <p className="text-sm text-white/60">
+                    • {review.targetUser.role.toLowerCase()}
+                  </p>
+                </div>
                 <Button
                   asChild
                   size="sm"

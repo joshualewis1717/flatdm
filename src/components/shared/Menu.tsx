@@ -115,15 +115,15 @@ export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
               <p className="truncate text-sm font-semibold text-white">{name ?? "FlatDM user"}</p>
               <p className="text-xs text-white/55">{displayRole}</p>
 
-              <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="mt-3 flex">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="min-w-0 px-2"
+                  className="w-fit px-2"
                   onClick={handleSignOut}
                   disabled={isSigningOut}
                 >
-                    <LogOut className="size-3.5" />
+                  <LogOut className="size-3.5" />
                   {isSigningOut ? "Signing out..." : "Sign out"}
                 </Button>
               </div>
