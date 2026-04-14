@@ -30,7 +30,7 @@ const SORT_OPTIONS: Array<{
 ];
 
 function hasActiveFilters(listingParameters: ListingParameters): boolean {
-  const { sort_by, sort_order, distance_to_location, location_lat, location_lng, page, search, ...filtered } = listingParameters;
+  const { sort_by, sort_order, distance_to_location, location_lat, location_lng, page, search, has_search_changed, ...filtered } = listingParameters;
   return Object.values(filtered).some((value) => value !== undefined);
 }
 
