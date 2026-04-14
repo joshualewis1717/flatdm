@@ -16,6 +16,7 @@ import {
   countOverlappingOccupantsQuery,
   getOccupantByOccupantId,
   removeOccupantQuery,
+  getUserProfileByUserId,
 } from "./rawQueries";
 import { mapApplicantApplication, mapLandlordApplication } from "./mappers";
 import { runService, withRole } from "@/app/app/clientService/prisma/prismaUtils";
@@ -262,5 +263,26 @@ export async function removeOccupant(occupantId: number) {
 
     await removeOccupantQuery(occupantId)
     return true
+  });
+}
+
+// function to get current user's profile details
+export async function getCurrentUserProfile() {
+  return runService(async () => {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      throw new Error("Unauthorised");
+    }
+
+    const userId = Number(session.user.id);
+
+    const profile = await getUserProfileByUserId(userId);
+
+    if (!profile) {
+      throw new Error("Profile not found");
+    }
+
+    return profile;
   });
 }
