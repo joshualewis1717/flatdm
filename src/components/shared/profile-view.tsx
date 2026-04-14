@@ -9,12 +9,13 @@ import {
 
 import { Button } from "@/components/ui/button";
 import type { ProfilePageData } from "@/lib/profile";
+import RequestButton from "@/app/app/requests/_components/RequestButton";
 
 type StatKey = keyof ProfilePageData["stats"];
 type StatConfig = {
   label: string;
   key: StatKey;
-  href?: string;
+  href?: (profileId: number) => string;
 };
 
 const ownCopy = {
@@ -23,9 +24,9 @@ const ownCopy = {
     primaryCta: { href: "/app/profile/edit", label: "Edit profile" },
     secondaryCta: { href: "/app/messages", label: "Open inbox" },
     stats: [
-      { label: "Applications sent", key: "applications", href: "/app/applications" },
-      { label: "Reviews made", key: "reviewsMade", href: "/app/reviews" },
-      { label: "Reviews received", key: "reviews", href: "/app/reviews" },
+      { label: "Applications sent", key: "applications", href: (id) => `/app/applications` },
+      { label: "Reviews made", key: "reviewsMade", href: (id) => `/app/reviews/byUser/${id}` },
+      { label: "Reviews received", key: "reviews", href: (id) => `/app/reviews/user/${id}` },
     ],
   },
   LANDLORD: {
@@ -33,9 +34,9 @@ const ownCopy = {
     primaryCta: { href: "/app/profile/edit", label: "Edit profile" },
     secondaryCta: { href: "/app/applications", label: "Review applicants" },
     stats: [
-      { label: "Live listings", key: "listings", href: "/app/listings" },
-      { label: "Reviews made", key: "reviewsMade", href: "/app/reviews" },
-      { label: "Reviews received", key: "reviews", href: "/app/reviews" },
+      { label: "Live listings", key: "listings", href: (id) => `/app/listings` },
+      { label: "Reviews made", key: "reviewsMade", href: (id) => `/app/reviews/byUser/${id}` },
+      { label: "Reviews received", key: "reviews", href: (id) => `/app/reviews/user/${id}` },
     ],
   },
   MODERATOR: {
@@ -43,9 +44,9 @@ const ownCopy = {
     primaryCta: { href: "/app/profile/edit", label: "Edit profile" },
     secondaryCta: { href: "/app/reports", label: "Open report queue" },
     stats: [
-      { label: "Reports in progress", key: "reportsInProcess", href: "/app/reports" },
+      { label: "Reports in progress", key: "reportsInProcess", href: (id) => `/app/reports` },
       { label: "Reports handled", key: "totalReportsHandled" },
-      { label: "Unopened reports", key: "unopenedReports", href: "/app/reports" },
+      { label: "Unopened reports", key: "unopenedReports", href: (id) => `/app/reports` },
     ],
   },
 } as const satisfies Record<string, {
@@ -61,9 +62,9 @@ const publicCopy = {
     primaryCta: { href: "/app/messages", label: "Message them" },
     secondaryCta: { href: "/app/reviews/new", label: "Leave a review" },
     stats: [
-      { label: "Reviews Made", key: "reviewsMade" },
+      { label: "Reviews Made", key: "reviewsMade", href: (id) => `/app/reviews/byUser/${id}` },
       { label: "Rental history", key: "rentalHistory" },
-      { label: "Reviews received", key: "reviews" },
+      { label: "Reviews received", key: "reviews", href: (id) => `/app/reviews/user/${id}` },
     ],
   },
   LANDLORD: {
@@ -73,7 +74,7 @@ const publicCopy = {
     stats: [
       { label: "Live listings", key: "listings" },
       { label: "Properties added", key: "properties" },
-      { label: "Average review", key: "averageReview" },
+      { label: "Average review", key: "averageReview", href: (id) => `/app/reviews/user/${id}` },
     ],
   },
   MODERATOR: {
@@ -107,34 +108,31 @@ function formatStatValue(profile: ProfilePageData, key: StatKey) {
 
   return profile.stats[key];
 }
+
 function isConsultant(profile: ProfilePageData) {
-  if (profile.role === "CONSULTANT") {
-    return true
-  
-  } return false;
+  return profile.role === "CONSULTANT";
 }
 
-function getReviewHref({
-  profileId,
-}: {
-  profileId: number;
-}) {
+function getReviewHref({ profileId }: { profileId: number }) {
   return `/app/reviews/new?userId=${profileId}&from=/app/profile/${profileId}`;
 }
 
 export default function ProfileView({
   profile,
   isOwnProfile,
+  hasExistingConversation,
+  viewerId,
 }: {
   profile: ProfilePageData;
   isOwnProfile: boolean;
+  hasExistingConversation: boolean;
+  viewerId: number;
 }) {
   const ownConfig = ownCopy[profile.role];
   const publicConfig = publicCopy[profile.role];
   const config = isOwnProfile ? ownConfig : publicConfig;
   const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "FlatDM user";
   const joinedDate = formatDate(profile.createdAt);
-  
 
   const editableValues = {
     fullName,
@@ -150,7 +148,7 @@ export default function ProfileView({
           <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex size-14 items-center justify-center rounded-[1.35rem] bg-black/25 text-lg font-semibold text-white">
-                {isConsultant(profile)? profile.username.charAt(0).toUpperCase(): fullName.charAt(0).toUpperCase()}
+                {isConsultant(profile) ? profile.username.charAt(0).toUpperCase() : fullName.charAt(0).toUpperCase()}
               </div>
               <div>
                 <p className="text-xs font-medium uppercase tracking-[0.35em] text-primary/85">
@@ -175,18 +173,22 @@ export default function ProfileView({
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Button asChild size="lg" className="rounded-2xl px-5">
-                <Link
-                  href={
-                    isOwnProfile
-                      ? config.primaryCta.href
-                      : `${publicConfig.primaryCta.href}?userId=${profile.id}`
-                  }
-                >
-                  {config.primaryCta.label}
-                  <ArrowRight />
-                </Link>
-              </Button>
+              {!isOwnProfile && !hasExistingConversation ? (
+                <RequestButton receiverId={profile.id} />
+              ) : (
+                <Button asChild size="lg" className="rounded-2xl px-5">
+                  <Link
+                    href={
+                      isOwnProfile
+                        ? config.primaryCta.href
+                        : `${publicConfig.primaryCta.href}?userId=${profile.id}`
+                    }
+                  >
+                    {config.primaryCta.label}
+                    <ArrowRight />
+                  </Link>
+                </Button>
+              )}
               <Button
                 asChild
                 size="lg"
@@ -197,9 +199,7 @@ export default function ProfileView({
                   href={
                     isOwnProfile
                       ? config.secondaryCta.href
-                      : getReviewHref({
-                          profileId: profile.id,
-                        })
+                      : getReviewHref({ profileId: profile.id })
                   }
                 >
                   {config.secondaryCta.label}
@@ -222,12 +222,14 @@ export default function ProfileView({
               </article>
             );
 
-            if (!isOwnProfile || !stat.href) {
+            const href = stat.href?.(profile.id);
+
+            if (!isOwnProfile || !href) {
               return <div key={stat.label}>{card}</div>;
             }
 
             return (
-              <Link key={stat.label} href={stat.href}>
+              <Link key={stat.label} href={href}>
                 {card}
               </Link>
             );
@@ -322,7 +324,7 @@ export default function ProfileView({
               <p className="text-sm leading-7 text-white/72">
                 {profile.bio ??
                   (isOwnProfile
-                    ? "Add a bio describing yourself ."
+                    ? "Add a bio describing yourself."
                     : "This user has not added a public bio yet.")}
               </p>
             </div>

@@ -7,6 +7,7 @@ import { getProfilePageData } from "@/lib/profile";
 export default async function ProfilePage() {
   const session = await auth();
 
+
   if (!session?.user?.id) {
     notFound();
   }
@@ -17,5 +18,5 @@ export default async function ProfilePage() {
     notFound();
   }
 
-  return <ProfileView profile={profile} isOwnProfile />;
+  return <ProfileView profile={profile} isOwnProfile hasExistingConversation={false} />;
 }

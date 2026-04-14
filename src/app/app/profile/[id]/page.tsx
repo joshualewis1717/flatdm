@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-
+import { prisma } from "@/lib/prisma";
 import ProfileView from "@/components/shared/profile-view";
 import { auth } from "@/lib/auth";
 import { getProfilePageData } from "@/lib/profile";
@@ -26,8 +26,20 @@ export default async function PublicProfilePage({
   const profile = await getProfilePageData(profileId);
 
   if (!profile) {
-    notFound();
+  notFound();
   }
 
-  return <ProfileView profile={profile} isOwnProfile={viewerId === profileId} />;
+  const conversation = await prisma.conversation.findFirst({
+  where: {
+    OR: [
+      { userAId: viewerId, userBId: profileId },
+      { userAId: profileId, userBId: viewerId },
+    ],
+  },
+    select: { id: true },
+    });
+
+
+
+  return <ProfileView profile={profile} isOwnProfile={viewerId === profileId} hasExistingConversation={!!conversation} viewerId={viewerId} />;
 }
