@@ -7,10 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Conversation, Request } from "./type";
 import ConversationBox from "./ConversationBox";
 import RequestBox from "../../requests/_components/RequestBox";
-<<<<<<< Updated upstream
-=======
 import ErrorDisplay from "./ErrorDisplay";
->>>>>>> Stashed changes
 
 type Parameters = {
   conversations: Conversation[];
