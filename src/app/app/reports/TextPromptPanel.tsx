@@ -1,7 +1,12 @@
+"use client";
 
-import React, { useState } from "react";
-import { Input, Textarea } from "@/components/ui/textarea";
-import { type ConfirmFunction, User } from '@/app/app/reports/types';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { X } from "lucide-react";
+import { type ConfirmFunction, type User } from "@/app/app/reports/types";
 
 type Props = {
   text: string;
@@ -11,78 +16,100 @@ type Props = {
   hide?: () => void;
 };
 
-export function TextPromptPanel({ text, user, confirm, visible , hide }: Props){
+export function TextPromptPanel({ text, user, confirm, visible, hide }: Props) {
   const [inputValue, setInputValue] = useState("");
 
-  if (visible){
-        return (
-        <div
-        className="
-            fixed inset-0
-            pointer-events-auto
-            flex items-start justify-center
-            py-30 width-200
-        "
-        >
-        <div className="flex flex-col gap-1 rounded-[2rem] border border-white/10 bg-black p-6 sm:p-8">
-            {/* Top text */}
-            <header className="px-40 py-4 border-b border-gray-700">
-            <h1 className="text-lg font-semibold">{text}</h1>
-            </header>
+  const handleClose = () => {
+    setInputValue("");
+    hide?.();
+  };
 
-            {/* Content area */}
-            <main className="py-4">
-            <label className="block text-sm"></label>
-            <Textarea 
+  const handleConfirm = async () => {
+    const trimmedText = inputValue.trim();
+
+    if (!trimmedText || !user) return;
+
+    try {
+      await confirm({ user, text: trimmedText });
+      handleClose();
+    } catch (e) {
+      console.error("confirm error:", e);
+    }
+  };
+
+  if (!visible) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/60 backdrop-blur-md"
+        onClick={handleClose}
+        aria-label="Close text prompt"
+      />
+
+      <Card className="relative max-h-[90vh] w-full max-w-2xl overflow-auto rounded-[2rem] border border-border/80 bg-card/65 py-0 shadow-2xl shadow-black/30 backdrop-blur-2xl">
+        <div className="relative px-6 pb-6 pt-6 md:px-8 md:pb-8 md:pt-8">
+          <CardHeader className="space-y-4 px-0 pb-2 pt-0">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <CardTitle className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
+                  {text}
+                </CardTitle>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleClose}
+                className="rounded-2xl px-3 py-1 text-muted-foreground transition hover:text-foreground"
+                aria-label="Close text prompt"
+              >
+                <X />
+              </button>
+            </div>
+          </CardHeader>
+
+          <CardContent className="px-0 pb-0 pt-4">
+            <div className="space-y-2">
+              <Label
+                htmlFor="text-prompt-input"
+                className="text-sm font-medium text-foreground"
+              >
+                Details
+              </Label>
+              <Textarea
+                id="text-prompt-input"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="Type here..."
-            />
-            </main>
+                className="min-h-[140px] rounded-2xl border-border/80 bg-card/70 px-4 py-3 text-foreground placeholder:text-muted-foreground focus-visible:border-primary/60 focus-visible:ring-primary/20"
+              />
+            </div>
 
-            {/* Actions */}
-            <footer className="px-6 py-4 border-t border-gray-700 flex gap-3 justify-end">
-            <button
-                onClick={() => hide?.()}
-                className="
-                px-4 py-2 rounded-md
-                bg-gray-800 text-gray-200
-                border border-gray-700
-                hover:bg-gray-700
-                transition
-                "
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <Button
                 type="button"
-            >
+                size="lg"
+                variant="outline"
+                onClick={handleClose}
+                className="h-12 rounded-2xl text-sm font-semibold"
+              >
                 Cancel
-            </button>
+              </Button>
 
-            <button
-                onClick={async () => {
-                    if (!inputValue.trim()) return;
-                    if (typeof confirm !== "function") return;
-                    try {
-                        if (!user) return;
-                        await confirm({ user, text: inputValue });
-                    } catch (e) {
-                    console.error("confirm error:", e);
-                    } finally {
-                    hide?.();
-                    }
-                }}
-                disabled={!inputValue.trim()}
-                className={`px-4 py-2 rounded-md transition ${
-                    inputValue.trim()
-                    ? "bg-[#c9fb00] text-black hover:bg-green-300"
-                    : "bg-gray-600 text-gray-300 cursor-not-allowed"
-                }`}
+              <Button
                 type="button"
-                >
+                size="lg"
+                onClick={handleConfirm}
+                disabled={!inputValue.trim() || !user}
+                className="h-12 rounded-2xl text-sm font-semibold"
+              >
                 Confirm
-            </button>
-
-            </footer>
+              </Button>
+            </div>
+          </CardContent>
         </div>
-        </div>
-    );
-  }
-};
+      </Card>
+    </div>
+  );
+}
