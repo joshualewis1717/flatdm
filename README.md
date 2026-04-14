@@ -1,4 +1,4 @@
-# flatdm
+# FlatDM
 
 Setup commands for running the app locally.
 
@@ -6,14 +6,6 @@ Setup commands for running the app locally.
 
 ```bash
 npm install
-```
-
-## Prisma
-
-Make sure `.env` contains a valid `DATABASE_URL`, then sync the Prisma schema and generate the client:
-
-```bash
-npx prisma generate
 ```
 
 ## Environment Variables
@@ -30,6 +22,14 @@ Add these variables to `.env`:
 | `SMTP_USER` | SMTP username |
 | `SMTP_PASS` | SMTP password |
 | `EMAIL_FROM` | Sender email address |
+
+## Prisma
+
+Make sure `.env` contains a valid `DATABASE_URL`, then sync the Prisma schema and generate the client:
+
+```bash
+npx prisma generate
+```
 
 ## Run Dev
 
