@@ -26,9 +26,15 @@ function deleteUserWrap({user, setShowUser} : {user : User; setShowUser : any}){
     // make sure we actually want to delete this
     const ok = window.confirm(`Delete User ${user['username']}? This cannot be undone.`);
     if (!ok) return;
+    let delError = null;
 
+    try{
     deleteUser({user});
     setShowUser(false);
+    }
+    catch(error){
+        delError = error;
+    }
     return;
 }
 

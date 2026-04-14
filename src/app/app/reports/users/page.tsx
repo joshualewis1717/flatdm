@@ -19,7 +19,7 @@ export default async function HomePage({ params } : { params: Promise<{id: numbe
             users = users.result;
         }
         else{
-            dataError = "Error fetching users from database. Refresh to try again."
+            dataError = users.error;
         }
     }
     catch (error){

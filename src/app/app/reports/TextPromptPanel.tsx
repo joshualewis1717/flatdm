@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import User from '@/app/app/reports/types';
+import { Input, Textarea } from "@/components/ui/textarea";
 
 type Props = {
   text: string;
@@ -19,40 +20,21 @@ export function TextPromptPanel({ text, user, confirm, visible , hide }: Props){
             fixed inset-0
             pointer-events-auto
             flex items-start justify-center
+            py-30 width-200
         "
-        style={{ padding: "10rem" }} // leaves 5rem outside area on all sides
         >
-        <div
-            className="
-            w-full h-full
-            bg-black/90 text-gray-200
-            rounded-lg
-            overflow-auto
-            shadow-xl
-            flex flex-col
-            "
-        >
+        <div className="flex flex-col gap-1 rounded-[2rem] border border-white/10 bg-black p-6 sm:p-8">
             {/* Top text */}
-            <header className="px-6 py-4 border-b border-gray-700">
-            <h1 className="text-lg font-semibold text-gray-100">{text}</h1>
+            <header className="px-40 py-4 border-b border-gray-700">
+            <h1 className="text-lg font-semibold">{text}</h1>
             </header>
 
             {/* Content area */}
-            <main className="flex-1 px-6 py-8">
-            <label className="block text-sm text-gray-300 mb-2"></label>
-            <input
+            <main className="py-4">
+            <label className="block text-sm"></label>
+            <Textarea 
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                className="
-                w-full
-                bg-gray-900 text-gray-100
-                border border-gray-700
-                focus:border-green-300 focus:ring-2 focus:ring-green-300
-                rounded-md
-                px-3 py-2
-                outline-none
-                transition
-                "
                 placeholder="Type here..."
             />
             </main>
@@ -86,8 +68,8 @@ export function TextPromptPanel({ text, user, confirm, visible , hide }: Props){
                 }}
                 className="
                 px-4 py-2 rounded-md
-                bg-green-400 text-black
-                hover:bg-green-500
+                bg-[#c9fb00] text-black
+                hover:bg-green-300
                 transition
                 "
                 type="button"

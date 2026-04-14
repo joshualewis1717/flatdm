@@ -390,8 +390,6 @@ export async function deleteUser({ user }: { user: User }): Promise<DbReturnType
 
     const text: string = "Your account has been deleted";
     sendEmail({ user, text });
-
-    console.log("deleted user with id: " + user.id);
     return ok<void>(undefined);
   } catch (error: any) {
     console.error("error occured: " + error.message);
