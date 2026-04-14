@@ -4,8 +4,12 @@ import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+type HeaderMeta = {
+  title: string;
+  description: string;
+};
 
-const headers: Record<string, { title: string; description: string }> = {
+const headers: Record<string, HeaderMeta> = {
   "/app": {
     title: "Overview",
     description: "Single place to track the health of listings, applications, and conversations.",
@@ -14,7 +18,27 @@ const headers: Record<string, { title: string; description: string }> = {
     title: "Listings",
     description: "Review available properties, add new stock, and manage what is currently live.",
   },
+  "/app/listings/my-properties": {
+    title: "Your listings",
+    description: "Manage the properties you have listed and keep availability up to date.",
+  },
+  "/app/listings/new": {
+    title: "New listing",
+    description: "Create a property listing and add the details applicants need.",
+  },
+  "/app/listings/edit/*": {
+    title: "Edit listing",
+    description: "Update listing details, availability, images, and property information.",
+  },
+  "/app/listings/*": {
+    title: "Listing details",
+    description: "Review the property details, availability, amenities, and next steps.",
+  },
   "/app/applications": {
+    title: "Applications",
+    description: "Stay on top of active applicants, current decisions, and outstanding follow-up.",
+  },
+  "/app/applications/*": {
     title: "Applications",
     description: "Stay on top of active applicants, current decisions, and outstanding follow-up.",
   },
@@ -30,6 +54,14 @@ const headers: Record<string, { title: string; description: string }> = {
     title: "Edit profile",
     description: "Update your personal details and keep your profile current.",
   },
+  "/app/profile/edit/*": {
+    title: "Edit profile",
+    description: "Update your personal details and keep your profile current.",
+  },
+  "/app/profile/*": {
+    title: "Profile",
+    description: "Keep your account details current and track the activity that matters for your role.",
+  },
   "/app/reviews": {
     title: "Reviews",
     description: "Track incoming reviews, leave feedback, and build trust across the platform.",
@@ -38,25 +70,40 @@ const headers: Record<string, { title: string; description: string }> = {
     title: "Leave a review",
     description: "Share feedback about another user or listing.",
   },
+  "/app/reviews/new/*": {
+    title: "Leave a review",
+    description: "Share feedback about another user or listing.",
+  },
+  "/app/reviews/*": {
+    title: "Reviews",
+    description: "Track incoming reviews, leave feedback, and build trust across the platform.",
+  },
   "/app/reports": {
+    title: "Reports",
+    description: "Monitor flagged content, review details, and take action to keep the marketplace healthy.",
+  },
+  "/app/reports/*": {
     title: "Reports",
     description: "Monitor flagged content, review details, and take action to keep the marketplace healthy.",
   },
 };
 
+function getHeaderMeta(pathname: string) {
+  const exactMatch = headers[pathname];
+
+  if (exactMatch) return exactMatch;
+  
+  const wildcardMatch = Object.entries(headers)
+    .filter(([path]) => path.endsWith("/*"))
+    .sort(([a], [b]) => b.length - a.length)
+    .find(([path]) => pathname.startsWith(path.slice(0, -1)));
+
+  return wildcardMatch?.[1] ?? headers["/app"];
+}
 
 export default function Header({ onMenuClick } : { onMenuClick: () => void; }) {
   const pathname = usePathname();
-  const meta =
-    pathname.startsWith("/app/profile/edit")
-      ? headers["/app/profile/edit"]
-      : pathname.startsWith("/app/profile/")
-        ? headers["/app/profile"]
-      : pathname.startsWith("/app/reviews/new")
-        ? headers["/app/reviews/new"]
-      : pathname.startsWith("/app/reviews/")
-        ? headers["/app/reviews"]
-        : headers[pathname] ?? headers["/app"];
+  const meta = getHeaderMeta(pathname);
 
   return (
     <header
