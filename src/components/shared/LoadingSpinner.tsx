@@ -2,23 +2,32 @@
 // Accepts a `text` prop for a contextual message beneath the spinner
 
 type LoadingSpinnerProps = {
-    text?: string;
-  };
+  text?: string;
+  size?: "sm" | "md";
+  spinnerColour?: string; // Tailwind border-t class
+};
+
+export default function LoadingSpinner({  text = "Loading…", size = "md",spinnerColour = "border-t-primary"}: LoadingSpinnerProps) {
   
-  export default function LoadingSpinner({ text = "Loading…" }: LoadingSpinnerProps) {
-    return (
-      <div className="flex flex-col items-center justify-center w-full min-h-[200px] gap-4 py-16">
-        {/* Spinning ring */}
-        <div className="relative w-10 h-10">
-          <div className="absolute inset-0 rounded-full border-2 border-white/10" />
-          <div
-            className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin"
-            style={{ animationDuration: "0.75s" }}
-          />
-        </div>
-  
-        {/* Loading text */}
-        <p className="text-sm text-white/40 tracking-wide">{text}</p>
+  const isInline = size === "sm";// e.g. if it is bing used inline (e.g. in a button) or inside a page
+
+  return (
+    <div className={`flex items-center justify-center gap-2
+      ${isInline ? "" : "w-full min-h-[200px] py-16"}`}
+    >
+      <div className={`relative shrink-0 ${isInline ? "w-4 h-4" : "w-10 h-10"}`}>
+        <div className="absolute inset-0 rounded-full border-2 border-white/10" />
+        <div
+          className={`absolute inset-0 rounded-full border-2 border-transparent animate-spin ${spinnerColour}`}
+          style={{ animationDuration: "0.75s" }}
+        />
       </div>
-    );
-  }
+
+      {text && (
+        <p className={`tracking-wide ${isInline ? "text-xs" : "text-sm text-white/40"}`}>
+          {text}
+        </p>
+      )}
+    </div>
+  );
+}

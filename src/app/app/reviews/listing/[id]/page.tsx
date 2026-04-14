@@ -1,0 +1,142 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ArrowLeft, Star } from "lucide-react";
+
+import { prisma } from "@/lib/prisma";
+import { Button } from "@/components/ui/button";
+import { ReviewCard } from "../../review-ui";
+import ErrorMessage from "@/components/shared/ErrorMessage";
+import { tr } from "date-fns/locale";
+
+export default async function ListingReviewsPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const listingId = Number(id);
+
+  if (Number.isNaN(listingId)) {
+    notFound();
+  }
+  let listing;
+  try{
+    listing = await prisma.propertyListing.findFirst({
+      where: {
+        id: listingId,
+        isDeleted: false,
+      },
+      select: {
+        id: true,
+        flatNumber: true,
+        property: {
+          select: {
+            title: true,
+            streetName: true,
+            city: true,
+          },
+        },
+      },
+    });
+  } catch(err) {
+    return <ErrorMessage text="Database Error"/>
+  }
+
+  if (!listing) {
+    notFound();
+  }
+  let reviews;
+  try{
+    reviews = await prisma.review.findMany({
+      where: {
+        isDeleted: false,
+        listingId: listing.id,
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            username: true,
+            role: true,
+          },
+        },
+        targetUser: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            username: true,
+            role: true,
+          },
+        },
+        listing: {
+          select: {
+            id: true,
+            flatNumber: true,
+            property: {
+              select: {
+                title: true,
+                city: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  } catch(err) {
+    return <ErrorMessage text="Database Error"/>
+  }
+
+  const listingName = `${listing.property.title}${
+    listing.flatNumber ? `, Flat ${listing.flatNumber}` : ""
+  }`;
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
+        <p className="text-xs font-medium uppercase tracking-[0.35em] text-primary/85">
+          Listing reviews
+        </p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          Reviews for {listingName}
+        </h1>
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-white/68">
+          Browse all reviews submitted for this listing.
+        </p>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Button
+            asChild
+            size="lg"
+            variant="outline"
+            className="rounded-2xl border-white/12 bg-white/[0.03] px-5 text-white hover:bg-white/[0.06]"
+          >
+            <Link href={`/app/listings/${listing.id}`}>
+              <ArrowLeft />
+              Back to listing
+            </Link>
+          </Button>
+          <Button asChild size="lg" className="rounded-2xl px-5">
+            <Link href={`/app/reviews/new?listingId=${listing.id}&from=/app/reviews/listing/${listing.id}`}>
+              <Star />
+              Leave a review
+            </Link>
+          </Button>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        {reviews.length === 0 ? (
+          <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6 text-sm text-white/60">
+            No reviews have been submitted for this listing yet.
+          </div>
+        ) : (
+          reviews.map((review) => <ReviewCard key={review.id} review={review} />)
+        )}
+      </section>
+    </div>
+  );
+}

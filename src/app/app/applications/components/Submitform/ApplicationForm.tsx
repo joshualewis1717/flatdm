@@ -2,7 +2,7 @@
 import {useEffect, useState } from "react";
 import type { ApplicationForm } from "../../types";
 import InputField from "../../components/Submitform/UI/InputField";
-import { getExistingApplication, submitApplication } from "../../prisma/clientServices";
+import { getCurrentUserProfile, getExistingApplication, submitApplication } from "../../prisma/clientServices";
 import { useSessionContext } from "@/components/shared/app-frame";
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { getListingById } from "@/app/app/listings/prisma/clientServices";
@@ -10,7 +10,6 @@ import { getListingTitle } from "@/app/app/logic/listing";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ErrorMessage from "@/components/shared/ErrorMessage";
 import SuccessMessage from "@/components/shared/SuccessMessage";
-import { routerServerGlobal } from "next/dist/server/lib/router-utils/router-server-context";
 import { useRouter } from "next/navigation";
 
 
@@ -91,13 +90,21 @@ export default function ApplicationForm({ listingId, applicationId}: SubmitAppli
   useEffect(() => {
     async function fetchCreateModeDetails(){
       if (!isConsultant || !firstName || !lastName || isViewMode || !listingId) return;
+      let phoneNumber = ""
     
+      // fetch here to retrieve profile details for phone number
+      const profileDetails = await getCurrentUserProfile();
+      // the error here is not as important (if query fails, user can just type in phne number by themselves, so ignore error)
+      if (profileDetails.result){
+        phoneNumber = profileDetails.result.phone ?? "";
+      }
       setPageLoading(true)
       setForm((prev) => ({
         ...prev,
         firstName: firstName ?? "",
         lastName: lastName ?? "",
         email: email ?? "",
+        phoneNumber: phoneNumber
       }));
 
       const {result, error} = await getListingById(listingId.toString())

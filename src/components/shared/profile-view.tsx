@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import type { ProfilePageData } from "@/lib/profile";
 
 type StatKey = keyof ProfilePageData["stats"];
-
 type StatConfig = {
   label: string;
   key: StatKey;
@@ -109,6 +108,14 @@ function formatStatValue(profile: ProfilePageData, key: StatKey) {
   return profile.stats[key];
 }
 
+function getReviewHref({
+  profileId,
+}: {
+  profileId: number;
+}) {
+  return `/app/reviews/new?userId=${profileId}&from=/app/profile/${profileId}`;
+}
+
 export default function ProfileView({
   profile,
   isOwnProfile,
@@ -183,7 +190,9 @@ export default function ProfileView({
                   href={
                     isOwnProfile
                       ? config.secondaryCta.href
-                      : `${publicConfig.secondaryCta.href}?userId=${profile.id}`
+                      : getReviewHref({
+                          profileId: profile.id,
+                        })
                   }
                 >
                   {config.secondaryCta.label}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UserConversations, Message } from "./type";
+import { Conversation, Request, Message } from "./type";
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
@@ -10,15 +10,18 @@ import { Button } from "@/components/ui/button";
 import Inbox from "./Inbox";
 import Chat from "./Chat";
 
-export default function MessagesClient({ conversations }: UserConversations) {
-  const [selectedConversation, setSelectedConversation] = useState<number | null>(
-    conversations[0]?.id ?? null
-  );
+type parameters={
+  conversations: Conversation[];
+  requests: Request[];
+}
+
+export default function MessagesClient({conversations, requests}: parameters) {
+  const [selectedConversation, setSelectedConversation] = useState<number | null>(conversations[0]?.id ?? null);
   
   const [search, setSearch] = useState("");
   const [allConversations, setAllConversations] = useState(conversations);
+  const [allRequests, setAllRequests] = useState(requests);
   const [isMobileInboxOpen, setIsMobileInboxOpen] = useState(false);
-
   const activeConversation = allConversations.find((conversation) => conversation.id === selectedConversation);
 
   const updateConversation = ( 
@@ -51,7 +54,7 @@ export default function MessagesClient({ conversations }: UserConversations) {
     });
   };
 
-  const replacePendingMessage = ( conversationId: number, tempId: number, message: Message ) => {
+  const replacePendingMessage = (conversationId: number, tempId: number, message: Message) => {
     updateConversation(conversationId, (conversation) => {
       const messages = conversation.messages.map((item) =>
         item.id === tempId ? message : item
@@ -130,9 +133,58 @@ export default function MessagesClient({ conversations }: UserConversations) {
     }
   };
 
+  const acceptRequest = async (requestId: number) => {
+    try {
+      const response = await fetch("/api/requests", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({requestId, action: "ACCEPT"}),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to accept request");
+      }
+
+      const data: { conversation: Conversation } = await response.json();
+
+      setAllRequests((current) => current.filter((request) => request.id !== requestId));
+
+      setAllConversations((current) => [
+        data.conversation,
+        ...current.filter((conversation) => conversation.id !== data.conversation.id),
+      ]);
+
+      setSelectedConversation(data.conversation.id);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const declineRequest = async (requestId: number) => {
+    try {
+      const response = await fetch("/api/requests", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({requestId, action: "DECLINE"}),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to decline request");
+      }
+
+      setAllRequests((current) => current.filter((request) => request.id !== requestId));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     setAllConversations(conversations);
   }, [conversations]);
+
+  useEffect(() => {
+    setAllRequests(requests);
+  }, [requests]);
 
   useEffect(() => {
     if (!selectedConversation) return;
@@ -177,11 +229,17 @@ export default function MessagesClient({ conversations }: UserConversations) {
       <div className="hidden md:block">
         <Inbox
           conversations={allConversations}
+          requests={allRequests}
           selectedConversation={selectedConversation}
-          setSelectedConversation={setSelectedConversation}
+          setSelectedConversation={(id) => {
+            setSelectedConversation(id);
+            setIsMobileInboxOpen(false);
+          }}
           search={search}
           setSearch={setSearch}
           deleteConversation={deleteConversation}
+          acceptRequest={acceptRequest}
+          declineRequest={declineRequest}
         />
       </div>
 
@@ -208,6 +266,7 @@ export default function MessagesClient({ conversations }: UserConversations) {
                 <div className="p-4 pt-2">
                   <Inbox
                     conversations={allConversations}
+                    requests={allRequests}
                     selectedConversation={selectedConversation}
                     setSelectedConversation={(id) => {
                       setSelectedConversation(id);
@@ -216,6 +275,8 @@ export default function MessagesClient({ conversations }: UserConversations) {
                     search={search}
                     setSearch={setSearch}
                     deleteConversation={deleteConversation}
+                    acceptRequest={acceptRequest}
+                    declineRequest={declineRequest}
                   />
                 </div>
               </SheetContent>

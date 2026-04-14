@@ -4,21 +4,30 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-import type { Conversation } from "./type";
+import type { Conversation, Request } from "./type";
 import ConversationBox from "./ConversationBox";
+import RequestBox from "../../requests/_components/RequestBox";
+import RequestButton from "../../requests/_components/RequestButton";
 
-type parameters = {
+type Parameters = {
   conversations: Conversation[];
+  requests: Request[];
   selectedConversation: number | null;
   setSelectedConversation: (id: number) => void;
   search: string;
   setSearch: (value: string) => void;
   deleteConversation: (conversationId: number) => void;
+  acceptRequest: (requestId: number) => void;
+  declineRequest: (requestId: number) => void;
 };
 
-export default function Inbox({conversations, selectedConversation, setSelectedConversation, search, setSearch, deleteConversation}: parameters) {
-  const filtered = conversations.filter((c) =>
+export default function Inbox({conversations, requests, selectedConversation, setSelectedConversation, search, setSearch, deleteConversation, acceptRequest, declineRequest}: Parameters) {
+  const filteredConversations = conversations.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const filteredRequests = requests.filter((r) =>
+    r.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -36,15 +45,42 @@ export default function Inbox({conversations, selectedConversation, setSelectedC
 
         {/* Available Conversations */}
         <ScrollArea className="h-[70vh] pr-2 w-full">
-            <div className="space-y-2">
-                {filtered.map((conversation) => (
-                    <ConversationBox
-                    conversation={conversation}
-                    selectedConversation={selectedConversation}
-                    setSelectedConversation={setSelectedConversation}
-                    deleteConversation={deleteConversation} />
+          <div className="space-y-4">
+            {filteredRequests.length > 0 && (
+              <div className="space-y-2">
+                <p className="px-1 text-xs font-medium uppercase tracking-wide text-white/50">
+                  Requests
+                </p>
+
+                {filteredRequests.map((request) => (
+                  <RequestBox
+                    key={request.id}
+                    request={request}
+                    acceptRequest={acceptRequest}
+                    declineRequest={declineRequest}
+                  />
                 ))}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              {filteredRequests.length > 0 && (
+                <p className="px-1 text-xs font-medium uppercase tracking-wide text-white/50">
+                  Conversations
+                </p>
+              )}
+
+              {filteredConversations.map((conversation) => (
+                <ConversationBox
+                  key={conversation.id}
+                  conversation={conversation}
+                  selectedConversation={selectedConversation}
+                  setSelectedConversation={setSelectedConversation}
+                  deleteConversation={deleteConversation}
+                />
+              ))}
             </div>
+          </div>
         </ScrollArea>
       </CardContent>
     </Card>

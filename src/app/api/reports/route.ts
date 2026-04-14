@@ -73,10 +73,21 @@ async function resolveListingTarget(targetId: number,providedTargetUserId: numbe
 }
 
 async function resolveReviewTarget( userId: number, targetId: number, providedTargetUserId: number | null): Promise<ResolvedReportTarget> {
+  const review = await prisma.review.findUnique({
+    where: { id: targetId },
+    select: {
+      id: true,
+      authorId: true,
+    },
+  });
+
+  if (!review) {
+    throw new Error("Review not found");
+  }
   return {
     conversationId: null,
     listingId: null,
-    reviewId: null,
+    reviewId: targetId,
     targetUserId: providedTargetUserId,
   };
 }

@@ -195,11 +195,7 @@ export default function AuthModal({
     setIsSubmitting(false);
 
     if (!signInResult || signInResult.error) {
-      setError(
-        authMode === "register"
-          ? "Account created, but login failed. Please login manually."
-          : "Invalid email or password"
-      );
+      setError("Invalid email or password");
       return;
     }
 
@@ -210,7 +206,7 @@ export default function AuthModal({
 
   const verified = searchParams.get("verified");
   const verifiedReason = searchParams.get("reason");
-  const loginNotice = authMode === "login"
+  const loginNotice: NoticeState | null = authMode === "login"
     ? verified === "1"
       ? { tone: "success" as const, message: "Email verified. You can log in and access your account now." }
       : verified === "0"
