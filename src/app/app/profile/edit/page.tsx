@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
-
 import EditProfileForm from "@/app/app/profile/edit/edit-profile-form";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import ErrorMessage from "@/components/shared/ErrorMessage";
 
 const fieldLabels: Record<string, string> = {
   fullName: "full name",
@@ -27,23 +27,28 @@ export default async function EditProfilePage({
   if (!session?.user?.id) {
     notFound();
   }
+  let user;
 
-  const user = await prisma.user.findUnique({
-    where: { id: Number(session.user.id) },
-    select: {
-      firstName: true,
-      lastName: true,
-      username: true,
-      email: true,
-      profile: {
-        select: {
-          phone: true,
-          description: true,
-          bio: true,
+  try {
+    user = await prisma.user.findUnique({
+      where: { id: Number(session.user.id) },
+      select: {
+        firstName: true,
+        lastName: true,
+        username: true,
+        email: true,
+        profile: {
+          select: {
+            phone: true,
+            description: true,
+            bio: true,
+          },
         },
       },
-    },
-  });
+    });
+  } catch(err) {
+      return <ErrorMessage text="Database error" />;
+  }
 
   if (!user) {
     notFound();
