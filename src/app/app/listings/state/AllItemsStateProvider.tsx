@@ -14,7 +14,7 @@ import type { AllItemsState, ListingsResultItem, PaginationMeta } from "../types
 // - pagination meta (current page, total pages, etc.) 
 // - query signature that can be used to determine if the current filters/sorting have changed (and thus if we need to refetch data from the server) 
 
-const DEFAULT_PAGE_SIZE = 1;
+const DEFAULT_PAGE_SIZE = 5;
 
 const AllItemsStateContext = createContext<AllItemsState | null>(null);
 
