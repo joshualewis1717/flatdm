@@ -12,7 +12,7 @@ import StatusSelector from '@/components/shared/StatusSelector';
 import SeveritySelector from '@/components/shared/SeveritySelector';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 
-const themeMap = {
+const themeMap: Record<string, string> = {
     "RESOLVED":"green",
     "UNDER_REVIEW":"amber",
     "OPEN":"red",
@@ -22,7 +22,7 @@ const themeMap = {
     "UNRANKED":"neutral"
 }
 
-const wordMap = {
+const wordMap: Record<string, string> = {
     "RESOLVED":"Resolved",
     "UNDER_REVIEW":"Under Review",
     "OPEN":"Open",
@@ -65,18 +65,18 @@ export default function SelectedReportClient({error, report, target, reporter, m
 
     // variables for the status for easier processing (for the theme of the Status component)
     const [status, setStatus] = useState(report['status']);
-    const [severity, setSeverity] = useState(report['severity']);
+    const [severity, setSeverity] = useState(report['severity'] ?? "UNRANKED");
     const [moderator, setModerator] = useState(getMod({userId:report.assignedModeratorId, userMap:userMap}))
 
-    function assignModeratorWrap({setVis, vis} : {setVis:Function, vis:boolean}): void {
+    function assignModeratorWrap({setVis, vis} : {setVis: (value: boolean) => void, vis:boolean}): void {
         setVis(!vis);
     }
 
-    function changeStatusWrap({setVis, vis} : {setVis:Function, vis:boolean}): void {
+    function changeStatusWrap({setVis, vis} : {setVis: (value: boolean) => void, vis:boolean}): void {
         setVis(!vis);
     }
 
-    function changeSeverityWrap({setVis, vis} : {setVis:Function, vis:boolean}): void {
+    function changeSeverityWrap({setVis, vis} : {setVis: (value: boolean) => void, vis:boolean}): void {
         setVis(!vis)
     }
 

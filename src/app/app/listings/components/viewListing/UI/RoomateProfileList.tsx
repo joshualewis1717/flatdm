@@ -1,7 +1,5 @@
 "use client";
 // a generic component to show a list of roomate profiles stacked together
-import { Roommate } from "../../../types";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ListingInfoData } from "../../../types";
 import Link from "next/link";
@@ -12,7 +10,6 @@ type RoommateAvatarsProps = {
 };
 
 export default function RoommateProfileList({ roomates, maxVisible = 10 }: RoommateAvatarsProps) {
-  const router = useRouter();
   const [expanded, setExpanded] = useState(false); 
 
   if (!roomates || roomates.length === 0) return null;

@@ -7,7 +7,6 @@ import ProfileButton from "../profile/ProfileButton";
 import { Application } from "../../../../types";
 import ViewListingButton from "../generic/ViewListingButton";
 import ViewApplicationButton from "../generic/ViewApplicationButton";
-import { useRouter } from "next/navigation";
 
 // cards that was produced by applicants, landlords will be seeing these cards and interacting with them
 type props={
@@ -16,7 +15,6 @@ type props={
 }
 
 export default function ApplicantCard({ application,onAction, }: props) {
-  const router = useRouter();
     return (
       <li className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden hover:border-white/20 transition-colors">
       <div

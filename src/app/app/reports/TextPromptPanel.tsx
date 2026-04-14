@@ -1,11 +1,12 @@
+
 import React, { useState } from "react";
-import User from '@/app/app/reports/types';
 import { Input, Textarea } from "@/components/ui/textarea";
+import { type ConfirmFunction, User } from '@/app/app/reports/types';
 
 type Props = {
   text: string;
   user?: User | null;
-  confirm: (user?: User | null, text?: string) => void | Promise<void>;
+  confirm: ConfirmFunction;
   visible?: boolean;
   hide?: () => void;
 };
@@ -60,7 +61,8 @@ export function TextPromptPanel({ text, user, confirm, visible , hide }: Props){
                     if (!inputValue.trim()) return;
                     if (typeof confirm !== "function") return;
                     try {
-                    await confirm({ user, text: inputValue });
+                        if (!user) return;
+                        await confirm({ user, text: inputValue });
                     } catch (e) {
                     console.error("confirm error:", e);
                     } finally {

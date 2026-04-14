@@ -6,7 +6,6 @@ import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { ReviewCard } from "../../review-ui";
 import ErrorMessage from "@/components/shared/ErrorMessage";
-import { tr } from "date-fns/locale";
 
 export default async function ListingReviewsPage({
   params,

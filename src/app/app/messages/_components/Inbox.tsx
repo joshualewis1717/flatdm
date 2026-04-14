@@ -7,7 +7,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Conversation, Request } from "./type";
 import ConversationBox from "./ConversationBox";
 import RequestBox from "../../requests/_components/RequestBox";
-import RequestButton from "../../requests/_components/RequestButton";
 
 type Parameters = {
   conversations: Conversation[];

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Building2, FileText, Home, LogOut, MessageSquare, User, UserRound, X, Fence } from "lucide-react";
+import { Building2, FileText, Home, LogOut, MessageSquare, UserRound, X, Fence } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSessionContext } from "./app-frame";

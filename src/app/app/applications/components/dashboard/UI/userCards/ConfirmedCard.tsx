@@ -1,6 +1,5 @@
 // component for applicants to see their confirmed application (i.e they acceted the offer and is scheduled to move into there)
 
-import { ArrowUpRight } from "lucide-react";
 import CardFooter from "../../layout/CardFooter";
 import DateColumn from "../generic/DateColumn";
 import ListingInfo from "../generic/ListingInfo";
@@ -8,13 +7,11 @@ import ProfileButton from "../profile/ProfileButton";
 import { Application } from "../../../../types";
 import ViewListingButton from "../generic/ViewListingButton";
 import ViewApplicationButton from "../generic/ViewApplicationButton";
-import { useRouter } from "next/navigation";
 
 type props={
     app: Application;
 }
 export default function ConfirmedCard({ app }: props) {
-  const router = useRouter();
     return (
       <section className="space-y-5">
         <div className="space-y-3">

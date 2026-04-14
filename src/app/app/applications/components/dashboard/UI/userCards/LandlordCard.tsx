@@ -1,4 +1,3 @@
-import { ArrowUpRight, FileText } from "lucide-react";
 import CardFooter from "../../layout/CardFooter";
 import DateColumn from "../generic/DateColumn";
 import ListingInfo from "../generic/ListingInfo";
@@ -6,7 +5,6 @@ import ProfileButton from "../profile/ProfileButton";
 import { Application } from "../../../../types";
 import ViewListingButton from "../generic/ViewListingButton";
 import ViewApplicationButton from "../generic/ViewApplicationButton";
-import { useRouter } from "next/navigation";
 // card which is viewable to applicant, to quickly see their current applications and what actions they can perform on it
 // produced by landlords
 type props={
@@ -15,7 +13,6 @@ type props={
 }
 
 export default function LandlordCard({ app, onAction,}: props) {
-  const router = useRouter();
   return (
     <li className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden hover:border-white/20 transition-colors">
      <div

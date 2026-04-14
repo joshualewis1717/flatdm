@@ -58,7 +58,7 @@
   --secondary: #333333;
   --secondary-foreground: #ffffff;
   --muted: #333333;
-  --muted-foreground: #a0a0a0;
+  --muted-foreground: #d6d6d6;
   --accent: #c9fb00;
   --accent-foreground: #111111;
   --destructive: #dc2626;
@@ -93,7 +93,7 @@
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
+  --muted-foreground: oklch(0.88 0 0);
   --accent: #c9fb00;
   --accent-foreground: #111111;
   --destructive: oklch(0.704 0.191 22.216);
@@ -113,4 +113,71 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: #c9fb00;
+}
+
+@layer base {
+  html {
+    font-size: 17px;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    line-height: 1.6;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+@layer utilities {
+  /* Improve readability on the dark grey surfaces used throughout the app. */
+  [class~="text-muted-foreground"] {
+    color: var(--muted-foreground);
+  }
+
+  [class~="placeholder:text-muted-foreground"]::placeholder {
+    color: #d0d0d0;
+  }
+
+  [class~="text-white/20"],
+  [class~="text-white/25"],
+  [class~="text-white/30"],
+  [class~="text-white/35"],
+  [class~="text-white/40"],
+  [class~="text-white/45"] {
+    color: rgb(255 255 255 / 0.72);
+  }
+
+  [class~="text-white/50"],
+  [class~="text-white/55"],
+  [class~="text-white/60"],
+  [class~="text-white/65"],
+  [class~="text-white/68"] {
+    color: rgb(255 255 255 / 0.82);
+  }
+
+  [class~="text-white/70"],
+  [class~="text-white/72"],
+  [class~="text-white/75"],
+  [class~="text-white/80"] {
+    color: rgb(255 255 255 / 0.9);
+  }
+
+  [class~="text-gray-400"] {
+    color: rgb(229 231 235);
+  }
+
+  [class~="text-gray-300"] {
+    color: rgb(243 244 246);
+  }
+
+  [class~="placeholder-white/35"]::placeholder,
+  [class~="placeholder-white/40"]::placeholder,
+  [class~="placeholder-white/45"]::placeholder,
+  [class~="placeholder-white/50"]::placeholder,
+  [class~="placeholder:text-white/35"]::placeholder,
+  [class~="placeholder:text-white/40"]::placeholder,
+  [class~="placeholder:text-white/45"]::placeholder,
+  [class~="placeholder:text-white/50"]::placeholder {
+    color: rgb(255 255 255 / 0.72);
+  }
 }

@@ -1,13 +1,16 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import {DbReturnType, User, Report, Review, PropertyApplication, Property, PropertyListing, Status, Severity, Category, FilterSearchProps} from '@/app/app/reports/types';
+import {DbReturnType, User, Review, Status, Severity, Category, FilterSearchProps} from '@/app/app/reports/types';
+import {User, Report, Review, Status, Severity, Category, FilterSearchProps} from '@/app/app/reports/types';
 import {sendEmail} from '@/app/app/reports/sendEmail'
-import { use } from "react";
-import { isErrored } from "stream";
 import {ConfirmFunction} from '@/app/app/reports/types';
 import { Database, UnfoldHorizontal } from "lucide-react";
 import { error } from "console";
+
+function getErrorMessage(error: unknown) {
+    return error instanceof Error ? error.message : String(error);
+}
 
 // delete all properties (and all associated listings and applications) by a given landlord id
 async function rawDeletePropertiesByLandlord({landlordId} : {landlordId : number}){
@@ -26,7 +29,7 @@ async function rawDeletePropertiesByLandlord({landlordId} : {landlordId : number
         });
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 
     return;
@@ -40,8 +43,8 @@ async function rawDeletePropertyApplicationsByUser({ userId }: { userId: number 
       where: { userId: userId },
       data: { status: "WITHDRAWN" },
     });
-  } catch (error: any) {
-    console.error("error occured:", error?.message ?? error);
+  } catch (error: unknown) {
+    console.error("error occured:", getErrorMessage(error));
   }
   return;
 }
@@ -53,8 +56,8 @@ async function rawDeletePropertyApplicationsByListing({ listingId }: { listingId
       where: { listingId: listingId },
       data: { status: "WITHDRAWN" },
     });
-  } catch (error: any) {
-    console.error("error occured:", error?.message ?? error);
+  } catch (error: unknown) {
+    console.error("error occured:", getErrorMessage(error));
   }
   return;
 }
@@ -79,7 +82,7 @@ async function rawDeletePropertyListingByLandlord({landlordId} : {landlordId : n
         });  
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 
     return;
@@ -93,7 +96,7 @@ async function rawDeleteReview({reviewId} : {reviewId : number}){
         });
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 
     return;
@@ -114,7 +117,7 @@ async function rawDeleteReviewByUser({userId} : {userId : number}){
         });
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 
     return;
@@ -130,7 +133,7 @@ async function rawDeleteUser({userId} : {userId:number}){
         });
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 
     return;
@@ -146,16 +149,10 @@ function ok<T>(result: T): DbReturnType<T> {
 
 function err<T = null>(error: Error): DbReturnType<T> {
   return { error, result: null };
+  
 }
 
 // functions to be used externally /////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
 
 
 export const addOffence: ConfirmFunction = async ({ user, text }): Promise<DbReturnType<void>> => {
@@ -371,11 +368,6 @@ export async function getAllAliveUsers(): Promise<DbReturnType<any[]>> {
 }
 
 
-
-
-
-
-
 export async function deleteUser({ user }: { user: User }): Promise<DbReturnType<void>> {
   try {
     if (user.role === "LANDLORD") {
@@ -397,6 +389,7 @@ export async function deleteUser({ user }: { user: User }): Promise<DbReturnType
   }
 }
 
+
 export async function deleteReview({ review }: { review: Review }): Promise<DbReturnType<void>> {
   try {
     const result = await rawDeleteReview({ reviewId: review.id });
@@ -415,6 +408,93 @@ export async function deleteReviewById({ reviewId }: { reviewId: number }): Prom
     console.error("error occured: " + error.message);
     return err<void>(error);
   }
+
+export async function getModerators() {
+    try {
+        const mods = await prisma.user.findMany({
+        where: {
+            role: "MODERATOR",
+            isDeleted: false
+        }
+        });
+        return mods;
+    } catch (error: unknown) {
+        console.error("error occured: " + getErrorMessage(error));
+        return [];
+    }
+}
+
+
+export async function getReport({reportId}: {reportId: number}){
+    if (reportId == undefined){
+        console.log("trying to get report with undefined id")
+        return undefined;
+    }
+
+    try{
+        const report = await prisma.report.findFirst({
+            where: {id: reportId}
+        })
+        return report;
+    }
+    catch (error){
+        console.error("error occured: " + getErrorMessage(error));
+    }
+}
+
+
+export async function getReportsFilteredSorted({selectedStatuses, selectedSeverities, selectedCategories, sortField, sortDirection} : FilterSearchProps){
+
+    const STATUSES: Status[] = ["OPEN", "UNDER_REVIEW", "RESOLVED"];
+    const SEVERITIES: Severity[] = ["LOW", "MEDIUM", "HIGH"];
+    const CATEGORIES: Category[] = ["INAPPROPRIATE_CONTENT", "FRAUD", "HARASSMENT", "FAKE_INFORMATION", "IMPERSONATION", "OTHER"]
+
+    // map to array containing only selected fields
+    const statuses: Status[] = STATUSES.filter(s => selectedStatuses[s]);
+    const severities: Severity[] = SEVERITIES.filter(s => selectedSeverities[s]);
+    const categories: Category[] = CATEGORIES.filter(c => selectedCategories[c]);
+
+
+    // get reports that fit the requirements
+    try{
+        const reports = await prisma.report.findMany({
+            where: {
+                AND: [
+                    {status: {in: statuses}},
+                    {severity: {in: severities}},
+                    {category: {in: categories}},
+                ]
+            },
+            orderBy: { [sortField]: sortDirection },
+        });
+
+        return reports; 
+    }
+    catch (error){
+        console.error("error occured: " + getErrorMessage(error));
+    }
+}
+
+export async function getUsers(){
+    try{
+        const users = await prisma.user.findMany();
+        return users;
+    }
+    catch (error){
+        console.error("error occured: " + getErrorMessage(error));
+    }
+}
+
+export async function getUser({userId} : {userId: number}){
+    try{
+        const user = await prisma.user.findFirst({
+            where: { id: userId }
+        });
+        return user;
+    }
+    catch (error){
+        console.error("error occured: " + getErrorMessage(error));
+    }
 }
 
 
