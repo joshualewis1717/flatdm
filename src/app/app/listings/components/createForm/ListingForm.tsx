@@ -311,9 +311,9 @@ export default function ListingForm({ listingId }: Props) {
             <InputField label="Flat Number" name="flatNumber" value={form.flatNumber ?? ""} onChange={handleChange} placeholder="e.g. 4B (leave blank if entire building)" />
             <p className="text-xs text-white/40 pl-1">Leave blank if this listing covers the entire building.</p>
           </div>
-          <InputField label="City" name="city" value={form.city ?? ""} onChange={handleChange} placeholder="e.g. London" />
-          <InputField label="Street name" name="streetName" value={form.streetName ?? ""} onChange={handleChange} placeholder="e.g. 250 Baker Street" />
-          <InputField label="Postcode" name="postcode" value={form.postcode ?? ""} onChange={handleChange} placeholder="e.g. JK5 6DB" />
+          <InputField label="City" name="city" value={form.city ?? ""} onChange={handleChange} placeholder="e.g. London"  required/>
+          <InputField label="Street name" name="streetName" value={form.streetName ?? ""} onChange={handleChange} placeholder="e.g. 250 Baker Street"  required/>
+          <InputField label="Postcode" name="postcode" value={form.postcode ?? ""} onChange={handleChange} placeholder="e.g. JK5 6DB"  required/>
         </section>
 
          {/* Property details */}
