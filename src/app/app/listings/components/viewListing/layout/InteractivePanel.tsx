@@ -14,9 +14,10 @@ import Link from "next/link";
 
 type InteractivePanelProps = {
   listingId: string;
+  reviews:ListingReview[];
 };
 
-export default function InteractivePanel({ listingId}: InteractivePanelProps) {
+export default function InteractivePanel({ listingId, reviews}: InteractivePanelProps) {
   // Mock data — replace with db fetch via listingId
   const {isConsultant, isLandlord} = useSessionContext();
   const [landlordId, setLandlordId] = useState<number | null>(null)
@@ -25,13 +26,8 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
   const [isReportOpen, setIsReportOpen] = useState<boolean>(false)
   // single loading flag covers both fetches — panel is ready once both resolve
   const [panelLoading, setPanelLoading] = useState(true);
-  const totalReviews = 12;
-  const averageRating = 5;
-  const reviews: ListingReview[] = [
-    { id: 1, listingId: Number(listingId), rating: 5, comment: "Great place!", createdAt: new Date(), reviewerId: 1, username: "Alice" },
-    { id: 2, listingId: Number(listingId), rating: 4, comment: "Really enjoyed it.", createdAt: new Date(), reviewerId: 2 , username: "Bob"},
-    { id: 3, listingId: Number(listingId), rating: 5, comment: "Perfect for short stays.", createdAt: new Date(), reviewerId: 3, username: "Charlie" },
-  ];
+
+
 
   // run both fetches in parallel on mount.
   useEffect(() => {
@@ -122,9 +118,13 @@ export default function InteractivePanel({ listingId}: InteractivePanelProps) {
         <h3 className="text-lg font-bold text-white/50 text-center">Reviews</h3>
         <ReviewSlider
           reviews={reviews}
-          totalReviews={totalReviews}
-          averageRating={averageRating}
-        />
+          totalReviews={reviews.length}
+          averageRating={
+            reviews.length > 0
+              ? reviews.reduce((acc, r) => acc + (r.rating ?? 0), 0) / reviews.length
+              : 0        
+            }
+          />
       </aside>
     </>
   );
