@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 
+
 export function formatTimestampInbox(timestamp: string | null) {
     if (!timestamp) return "";
     const date = new Date(timestamp);

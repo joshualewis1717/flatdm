@@ -7,6 +7,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Conversation, Request } from "./type";
 import ConversationBox from "./ConversationBox";
 import RequestBox from "../../requests/_components/RequestBox";
+<<<<<<< Updated upstream
+=======
+import ErrorDisplay from "./ErrorDisplay";
+>>>>>>> Stashed changes
 
 type Parameters = {
   conversations: Conversation[];
@@ -18,9 +22,12 @@ type Parameters = {
   deleteConversation: (conversationId: number) => void;
   acceptRequest: (requestId: number) => void;
   declineRequest: (requestId: number) => void;
+  error?: string | null;
 };
 
-export default function Inbox({conversations, requests, selectedConversation, setSelectedConversation, search, setSearch, deleteConversation, acceptRequest, declineRequest}: Parameters) {
+export default function Inbox({conversations, requests, selectedConversation, setSelectedConversation, search, setSearch,
+  deleteConversation, acceptRequest, declineRequest, error=null}: Parameters) {
+
   const filteredConversations = conversations.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -42,44 +49,56 @@ export default function Inbox({conversations, requests, selectedConversation, se
           className="bg-white/5 border-white/10 text-white"
         />
 
+        {error && (
+          <ErrorDisplay message={error} />
+        )}
+
         {/* Available Conversations */}
         <ScrollArea className="h-[70vh] pr-2 w-full">
           <div className="space-y-4">
-            {filteredRequests.length > 0 && (
-              <div className="space-y-2">
-                <p className="px-1 text-xs font-medium uppercase tracking-wide text-white/50">
-                  Requests
-                </p>
+          {filteredRequests.length === 0 && filteredConversations.length === 0 ? (
+            <div className="flex h-[50vh] items-center justify-center">
+              <p className="text-sm text-white/50">No conversations found</p>
+            </div>
+          ) : (
+            <>
+              {filteredRequests.length > 0 && (
+                <div className="space-y-2">
+                  <p className="px-1 text-xs font-medium uppercase tracking-wide text-white/50">
+                    Requests
+                  </p>
 
-                {filteredRequests.map((request) => (
-                  <RequestBox
-                    key={request.id}
-                    request={request}
-                    acceptRequest={acceptRequest}
-                    declineRequest={declineRequest}
+                  {filteredRequests.map((request) => (
+                    <RequestBox
+                      key={request.id}
+                      request={request}
+                      acceptRequest={acceptRequest}
+                      declineRequest={declineRequest}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                {filteredRequests.length > 0 && (
+                  <p className="px-1 text-xs font-medium uppercase tracking-wide text-white/50">
+                    Conversations
+                  </p>
+                )}
+
+                {filteredConversations.map((conversation) => (
+                  <ConversationBox
+                    key={conversation.id}
+                    conversation={conversation}
+                    selectedConversation={selectedConversation}
+                    setSelectedConversation={setSelectedConversation}
+                    deleteConversation={deleteConversation}
                   />
                 ))}
               </div>
-            )}
-
-            <div className="space-y-2">
-              {filteredRequests.length > 0 && (
-                <p className="px-1 text-xs font-medium uppercase tracking-wide text-white/50">
-                  Conversations
-                </p>
-              )}
-
-              {filteredConversations.map((conversation) => (
-                <ConversationBox
-                  key={conversation.id}
-                  conversation={conversation}
-                  selectedConversation={selectedConversation}
-                  setSelectedConversation={setSelectedConversation}
-                  deleteConversation={deleteConversation}
-                />
-              ))}
-            </div>
-          </div>
+            </>
+          )}
+        </div>
         </ScrollArea>
       </CardContent>
     </Card>

@@ -146,6 +146,25 @@ export async function POST(request: Request) {
       );
     }
 
+    const latestConversation = await prisma.conversation.findFirst({
+      where: {
+        OR: [
+          { userAId: senderId, userBId: receiverId },
+          { userAId: receiverId, userBId: senderId },
+        ],
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    if (latestConversation && !latestConversation.isDeletedA && !latestConversation.isDeletedB){
+      return NextResponse.json(
+        { error: "A conversation already exists between these users." },
+        { status: 400 }
+      );
+    }
+
     const createdRequest = await prisma.messageRequest.create({
       data: {
         senderId,
