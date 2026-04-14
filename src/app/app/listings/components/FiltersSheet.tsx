@@ -4,7 +4,7 @@ import { Dispatch, ReactNode, SetStateAction, useEffect, useRef, useState } from
 import { ListingParameters } from "../types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { ChevronDown } from "lucide-react";
+import { CalendarDays, ChevronDown } from "lucide-react";
 
 //
 // Helper Components and Constants *after FiltersSheet component*
@@ -70,6 +70,9 @@ export default function FiltersSheet({
       <SheetContent
         side="top"
         className="w-screen max-w-none h-screen max-h-none inset-0 border-none gap-0"
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+        }}
       >
         <SheetHeader
           className="border-b border-zinc-700/60"
@@ -82,18 +85,24 @@ export default function FiltersSheet({
         <SheetInnerContent>
           <FilterGrouping title="Availability">
             <FilterSubGrouping title="Available By">
-              <Input
-                id="filter-available-from"
-                type="date"
-                className="scheme-dark text-foreground [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-80"
-                value={draftFilters.available_from && draftFilters.available_from !== "now" ? draftFilters.available_from.slice(0, 10) : ""}
-                disabled={draftFilters.available_from == "now"}
-                onChange={(event) =>
-                  updateDraftFilters({
-                    available_from: event.target.value || undefined,
-                  })
-                }
-              />
+              <div className="relative min-w-0">
+                <Input
+                  id="filter-available-from"
+                  type="date"
+                  style={{ width: "100%", minWidth: 0, maxWidth: "100%" }}
+                  className="scheme-dark block w-full min-w-0 max-w-full appearance-none pr-11 text-foreground [&::-webkit-date-and-time-value]:text-left [&::-webkit-datetime-edit]:p-0 [&::-webkit-datetime-edit-fields-wrapper]:p-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0"
+                  value={draftFilters.available_from && draftFilters.available_from !== "now" ? draftFilters.available_from.slice(0, 10) : ""}
+                  disabled={draftFilters.available_from == "now"}
+                  onChange={(event) =>
+                    updateDraftFilters({
+                      available_from: event.target.value || undefined,
+                    })
+                  }
+                />
+                <span className="pointer-events-none absolute right-2 top-1/2 inline-flex h-5 w-5 -translate-y-1/2 items-center justify-center text-white/70">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                </span>
+              </div>
 
               <label className="mt-1 flex cursor-pointer items-center gap-2">
                 <Checkbox
