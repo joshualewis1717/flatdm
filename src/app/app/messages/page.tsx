@@ -4,28 +4,58 @@ import MessagesClient from "./_components/_MessagesClient";
 
 export default async function MessagesPage() {
   const session = await auth();
-  const userId = Number(session?.user?.id);
+  if (!session?.user?.id) {
+    return null;
+  }
+  const userId = Number(session.user.id);
 
-  const conversations = await prisma.conversation.findMany({
-    where: {
-      OR:[
-        {
-          userAId: userId,
-          isDeletedA: false
-        },
-        {
-          userBId: userId,
-          isDeletedB: false
-        }
-      ]
-    },
-    include: {
-      userA: true,
-      userB: true,
-      messages: {
-        orderBy: { createdAt:"asc" }
+  const [rawConversations, pendingRequests] = await Promise.all([
+    prisma.conversation.findMany({
+      where: {
+        OR: [
+          {
+            userAId: userId,
+            isDeletedA: false,
+          },
+          {
+            userBId: userId,
+            isDeletedB: false,
+          },
+        ],
       },
-    },
+      include: {
+        userA: true,
+        userB: true,
+        messages: {
+          orderBy: { createdAt: "asc" },
+        },
+      },
+    }),
+    prisma.messageRequest.findMany({
+      where: {
+        receiverId: userId,
+        status: "PENDING",
+      },
+      include: {
+        sender: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+  ]);
+
+  const conversations = [...rawConversations].sort((a, b) => {
+    const aIsEmpty = a.messages.length === 0;
+    const bIsEmpty = b.messages.length === 0;
+
+    if (aIsEmpty && !bIsEmpty) return -1;
+    if (!aIsEmpty && bIsEmpty) return 1;
+
+    const aLast = a.messages.at(-1)?.createdAt?.getTime() ?? 0;
+    const bLast = b.messages.at(-1)?.createdAt?.getTime() ?? 0;
+
+    return bLast - aLast;
   });
 
   const formattedConversations = conversations.map((conversation) => {
@@ -52,5 +82,24 @@ export default async function MessagesPage() {
     };
   });
 
-  return <MessagesClient conversations={formattedConversations} />;
+  const formattedPendingRequests = pendingRequests.map((request) => {
+    const sender = request.sender;
+    const isDeletedUser = sender.isDeleted;
+
+    const displayName =
+      isDeletedUser
+        ? "Deleted User"
+        : [sender.firstName, sender.lastName].filter(Boolean).join(" ") || sender.username || "Unknown user";
+
+    return {
+      id: request.id,
+      senderId: sender.id,
+      name: displayName,
+      isDeletedUser,
+      status: request.status,
+      createdAt: request.createdAt.toISOString(),
+    };
+  });
+
+  return <MessagesClient conversations={formattedConversations} requests={formattedPendingRequests} />;
 }

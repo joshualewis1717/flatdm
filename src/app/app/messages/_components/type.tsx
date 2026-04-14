@@ -1,3 +1,5 @@
+import { RequestStatus } from "@prisma/client";
+
 export type Message = {
   id: number;
   content: string;
@@ -17,8 +19,13 @@ export type Conversation = {
   messages: Message[];
 };
 
-export type UserConversations = {
-  conversations: Conversation[];
+export type Request ={
+  id: number;
+  senderId: number;
+  name: string;
+  isDeletedUser: boolean;
+  status: RequestStatus;
+  createdAt: string;
 };
 
 export type Report = {
