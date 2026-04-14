@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { ChevronDown, Check, MapPin } from "lucide-react";
 import { ExistingProperty } from "../../../types";
 import { getPropertiesForLandlord } from "../../../prisma/clientServices";
+import ErrorMessage from "@/components/shared/ErrorMessage";
 
 // Component for landlords to select from their previously used properties (buildings) when creating or updating a listing
 type PropertySelectorProps = {
@@ -19,13 +20,15 @@ export default function PropertySelector({ onSelect, initialPropertyId }: Proper
   const [selected, setSelected] = useState<ExistingProperty | null>(null);
   const [properties, setProperties] = useState<ExistingProperty[]>([]);
   const [loading, setLoading] = useState(false);
-
+  const [error, setError] = useState<string | null>(null);
    // function to fetch the landlord properties from database
   async function getLandlordProperties() {
     setLoading(true);
+    setError(null)
     const { result, error } = await getPropertiesForLandlord();
     if (error) {
       console.error("Failed to load properties", error);
+      setError("Failed to load past properties " + error)
     } else {
       const mapped = result
         ? result.map((property) => ({
@@ -92,7 +95,11 @@ export default function PropertySelector({ onSelect, initialPropertyId }: Proper
         </button>
       </div>
 
-      {mode === "existing" && (
+      {error && (
+        <ErrorMessage text={error}/>
+      )}
+
+      {mode === "existing" && !error && (
         <div className="relative">
           <button
             type="button"
