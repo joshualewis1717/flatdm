@@ -57,25 +57,27 @@ export function TextPromptPanel({ text, user, confirm, visible , hide }: Props){
 
             <button
                 onClick={async () => {
+                    if (!inputValue.trim()) return;
                     if (typeof confirm !== "function") return;
                     try {
-                        await confirm({ user, text: inputValue });
+                    await confirm({ user, text: inputValue });
                     } catch (e) {
-                        console.error("confirm error:", e);
+                    console.error("confirm error:", e);
                     } finally {
-                        hide?.();
+                    hide?.();
                     }
                 }}
-                className="
-                px-4 py-2 rounded-md
-                bg-[#c9fb00] text-black
-                hover:bg-green-300
-                transition
-                "
+                disabled={!inputValue.trim()}
+                className={`px-4 py-2 rounded-md transition ${
+                    inputValue.trim()
+                    ? "bg-[#c9fb00] text-black hover:bg-green-300"
+                    : "bg-gray-600 text-gray-300 cursor-not-allowed"
+                }`}
                 type="button"
-            >
+                >
                 Confirm
             </button>
+
             </footer>
         </div>
         </div>
