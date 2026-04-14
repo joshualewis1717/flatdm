@@ -208,7 +208,7 @@ function SortDropdown({
         aria-label="Sort listings"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-10.5 w-full cursor-pointer appearance-none rounded-[10px] border border-l-[0.5px] border-white/13 bg-[#2a2a2a]/70 pb-1.5 pl-2.75 pr-9 pt-3.5 text-sm leading-normal text-white/80 backdrop-blur-xl outline-none transition-colors hover:border-white/25 hover:text-white focus:border-[#c9fb00] sm:w-auto"
+        className="h-10.5 w-full cursor-pointer appearance-none rounded-[10px] border border-white/13 bg-[#2a2a2a]/70 pb-1.5 pl-2.75 pr-9 pt-3.5 text-sm leading-normal text-white/80 backdrop-blur-xl outline-none transition-colors hover:border-white/25 hover:text-white focus:border-[#c9fb00] sm:w-auto"
       >
         <option value="">Sort by</option>
         {SORT_OPTIONS.map((option) => (
