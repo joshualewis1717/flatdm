@@ -1,8 +1,6 @@
 'use client'
 import { useState } from "react";
 import StarRating from "./StarRating";
-//import { Review } from "../types";
-import { Review } from "@prisma/client";
 import { ListingReview } from "../../../types";
 // component to display some reviews within a looping list
 

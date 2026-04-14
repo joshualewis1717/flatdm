@@ -1,27 +1,25 @@
-import { StringToBoolean } from "class-variance-authority/types";
-import { CreateReadStreamOptions } from "fs/promises";
-import { WeekNumberLabel } from "react-day-picker";
-
 type ConfirmFunctionArgs = {
   user: User;
   text: string;
 }
 
-type ConfirmFunction = (args: ConfirmFunctionArgs) => Promise<void> | void
+export type ConfirmFunction = (args: ConfirmFunctionArgs) => Promise<void> | void
 
 
-type Report = {
+export type Report = {
   id: number;
   reason: string;
   description: string;
   status: string;
-  createdAt: string;
+  createdAt: string | Date;
   reporterId: number;
   targetUserId: number;
   listingId: number;
+  category?: string;
+  severity?: string;
 };
 
-type User = {
+export type User = {
   id: number;
   username: string;
   firstName: string;
@@ -33,7 +31,7 @@ type User = {
   updatedAt: string;
 }
 
-type Review = {
+export type Review = {
   id: number;
   rating: number;
   comment: string;
@@ -43,7 +41,7 @@ type Review = {
   listingId: number;
 }
 
-type PropertyApplication = {
+export type PropertyApplication = {
   id: number;
   moveInDate: string;
   moveOutDate: string;
@@ -55,7 +53,7 @@ type PropertyApplication = {
   listingId: number;
 }
 
-type PropertyListing = {
+export type PropertyListing = {
   id: number;
   title: string;
   description: string;
@@ -66,7 +64,7 @@ type PropertyListing = {
   landlordId: number;
 }
 
-type Property = {
+export type Property = {
   id: number;
   address: string;
   city: string;
@@ -81,16 +79,16 @@ type Property = {
 
 // types for reports
 
-type Status = "OPEN" | "UNDER_REVIEW" | "RESOLVED";
+export type Status = "OPEN" | "UNDER_REVIEW" | "RESOLVED";
 
-type Severity = "UNRANKED" | "LOW" | "MEDIUM" | "HIGH";
+export type Severity = "UNRANKED" | "LOW" | "MEDIUM" | "HIGH";
 
-type Category = "FAKE_INFORMATION" | "IMPERSONATION" | "INAPPROPRIATE_BEHAVIOUR" | "OTHER";
+export type Category = "INAPPROPRIATE_CONTENT" | "FRAUD" | "HARASSMENT" | "FAKE_INFORMATION" | "IMPERSONATION" | "OTHER";
 
-type FilterSearchProps = {
+export type FilterSearchProps = {
   selectedStatuses: Record<Status, boolean>;
-  selectedSeverity: Record<Severity, boolean>;
-  selectedCategory: Record<Category, boolean>;
+  selectedSeverities: Record<Severity, boolean>;
+  selectedCategories: Record<Category, boolean>;
   sortField: 'modifiedAt' | 'createdAt';
   sortDirection: 'asc' | 'desc';
 };

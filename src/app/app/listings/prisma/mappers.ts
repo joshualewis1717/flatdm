@@ -1,6 +1,6 @@
 // functions to map raw prisma query to data that our UI can work with:
 
-import { Amenity, FurnishedType, Occupant } from "@prisma/client";
+import { Amenity } from "@prisma/client";
 import { AmenityUI, ExistingProperty, ListingInfoData, MyPropertyListingData, OccupantUI, OccupantWithUser } from "../types";
 import { queryListingById, queryListingsForLandlord, queryPropertiesForLandlord } from "./rawQueries";
 import { useAllItemsState } from "../state/AllItemsStateProvider";

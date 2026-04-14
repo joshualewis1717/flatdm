@@ -1,6 +1,6 @@
 import InputField from "@/app/app/applications/components/Submitform/UI/InputField";
 import { AmenityType } from "@prisma/client";
-import { AmenityUI, DistanceRange } from "../../../types";
+import { AmenityUI } from "../../../types";
 // panel for landlords to add in new amenity info
 
 const AMENITY_TYPE_OPTIONS = [

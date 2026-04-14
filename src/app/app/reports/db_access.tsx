@@ -1,12 +1,14 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import {User, Report, Review, PropertyApplication, Property, PropertyListing, Status, Severity, Category, FilterSearchProps} from '@/app/app/reports/types';
+import {User, Report, Review, Status, Severity, Category, FilterSearchProps} from '@/app/app/reports/types';
+import type { ReportStatus, OffenceSeverity } from '@prisma/client';
 import {sendEmail} from '@/app/app/reports/sendEmail'
-import { use } from "react";
-import { isErrored } from "stream";
 import {ConfirmFunction} from '@/app/app/reports/types';
-import { Database, UnfoldHorizontal } from "lucide-react";
+
+function getErrorMessage(error: unknown) {
+    return error instanceof Error ? error.message : String(error);
+}
 
 // delete all properties (and all associated listings and applications) by a given landlord id
 async function rawDeletePropertiesByLandlord({landlordId} : {landlordId : number}){
@@ -25,7 +27,7 @@ async function rawDeletePropertiesByLandlord({landlordId} : {landlordId : number
         });
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 
     return;
@@ -39,8 +41,8 @@ async function rawDeletePropertyApplicationsByUser({ userId }: { userId: number 
       where: { userId: userId },
       data: { status: "WITHDRAWN" },
     });
-  } catch (error: any) {
-    console.error("error occured:", error?.message ?? error);
+  } catch (error: unknown) {
+    console.error("error occured:", getErrorMessage(error));
   }
   return;
 }
@@ -52,8 +54,8 @@ async function rawDeletePropertyApplicationsByListing({ listingId }: { listingId
       where: { listingId: listingId },
       data: { status: "WITHDRAWN" },
     });
-  } catch (error: any) {
-    console.error("error occured:", error?.message ?? error);
+  } catch (error: unknown) {
+    console.error("error occured:", getErrorMessage(error));
   }
   return;
 }
@@ -78,7 +80,7 @@ async function rawDeletePropertyListingByLandlord({landlordId} : {landlordId : n
         });  
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 
     return;
@@ -92,7 +94,7 @@ async function rawDeleteReview({reviewId} : {reviewId : number}){
         });
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 
     return;
@@ -113,7 +115,7 @@ async function rawDeleteReviewByUser({userId} : {userId : number}){
         });
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 
     return;
@@ -129,7 +131,7 @@ async function rawDeleteUser({userId} : {userId:number}){
         });
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 
     return;
@@ -149,14 +151,14 @@ export const addOffence: ConfirmFunction = async ({ user, text }) => {
         }); 
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 
     return;
 }
 
 // change the severity of a report
-export async function changeReportSeverity({reportId, newSeverity}){
+export async function changeReportSeverity({reportId, newSeverity}: {reportId: number; newSeverity: OffenceSeverity}){
 
     try{
         await prisma.report.update({
@@ -166,7 +168,7 @@ export async function changeReportSeverity({reportId, newSeverity}){
  
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 
     return;
@@ -175,7 +177,7 @@ export async function changeReportSeverity({reportId, newSeverity}){
 
 
 // change the status of a report
-export async function changeReportStatus({reportId, newStatus}){
+export async function changeReportStatus({reportId, newStatus}: {reportId: number; newStatus: ReportStatus}){
 
     try{
         await prisma.report.update({
@@ -185,14 +187,14 @@ export async function changeReportStatus({reportId, newStatus}){
  
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 
     return;
 }
 
 // assign no mod to a report
-export async function unassignReport({reportId}){
+export async function unassignReport({reportId}: {reportId: number}){
     await prisma.report.update({
         where: {id: reportId},
         data: {assignedModeratorId: null}
@@ -201,19 +203,26 @@ export async function unassignReport({reportId}){
 
 
 // assign a moderator to a report
-export async function assignModToReport({reportId, userId}){
+export async function assignModToReport({reportId, userId}: {reportId: number; userId: number | string}){
 
     try{
+        const moderatorId = Number(userId);
+
+        if (!Number.isInteger(moderatorId)) {
+            console.log("report assignment denied since user " + userId + " is not a valid user id");
+            return;
+        }
+
         // make sure the user is actually a moderator
         const userRole = await prisma.user.findFirst({
-            where: {id: userId},
+            where: {id: moderatorId},
             select: {role: true}
         })
 
-        if (String(userRole.role) == "MODERATOR"){      
+        if (userRole && String(userRole.role) == "MODERATOR"){      
             await prisma.report.update({
                 where: { id: reportId },
-                data: { assignedModeratorId: userId },
+                data: { assignedModeratorId: moderatorId },
             });
         }
         else{
@@ -221,7 +230,7 @@ export async function assignModToReport({reportId, userId}){
         }
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 
     return;
@@ -230,7 +239,7 @@ export async function assignModToReport({reportId, userId}){
 
 
 
-export async function deleteReport({report} : Report){
+export async function deleteReport({report} : {report: Report}){
 
     try{
         // delete from database
@@ -239,7 +248,7 @@ export async function deleteReport({report} : Report){
         });
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 
     return;
@@ -254,14 +263,14 @@ export async function getModerators() {
         }
         });
         return mods;
-    } catch (error: any) {
-        console.error("error occured: " + error.message);
+    } catch (error: unknown) {
+        console.error("error occured: " + getErrorMessage(error));
         return [];
     }
 }
 
 
-export async function getReport({reportId}: any){
+export async function getReport({reportId}: {reportId: number}){
     if (reportId == undefined){
         console.log("trying to get report with undefined id")
         return undefined;
@@ -274,16 +283,16 @@ export async function getReport({reportId}: any){
         return report;
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 }
 
 
 export async function getReportsFilteredSorted({selectedStatuses, selectedSeverities, selectedCategories, sortField, sortDirection} : FilterSearchProps){
 
-    const STATUSES = ["OPEN", "UNDER_REVIEW", "RESOLVED"];
-    const SEVERITIES = ["LOW", "MEDIUM", "HIGH"];
-    const CATEGORIES = ["INAPPROPRIATE_CONTENT", "FRAUD", "HARASSMENT", "FAKE_INFORMATION", "IMPERSONATION", "OTHER"]
+    const STATUSES: Status[] = ["OPEN", "UNDER_REVIEW", "RESOLVED"];
+    const SEVERITIES: Severity[] = ["LOW", "MEDIUM", "HIGH"];
+    const CATEGORIES: Category[] = ["INAPPROPRIATE_CONTENT", "FRAUD", "HARASSMENT", "FAKE_INFORMATION", "IMPERSONATION", "OTHER"]
 
     // map to array containing only selected fields
     const statuses: Status[] = STATUSES.filter(s => selectedStatuses[s]);
@@ -307,7 +316,7 @@ export async function getReportsFilteredSorted({selectedStatuses, selectedSeveri
         return reports; 
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 }
 
@@ -317,11 +326,11 @@ export async function getUsers(){
         return users;
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 }
 
-export async function getUser({userId} : any){
+export async function getUser({userId} : {userId: number}){
     try{
         const user = await prisma.user.findFirst({
             where: { id: userId }
@@ -329,7 +338,7 @@ export async function getUser({userId} : any){
         return user;
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 }
 
@@ -342,12 +351,12 @@ export async function getAllReports(){
         return reports;
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 }
 
 
-export async function deleteUser({user} : User){
+export async function deleteUser({user} : {user: User}){
 
     try{   
         if (user['role'] == "LANDLORD"){
@@ -374,13 +383,13 @@ export async function deleteUser({user} : User){
         console.log("deleted user with id: " + user['id']);
     }
     catch (error){
-        console.error("error occured: " + error.message);
+        console.error("error occured: " + getErrorMessage(error));
     }
 
     return;
 }
 
-export async function deleteReview({ review }: Review) {
+export async function deleteReview({ review }: { review: Review }) {
     await rawDeleteReview({ reviewId: review.id });
     return;
 }

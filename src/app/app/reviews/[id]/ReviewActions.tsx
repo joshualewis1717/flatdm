@@ -20,7 +20,7 @@ export default function ReviewActions({
   variant = "outline",
 }: ReviewActionsProps) {
   const [isReportOpen, setIsReportOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
 
   return (
     <>

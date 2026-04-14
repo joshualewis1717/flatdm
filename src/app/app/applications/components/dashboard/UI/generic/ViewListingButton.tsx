@@ -2,7 +2,6 @@
 
 import { getListingIdFromApplication } from "@/app/app/applications/prisma/clientServices"
 import { ArrowUpRight } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import ErrorMessage from "@/components/shared/ErrorMessage";
 import Link from "next/link";
@@ -14,7 +13,6 @@ type props={
 }
 
 export default function ViewListingButton({applicationId, setError}: props){
-    const router = useRouter();
     const [listingId, setListingId] = useState<number | null>(null);
     const [localError, setLocalError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);// prevent the button from rendering before listingId resolves

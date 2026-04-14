@@ -1,21 +1,14 @@
-// 'use client';
-
-// import React, {useMemo, useState} from 'react';
-import { Card, CardContent, CardDescription, CardAction, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from '../ui/button';
-import { Props, ScriptProps } from 'next/script';
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import {Report, User} from '@/app/app/reports/types';
 import Status from '@/components/shared/Status';
-import {deleteReport, getUser} from '@/app/app/reports/db_access';
-import { prisma } from "@/lib/prisma";
 
 export default function ReportOverviewItem( {report, reporter, targetUser} : {report:Report, reporter: User, targetUser : User}){
     
     // depending on what value 'status' holds, the status bar will appear a different colour
     // theme is passed into the Status component to style it
-    const themeMap = {
+    const themeMap: Record<string, string> = {
         "RESOLVED":"green",
         "UNDER_REVIEW":"amber",
         "OPEN":"red",
@@ -26,7 +19,7 @@ export default function ReportOverviewItem( {report, reporter, targetUser} : {re
     }
 
 
-    const wordMap = {
+    const wordMap: Record<string, string> = {
         "RESOLVED":"Resolved",
         "UNDER_REVIEW":"Under Review",
         "OPEN":"Open",
@@ -52,8 +45,8 @@ export default function ReportOverviewItem( {report, reporter, targetUser} : {re
         <section className="px-[7%]">
             <div className="bg-black/20 border border-white/10 hover:border-[#c9fb00] focus:border-[#c9fb00] transition-colors rounded-[0.5rem] grid-cols-[4fr_1fr] p-4 grid grid-cols-2 items-start gap-4">
                 <div className="flex flex-col gap-1">
-                    <h1 className="text-white font-bold text-lg">{targetUser.username} : {report['reason']} ({wordMap[report['category']]})</h1>
-                    <h2 className="italic text-gray-300">{`Submitted by ${reporter.username} at ${report['createdAt'].slice(0,10)}`}</h2>
+                    <h1 className="text-white font-bold text-lg">{targetUser.username} : {report['reason']} ({wordMap[report['category'] ?? "OTHER"]})</h1>
+                    <h2 className="italic text-gray-300">{`Submitted by ${reporter.username} at ${String(report['createdAt']).slice(0,10)}`}</h2>
                     <div className="flex flex-row gap-2">
                         <Status theme={themeMap[report['status']]} text={"Status: " + wordMap[report['status']]} />
                         <Status theme={themeMap[severity]} text={"Severity: " + wordMap[severity]} />

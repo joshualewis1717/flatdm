@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { assignModToReport, unassignReport } from "@/app/app/reports/db_access";
 import { User, Report } from "@/app/app/reports/types";
 import {
@@ -15,7 +15,7 @@ import {
 type Props = {
   moderators: User[];
   report: Report;
-  setVis: Function;
+  setVis: (value: boolean) => void;
 };
 
 export function ModeratorSelector({ moderators, report, setVis }: Props) {

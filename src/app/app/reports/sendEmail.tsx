@@ -1,4 +1,4 @@
-import {User, Report, Review, PropertyApplication, Property, PropertyListing, ConfirmFunction} from '@/app/app/reports/types';
+import type { ConfirmFunction } from '@/app/app/reports/types';
 
 
 

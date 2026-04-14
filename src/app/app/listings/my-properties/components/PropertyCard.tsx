@@ -1,6 +1,6 @@
 'use client';
 
-import { Users, ChevronDown, Calendar, Eye, Image } from 'lucide-react';
+import { Users, ChevronDown, Calendar, Eye } from 'lucide-react';
 import PropertyStatusPill from '../../components/ownProperties/UI/PropertyStatusPill';
 import OccupantCard from './OccupantCard';
 import { useRouter } from 'next/navigation';

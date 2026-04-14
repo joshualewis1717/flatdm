@@ -1,10 +1,10 @@
-import React, { useState } from "react";
-import User from '@/app/app/reports/types';
+import { useState } from "react";
+import type { ConfirmFunction, User } from '@/app/app/reports/types';
 
 type Props = {
   text: string;
   user?: User | null;
-  confirm: (user?: User | null, text?: string) => void | Promise<void>;
+  confirm: ConfirmFunction;
   visible?: boolean;
   hide?: () => void;
 };
@@ -77,6 +77,7 @@ export function TextPromptPanel({ text, user, confirm, visible , hide }: Props){
                 onClick={async () => {
                     if (typeof confirm !== "function") return;
                     try {
+                        if (!user) return;
                         await confirm({ user, text: inputValue });
                     } catch (e) {
                         console.error("confirm error:", e);
