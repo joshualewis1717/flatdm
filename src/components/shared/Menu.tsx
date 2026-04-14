@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Building2, FileText, Home, LogOut, MessageSquare, UserRound, X, Fence } from "lucide-react";
+import { Building2, ClipboardList, FileText, Home, LogOut, MessageSquare, UserRound, Users, X, Fence } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSessionContext } from "./app-frame";
@@ -21,6 +21,8 @@ const navigation = [
   { href: "/app/listings", label: "Listings", icon: Building2 },
   { href: "/app/listings/my-properties", label: "Your Listings", icon: Fence },
   { href: "/app/applications/dashboard", label: "Applications", icon: FileText },
+  { href: "/app/reports", label: "Report Queue", icon: ClipboardList, moderatorOnly: true },
+  { href: "/app/reports/users", label: "All Users", icon: Users, moderatorOnly: true },
   { href: "/app/messages", label: "Messages", icon: MessageSquare },
   { href: "/app/profile", label: "Profile", icon: UserRound },
 ];
@@ -31,7 +33,7 @@ export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
   const displayRole = role ? role.charAt(0) + role.slice(1).toLowerCase() : "Workspace";
   const [isSigningOut, setIsSigningOut] = useState(false);
   const initial = (name ?? displayRole ?? "U").slice(0, 1).toUpperCase();
-  const {isLandlord} = useSessionContext();
+  const { isLandlord, isModerator } = useSessionContext();
 
   async function handleSignOut() {
     setIsSigningOut(true);
@@ -40,9 +42,9 @@ export default function Menu({ role, name, open, onClose }: AppSidebarProps) {
 
   // your listing button 7690is only visisble to landlords
   const filteredNavigation = navigation.filter((item) => {
-    if (item.href === "/app/listings/my-properties") {
-      return isLandlord;
-    }
+    if (item.href === "/app/listings/my-properties") return isLandlord;
+    if (item.href === "/app/applications/dashboard") return !isModerator;
+    if (item.moderatorOnly) return isModerator;
     return true;
   });
 
