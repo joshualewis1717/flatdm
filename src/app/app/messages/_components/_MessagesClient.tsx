@@ -4,24 +4,30 @@ import { useState, useEffect } from "react";
 import { Conversation, Request, Message } from "./type";
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import Inbox from "./Inbox";
 import Chat from "./Chat";
 
-type parameters={
+import { Menu } from "lucide-react";
+
+
+type Parameters={
   conversations: Conversation[];
   requests: Request[];
+  error?: string | null;
 }
 
-export default function MessagesClient({conversations, requests}: parameters) {
+export default function MessagesClient({conversations, requests, error=null}: Parameters) {
   const [selectedConversation, setSelectedConversation] = useState<number | null>(conversations[0]?.id ?? null);
-  
   const [search, setSearch] = useState("");
   const [allConversations, setAllConversations] = useState(conversations);
   const [allRequests, setAllRequests] = useState(requests);
   const [isMobileInboxOpen, setIsMobileInboxOpen] = useState(false);
+  
+  const [inboxError, setInboxError] = useState<string | null>(error);
+  const [chatError, setChatError] = useState<string | null>(null);
+
   const activeConversation = allConversations.find((conversation) => conversation.id === selectedConversation);
 
   const updateConversation = ( 
@@ -101,9 +107,7 @@ export default function MessagesClient({conversations, requests}: parameters) {
       return {
         ...conversation,
         messages,
-        lastMessage: lastMessage?.isDeleted
-          ? "This message was deleted"
-          : lastMessage?.content ?? "",
+        lastMessage: lastMessage?.isDeleted ? "This message was deleted" : lastMessage?.content ?? "",
         timestamp: lastMessage?.createdAt ?? conversation.timestamp,
       };
     });
@@ -111,6 +115,8 @@ export default function MessagesClient({conversations, requests}: parameters) {
 
   const deleteConversation = async (conversationId: number) => {
     try {
+      setInboxError(null);
+
       const response = await fetch("/api/conversations", {
         method: "DELETE",
         headers: {"Content-Type": "application/json"},
@@ -130,6 +136,7 @@ export default function MessagesClient({conversations, requests}: parameters) {
       }
     } catch (error) {
       console.error(error);
+      setInboxError("Failed to delete conversation.");
     }
   };
 
@@ -192,9 +199,12 @@ export default function MessagesClient({conversations, requests}: parameters) {
     const pollMessages = async () => {
       try {
         const response = await fetch(`/api/messages?conversationId=${selectedConversation}`);
-        if (!response.ok) return;
+        if (!response.ok) {
+          throw new Error();
+        }
 
         const messages: Message[] = await response.json();
+        setChatError(null);
 
         updateConversation(selectedConversation, (conversation) => {
           const currentLastId = conversation.messages[conversation.messages.length - 1]?.id;
@@ -214,7 +224,7 @@ export default function MessagesClient({conversations, requests}: parameters) {
           };
         });
       } catch (error) {
-        console.error("Failed to refresh messages", error);
+        setChatError(error instanceof Error ? error.message : "Unable to load messages. Please try again.");
       }
     };
 
@@ -240,6 +250,7 @@ export default function MessagesClient({conversations, requests}: parameters) {
           deleteConversation={deleteConversation}
           acceptRequest={acceptRequest}
           declineRequest={declineRequest}
+          error={inboxError}
         />
       </div>
 
@@ -250,6 +261,8 @@ export default function MessagesClient({conversations, requests}: parameters) {
           replaceMessage={replacePendingMessage}
           removeMessage={removePendingMessage}
           deleteMessage={deleteMessage}
+          error={chatError}
+          clearError={() => setChatError(null)}
           mobileInboxTrigger={
             <Sheet open={isMobileInboxOpen} onOpenChange={setIsMobileInboxOpen}>
               <SheetTrigger asChild>
@@ -277,6 +290,7 @@ export default function MessagesClient({conversations, requests}: parameters) {
                     deleteConversation={deleteConversation}
                     acceptRequest={acceptRequest}
                     declineRequest={declineRequest}
+                    error={inboxError}
                   />
                 </div>
               </SheetContent>

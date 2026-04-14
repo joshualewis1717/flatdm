@@ -4,11 +4,10 @@ import { Button } from "@/components/ui/button";
 
 type Parameters = {
   receiverId: number;
-  onSuccess?: () => void;
   className?: string;
 };
 
-export default function RequestButton({receiverId, onSuccess, className}: Parameters) {
+export default function RequestButton({receiverId, className}: Parameters) {
   const handleCreateRequest = async () => {
     try {
       const response = await fetch("/api/requests", {
@@ -23,7 +22,6 @@ export default function RequestButton({receiverId, onSuccess, className}: Parame
         console.error("Create request failed:", response.status, data);
         throw new Error(data?.error ?? `Failed to create request (${response.status})`);
       }
-      onSuccess?.();
     } catch (error) {
       console.error(error);
     }
