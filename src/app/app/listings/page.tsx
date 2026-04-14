@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import SearchAndFilterPanel from "./components/SearchAndFilterPanel";
 import ListingPropertyCard from "./components/ListingPropertyCard";
@@ -11,6 +12,7 @@ import { queryWithFiltersSortingAndPages } from "./prisma/queryWithFiltersSortin
 
 export default function ListingsPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const { listingParameters, setListingParameters } = useListingsState();
   const {
@@ -36,6 +38,7 @@ export default function ListingsPage() {
 
     const loadListings = async () => {
       setIsLoading(true);
+      setLoadError(null);
       setPaginationMeta((prev) => ({
         ...prev,
         page: 1,
@@ -43,13 +46,19 @@ export default function ListingsPage() {
       }));
 
       try {
-        const items = await queryWithFiltersSortingAndPages(listingParameters);
+        const response = await queryWithFiltersSortingAndPages(listingParameters);
 
         if (isCancelled) {
           return;
         }
 
-        setListingsResults(items);
+        if (response.result === null) {
+          setListingsResults([]);
+          setLoadError(response.error);
+        } else {
+          setListingsResults(response.result);
+        }
+
         setQuerySignature(fetchSignature);
       } finally {
         if (!isCancelled) {
@@ -171,6 +180,13 @@ export default function ListingsPage() {
           <div className="flex items-center justify-center gap-3">
             <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-white/25 border-t-[#c9fb00]" />
             <span>Loading listings...</span>
+          </div>
+        </Card>
+      ) : loadError ? (
+        <Card className="border border-red-400/25 bg-[#242424] px-5 py-10 text-red-200">
+          <div className="flex items-center justify-center gap-3">
+            <AlertTriangle className="h-5 w-5 text-red-300" aria-hidden="true" />
+            <span>{loadError}</span>
           </div>
         </Card>
       ) : listings.length === 0 ? (
