@@ -17,7 +17,7 @@ export type ProfilePageData = {
     applications: number;
     listings: number;
     properties: number;
-    unreadMessages: number;
+    reviewsMade: number;
     reviews: number;
     averageReview: number | null;
     reports: number;
@@ -29,7 +29,8 @@ export type ProfilePageData = {
 };
 
 export async function getProfilePageData(userId: number): Promise<ProfilePageData | null> {
-  const [user, unreadMessages, reviewAggregate, reportsInProcess, unopenedReports, totalReportsHandled] = await Promise.all([
+  try{
+    const [user, reviewsMade, reviewAggregate, reportsInProcess, unopenedReports, totalReportsHandled] = await Promise.all([
     prisma.user.findFirst({
       where: { id: userId, isDeleted: false },
       select: {
@@ -59,13 +60,19 @@ export async function getProfilePageData(userId: number): Promise<ProfilePageDat
         },
       },
     }),
-    prisma.message.count({
+    // prisma.message.count({
+    //   where: {
+    //     senderId: { not: userId },
+    //     conversation: {
+    //       OR: [{ userAId: userId }, { userBId: userId }],
+    //     },
+    //   },
+    // }),
+    prisma.review.count({
       where: {
-        senderId: { not: userId },
-        conversation: {
-          OR: [{ userAId: userId }, { userBId: userId }],
-        },
-      },
+        authorId: userId,
+        isDeleted: false,
+      }
     }),
     prisma.review.aggregate({
       where: {
@@ -112,7 +119,7 @@ export async function getProfilePageData(userId: number): Promise<ProfilePageDat
       applications: user._count.applications,
       listings: user._count.listings,
       properties: user._count.properties,
-      unreadMessages,
+      reviewsMade,
       reviews: user._count.reviewsReceived,
       averageReview: reviewAggregate._avg.rating ?? null,
       reports: user._count.reportsMade,
@@ -122,4 +129,7 @@ export async function getProfilePageData(userId: number): Promise<ProfilePageDat
       rentalHistory: user._count.occupants,
     },
   };
+  } catch(err) {
+    throw new Error("Database Error")
+  }
 }
