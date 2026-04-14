@@ -1,25 +1,48 @@
 'use client';
-// a simple reusable search bar
+
+import { forwardRef } from 'react';
 import { Search } from 'lucide-react';
-type props ={
-    value: string;// current value user typed in
-    onChange: (v: string) => void;// what to do as text changes
-    placeholder?: string;// place holder text
-    containerClassName?: string;
-    inputClassName?: string;
-}
-export default function SearchBar({ value, onChange, placeholder = 'Search...', containerClassName = '', inputClassName = ''}: props) {
+
+type SearchBarProps = {
+  value: string;
+  onChange: (value: string) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  placeholder?: string;
+  containerClassName?: string;
+  inputClassName?: string;
+};
+
+const SearchBar = forwardRef<HTMLDivElement, SearchBarProps>(function SearchBar(
+  {
+    value,
+    onChange,
+    onFocus,
+    onBlur,
+    placeholder = 'Search...',
+    containerClassName = '',
+    inputClassName = '',
+  },
+  ref,
+) {
   return (
-    <div className={`relative flex-1 min-w-50 ${containerClassName}`.trim()}>
-      <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2" style={{ color: 'rgb(138, 138, 138)' }}>
-        <Search />{/* search icon next to our text */}
+    <div ref={ref} className={`relative flex-1 min-w-50 ${containerClassName}`.trim()}>
+      <span
+        className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2"
+        style={{ color: 'rgb(138, 138, 138)' }}
+      >
+        <Search />
       </span>
       <input
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.target.value)}
+        onFocus={onFocus}
+        onBlur={onBlur}
         placeholder={placeholder}
-        className={`relative z-0 h-10.5 w-full bg-[#2a2a2a]/70 backdrop-blur-xl border border-white/13 text-white placeholder-white/45 pl-10 pr-3 py-0 rounded-[10px] text-[13px] outline-none focus:border-[#c9fb00] ${inputClassName}`.trim()}
+        className={`relative z-0 h-10.5 w-full rounded-[10px] border border-white/13 bg-[#2a2a2a]/70 px-3 py-0 pl-10 pr-3 text-[13px] text-white outline-none backdrop-blur-xl placeholder-white/45 focus:border-[#c9fb00] ${inputClassName}`.trim()}
       />
     </div>
   );
-}
+});
+
+export default SearchBar;

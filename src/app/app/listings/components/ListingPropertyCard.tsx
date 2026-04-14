@@ -17,6 +17,7 @@ export default function ListingPropertyCard({ listing, href }: ListingPropertyCa
   const buildingName = listing?.property?.title ?? listing?.property?.buildingName ?? `Listing ${listing.id}`;
   const headline = getListingTitle(buildingName, listing?.flatNumber ?? null);
   const nearbyAmenities = listing.property.amenities.slice(0, 3);
+  const landlordName = getLandlordName(listing);
 
   return (
     <Link
@@ -29,7 +30,7 @@ export default function ListingPropertyCard({ listing, href }: ListingPropertyCa
           <PropertyCardThumbnails listing={listing} headline={headline} />
 
           <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
-            <PropertyCardTitleAvailabilityRent listing={listing} headline={headline} />
+            <PropertyCardTitleAvailabilityRent listing={listing} headline={headline} landlordName={landlordName} />
             <PropertyCardRoomStayInfo listing={listing} />
             <PropertyCardDesc description={listing.description} />
             <PropertyCardNearbyAmenities nearbyAmenities={nearbyAmenities} />
@@ -175,13 +176,24 @@ function PropertyCardAvailabilityInfo({
   );
 }
 
-function PropertyCardTitleAvailabilityRent({ listing, headline }: { listing: any; headline: string }) {
+function PropertyCardTitleAvailabilityRent({
+  listing,
+  headline,
+  landlordName,
+}: {
+  listing: any;
+  headline: string;
+  landlordName: string;
+}) {
   const area = (listing as { area?: number }).area;
 
   return (
     <div className="flex items-start justify-between gap-3">
       <div className="flex min-w-0 flex-1 flex-col gap-3">
-        <h3 className="truncate text-[17px] font-semibold text-white">{headline}</h3>
+        <div className="min-w-0">
+          <h3 className="truncate text-[17px] font-semibold text-white">{headline}</h3>
+          <p className="mt-1 truncate text-xs text-white/55">Listed by {landlordName}</p>
+        </div>
 
         <PropertyCardAvailabilityInfo
           availableFrom={listing.availableFrom}
@@ -339,4 +351,13 @@ function capitalizeFirstLetter(value: string) {
   }
 
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function getLandlordName(listing: any) {
+  const propertyLandlordUsername = listing?.property?.landlord?.username;
+  if (propertyLandlordUsername) {
+    return propertyLandlordUsername;
+  }
+
+  return listing?.landlord?.name ?? listing?.owner?.name ?? listing?.user?.name ?? "Unknown";
 }

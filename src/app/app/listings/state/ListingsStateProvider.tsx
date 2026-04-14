@@ -14,6 +14,10 @@ import {
 } from "react";
 import type { ListingParameters } from "../types";
 
+// What this state stores:
+// - the current listing parameters (filters, sorting, pagination) that are used to query the listings from the server
+// - a setter function to update these parameters
+
 const UNSAVED_CHANGES_MESSAGE =
   "You have unsaved listing progress. If you leave this page, your changes will be lost.";
 

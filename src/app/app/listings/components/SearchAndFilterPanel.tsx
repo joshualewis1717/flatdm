@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import SearchBar from "./UI/SearchBar";
 import FiltersSheet from "./FiltersSheet";
+import LocationSuggestionHolder from "./LocationSuggestionHolder";
 import { useListingsState } from "../state/ListingsStateProvider";
 import type { ListingParameters } from "../types";
 
@@ -24,6 +25,13 @@ const SORT_OPTIONS: Array<{
     sortOrder: "desc",
   },
   { value: "closest", label: "Closest", sortBy: "distance", sortOrder: "asc" },
+];
+
+const MOCK_LOCATION_SUGGESTIONS = [
+  { id: "downtown-la", label: "Downtown Los Angeles", subtitle: "Los Angeles, CA" },
+  { id: "santa-monica", label: "Santa Monica", subtitle: "Santa Monica, CA" },
+  { id: "pasadena", label: "Pasadena", subtitle: "Pasadena, CA" },
+  { id: "long-beach", label: "Long Beach", subtitle: "Long Beach, CA" },
 ];
 
 function hasActiveFilters(listingParameters: ListingParameters): boolean {
@@ -47,6 +55,8 @@ export default function SearchAndFilterPanel() {
   const { listingParameters, setListingParameters } = useListingsState();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [stickyTopOffset, setStickyTopOffset] = useState(96);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchBarRef = useRef<HTMLDivElement>(null);
   const searchValue =
     typeof listingParameters.search === "string" ? listingParameters.search : "";
   const distanceValue =
@@ -54,6 +64,8 @@ export default function SearchAndFilterPanel() {
       ? String(listingParameters.distance_to_location)
       : "";
   const sortValue = getSortPresetValue(listingParameters);
+  const showSuggestions =
+    isSearchFocused && Boolean(listingParameters.has_search_changed);
 
   useEffect(() => {
     const header = document.getElementById("app-page-header");
@@ -86,15 +98,39 @@ export default function SearchAndFilterPanel() {
       >
         <section className="flex w-full flex-col-reverse items-stretch gap-2 py-2 sm:flex-row sm:items-center">
           <div className="flex min-w-0 flex-1 items-stretch">
-            <SearchBar
-              value={searchValue}
-              placeholder="Search Location..."
-              onChange={(value) =>
-                setListingParameters((prev) => ({ ...prev, search: value }))
-              }
-              containerClassName="min-w-0 flex-1"
-              inputClassName="rounded-r-none border-r-[0.5px] focus:relative focus:z-10"
-            />
+            <div className="relative min-w-0 flex-1">
+              <SearchBar
+                ref={searchBarRef}
+                value={searchValue}
+                placeholder="Search Location..."
+                onChange={(value) =>
+                  setListingParameters((prev) => ({
+                    ...prev,
+                    search: value,
+                    has_search_changed: true,
+                  }))
+                }
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                containerClassName="min-w-0 flex-1"
+                inputClassName="rounded-r-none border-r-[0.5px] focus:relative focus:z-10"
+              />
+
+              {showSuggestions ? (
+                <LocationSuggestionHolder
+                  anchorRef={searchBarRef}
+                  suggestions={MOCK_LOCATION_SUGGESTIONS}
+                  onSelect={(item) => {
+                    setListingParameters((prev) => ({
+                      ...prev,
+                      search: item.label,
+                      has_search_changed: false,
+                    }));
+                    // setIsSearchFocused(false);
+                  }}
+                />
+              ) : null}
+            </div>
 
             <DistanceDropdown
               value={distanceValue}

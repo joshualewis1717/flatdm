@@ -24,11 +24,22 @@ export default function ListingsPage() {
     setQuerySignature,
   } = useAllItemsState();
 
+  // Create a stable signature for the current filters/sorting (excluding pagination) to determine when to refetch data (we use memoization)
   const fetchSignature = useMemo(() => {
-    const { page, sort_by, sort_order, ...rest } = listingParameters;
+    const { page, sort_by, sort_order, search, ...rest } = listingParameters;
     return JSON.stringify(rest);
   }, [listingParameters]);
 
+  useEffect(() => {
+    console.log("Fetch Sig Changed")
+  
+    return () => {
+      console.log("Cleanup for fetch sig", fetchSignature)
+    }
+  }, [fetchSignature])
+  
+
+  // Whenever the fetchSignature changes (indicating a change in filters/sorting), we refetch the listings data from the server
   useEffect(() => {
     if (querySignature === fetchSignature) {
       return;
@@ -44,6 +55,7 @@ export default function ListingsPage() {
         page: 1,
         totalPages: 1,
       }));
+      console.log("refetching");
 
       try {
         const response = await queryWithFiltersSortingAndPages(listingParameters);
@@ -81,6 +93,8 @@ export default function ListingsPage() {
     setQuerySignature,
   ]);
 
+  // Sync pagination meta (total items, total pages) whenever the listings results or current page changes
+  // e.g. calculates total pages based on total items and page size
   useEffect(() => {
     if (isLoading) {
       return;
@@ -116,6 +130,14 @@ export default function ListingsPage() {
     setPaginationMeta,
   ]);
 
+  // On refetched page, set page back to 1 (if not already there) to avoid invalid page numbers after filter/sorting changes
+  useEffect(() => {
+    if (listingParameters.page !== 1) {
+      setListingParameters((prev) => ({ ...prev, page: 1 }));
+    }
+  }, [fetchSignature, setListingParameters]);
+
+  // Apply client-side sorting to the current results
   const sortedResults = useMemo(() => {
     const sortBy = listingParameters.sort_by ?? "updated_at";
     const sortOrder = listingParameters.sort_order === "asc" ? "asc" : "desc";
@@ -154,6 +176,7 @@ export default function ListingsPage() {
   }, [ListingsResults, listingParameters.sort_by, listingParameters.sort_order]);
 
   // Get current page listings
+  // Factors in pagination and sorting, but not filtering (since most filtering is done server-side)
   const listings = useMemo(() => {
     const start = (paginationMeta.page - 1) * paginationMeta.pageSize;
     const end = start + paginationMeta.pageSize;

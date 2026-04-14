@@ -213,6 +213,7 @@ export type ListingParameters = Record<string, unknown> & {
   location_lat?: number; // for distance filtering
   location_lng?: number; // for distance filtering
   search?: string;
+  has_search_changed?: boolean; // indicates if the search query has changed, used for showing autosuggestions or not (+ if focused)
 
   //
   //
