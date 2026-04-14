@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma";
 import ReportsClient from "./ReportsClient";
 import { getAllReports, getAllUsers } from "./db_access";
 

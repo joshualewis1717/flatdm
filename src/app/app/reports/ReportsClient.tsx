@@ -124,15 +124,10 @@ export default function ReportsClient({ error, initialReports, users }: {error :
 
     return;
   }
-                   
-
-
 
   // pagination logic
-
   const [page, setPage] = useState<number>(1);
   const pageSize = 10;
-
 
   // derived pagination values
   const totalReports = viewableReports?.length || 0;
@@ -142,7 +137,6 @@ export default function ReportsClient({ error, initialReports, users }: {error :
   const currentPageReports = useMemo(() => {
     const start = (safePage - 1) * pageSize;
     const end = start + pageSize;
-    console.log(viewableReports)
     return (viewableReports || []).slice(start, end);
   }, [viewableReports, safePage, pageSize]);
 
@@ -151,8 +145,7 @@ export default function ReportsClient({ error, initialReports, users }: {error :
     setPage(clamped);
   }
 
-
-  function getMod(report: Report): User | null {
+  function getMod(report: Report) {
     if (report.assignedModeratorId == null){
       return null;
     }
