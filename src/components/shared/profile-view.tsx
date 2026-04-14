@@ -24,7 +24,7 @@ const ownCopy = {
     secondaryCta: { href: "/app/messages", label: "Open inbox" },
     stats: [
       { label: "Applications sent", key: "applications", href: "/app/applications" },
-      { label: "Unread messages", key: "unreadMessages", href: "/app/messages" },
+      { label: "Reviews made", key: "reviewsMade", href: "/app/reviews" },
       { label: "Reviews received", key: "reviews", href: "/app/reviews" },
     ],
   },
@@ -34,7 +34,7 @@ const ownCopy = {
     secondaryCta: { href: "/app/applications", label: "Review applicants" },
     stats: [
       { label: "Live listings", key: "listings", href: "/app/listings" },
-      { label: "Unread messages", key: "unreadMessages", href: "/app/messages" },
+      { label: "Reviews made", key: "reviewsMade", href: "/app/reviews" },
       { label: "Reviews received", key: "reviews", href: "/app/reviews" },
     ],
   },
@@ -44,7 +44,7 @@ const ownCopy = {
     secondaryCta: { href: "/app/reports", label: "Open report queue" },
     stats: [
       { label: "Reports in progress", key: "reportsInProcess", href: "/app/reports" },
-      { label: "Unread messages", key: "unreadMessages", href: "/app/messages" },
+      { label: "Reports handled", key: "totalReportsHandled" },
       { label: "Unopened reports", key: "unopenedReports", href: "/app/reports" },
     ],
   },
@@ -61,7 +61,7 @@ const publicCopy = {
     primaryCta: { href: "/app/messages", label: "Message them" },
     secondaryCta: { href: "/app/reviews/new", label: "Leave a review" },
     stats: [
-      { label: "Applications sent", key: "applications" },
+      { label: "Reviews Made", key: "reviewsMade" },
       { label: "Rental history", key: "rentalHistory" },
       { label: "Reviews received", key: "reviews" },
     ],
@@ -107,6 +107,12 @@ function formatStatValue(profile: ProfilePageData, key: StatKey) {
 
   return profile.stats[key];
 }
+function isConsultant(profile: ProfilePageData) {
+  if (profile.role === "CONSULTANT") {
+    return true
+  
+  } return false;
+}
 
 function getReviewHref({
   profileId,
@@ -128,6 +134,7 @@ export default function ProfileView({
   const config = isOwnProfile ? ownConfig : publicConfig;
   const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "FlatDM user";
   const joinedDate = formatDate(profile.createdAt);
+  
 
   const editableValues = {
     fullName,
@@ -143,7 +150,7 @@ export default function ProfileView({
           <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex size-14 items-center justify-center rounded-[1.35rem] bg-black/25 text-lg font-semibold text-white">
-                {fullName.charAt(0).toUpperCase()}
+                {isConsultant(profile)? profile.username.charAt(0).toUpperCase(): fullName.charAt(0).toUpperCase()}
               </div>
               <div>
                 <p className="text-xs font-medium uppercase tracking-[0.35em] text-primary/85">
