@@ -1,5 +1,6 @@
 'use server'
 import { prisma } from "@/lib/prisma";
+import { getConfiguredAppBaseUrl } from "@/lib/app-url";
 import { PropertyListingForm } from "../types";
 import { queryPropertiesForLandlord, queryListingById, queryListingsForLandlord, querySoftDeleteListing, queryCreateListing, queryLandlordByListingId, querySyncAmenity, queryCheckListingConflict, propertyUpsert, queryUpdateListing } from "./rawQueries";
 import { mapToExistingProperty, mapToListingDetail, mapToMyPropertyListing } from "./mappers";
@@ -11,18 +12,13 @@ import { landlordOwnsListing } from "../../applications/prisma/clientServices";
 
 export type ValidatedLocation = { lat: number; lng: number };
 
-function getAppBaseUrl() {
-  return process.env.ENVIRONMENT?.trim().toLowerCase() === "production"
-    ? "https://flatdm.lewiscoding.com" : "http://localhost:3000";
-}
-
 export async function validateLocation(params: {city?: string;streetName?: string;postcode: string;}): Promise<ValidatedLocation> {
   const query = new URLSearchParams();
   if (params.city)       query.set("city",       params.city);
   if (params.streetName) query.set("streetName", params.streetName);
   query.set("postcode", params.postcode);
 
-  const baseUrl = getAppBaseUrl();
+  const baseUrl = getConfiguredAppBaseUrl();
   const res = await fetch(`${baseUrl}/api/validate-location?${query.toString()}`);
   const data = await res.json();
 

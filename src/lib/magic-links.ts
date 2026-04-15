@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "crypto";
 import { hash } from "bcrypt";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
+import { getConfiguredAppBaseUrl } from "@/lib/app-url";
 
 export type MagicLinkTypeValue = "EMAIL_VERIFICATION" | "PASSWORD_RESET";
 
@@ -25,14 +26,6 @@ const MAGIC_LINK_TTL_MS: Record<MagicLinkTypeValue, number> = {
 function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
-
-export function getAppBaseUrl() {
-  return process.env.ENVIRONMENT?.trim().toLowerCase() === "production"
-    ? "https://flatdm.lewiscoding.com/"
-    : "http://localhost:3000/";
-}
-
-function getMagicLinkBaseUrl() { return getAppBaseUrl(); }
 
 function getMagicLinkUrl(baseUrl: string, type: MagicLinkTypeValue, token: string) {
   const path = type === "EMAIL_VERIFICATION"
@@ -112,11 +105,10 @@ export async function sendMagicLinkEmail(args: {
   type: MagicLinkTypeValue;
 }) {
   const { user, type } = args;
-  const baseUrl = getMagicLinkBaseUrl();
   const rawToken = randomBytes(32).toString("hex");
   const tokenHash = hashToken(rawToken);
   const expiresAt = new Date(Date.now() + MAGIC_LINK_TTL_MS[type]);
-  const link = getMagicLinkUrl(baseUrl, type, rawToken);
+  const link = getMagicLinkUrl(getConfiguredAppBaseUrl(), type, rawToken);
 
   await prisma.magicLink.deleteMany({
     where: {

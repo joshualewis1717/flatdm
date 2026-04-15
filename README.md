@@ -14,7 +14,7 @@ Add these variables to `.env`:
 
 | Variable | Purpose |
 | --- | --- |
-| `ENVIRONMENT` | Use `development` for `http://localhost:3000/` magic links or `production` for `https://flatdm.lewiscoding.com/` magic links |
+| `ENVIRONMENT` | Use `development` for `http://localhost:3000` or `production` for `https://flatdm.lewiscoding.com` |
 | `DATABASE_URL` | PostgreSQL connection string for Prisma |
 | `ORS_API_KEY` | Used for OpenRouteService |
 | `NEXTAUTH_SECRET` | Secret used by NextAuth |

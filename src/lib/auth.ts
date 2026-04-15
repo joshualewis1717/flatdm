@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { compare } from "bcrypt";
 import { getServerSession, type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { getConfiguredAppBaseUrl } from "@/lib/app-url";
 
 type AuthorizedUser = {
   id: string;
@@ -88,6 +89,23 @@ export const authOptions: NextAuthOptions = {
         session.user.emailVerified = token.emailVerified as boolean | undefined;
       }
       return session;
+    },
+    async redirect({ url }) {
+      const appBaseUrl = getConfiguredAppBaseUrl();
+      const allowedOrigin = new URL(appBaseUrl).origin;
+
+      if (url.startsWith("/")) {
+        return new URL(url, appBaseUrl).toString();
+      }
+
+      try {
+        const targetUrl = new URL(url);
+        if (targetUrl.origin === allowedOrigin) return targetUrl.toString();
+      } catch {
+        return appBaseUrl;
+      }
+
+      return appBaseUrl;
     },
   },
   pages: {
