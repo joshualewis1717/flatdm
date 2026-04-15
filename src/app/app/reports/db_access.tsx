@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import {DbReturnType, User, Report, Review, PropertyApplication, Property, PropertyListing, Status, Severity, Category, FilterSearchProps} from '@/app/app/reports/types';
-import {sendEmail} from '@/app/app/reports/sendEmail'
+import {SendEmailArgs, sendEmail} from '@/lib/email'
 import {ConfirmFunction} from '@/app/app/reports/types';
 
 
@@ -376,8 +376,16 @@ export async function deleteUser({ user }: { user: User }): Promise<DbReturnType
 
     await rawDeleteUser({ userId: user.id });
 
-    const text: string = "Your account has been deleted";
-    sendEmail({ user, text });
+    await sendEmail({ to:user.email,
+                      subject:"Your account has been Banned",
+                      text: "",
+                      html:`
+                        <p>Dear ${user.firstName} ${user.lastName},</p>
+                        <p>Your account has been banned, likely due to ignored warnings and too many offences. If this was not expected, please contact FDM.</p>
+                        <p>- Moderating Team</p>`
+                    });
+
+
     return ok<void>(undefined);
   } catch (error: any) {
     console.error("error occured: " + error.message);
