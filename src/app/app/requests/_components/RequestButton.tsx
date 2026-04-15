@@ -27,7 +27,8 @@ export default function RequestButton({
   const [error, setError] = useState<string | null>(null)
 
   const handleCreateRequest = async () => {
-    if (status === "PENDING" || isSubmitting) {
+    console.log("hello world")
+    if (isSubmitting) {
       return;
     }
 
