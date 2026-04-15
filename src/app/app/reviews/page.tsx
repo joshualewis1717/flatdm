@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { REVIEWS_DATABASE_ERROR_MESSAGE } from "@/lib/reviews";
 import { ReviewCard } from "./review-ui";
 import ErrorMessage from "@/components/shared/ErrorMessage";
 
@@ -41,8 +42,8 @@ export default async function ReviewsPage() {
       },
     },
   });
-} catch(err) {
-  return <ErrorMessage text="Database Error"/>
+} catch {
+  return <ErrorMessage text={REVIEWS_DATABASE_ERROR_MESSAGE} />;
 }
 
   return (

@@ -4,6 +4,7 @@ import { Home, Star, UserRound } from "lucide-react";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { REVIEWS_DATABASE_ERROR_MESSAGE } from "@/lib/reviews";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import ErrorMessage from "@/components/shared/ErrorMessage";
@@ -168,8 +169,8 @@ async function createReview(formData: FormData) {
         where: { id: listingId, isDeleted: false },
         select: { id: true },
       });
-    } catch(err) {
-      return <ErrorMessage text="Database Error"/>
+    } catch {
+      throw new Error(REVIEWS_DATABASE_ERROR_MESSAGE);
     }
 
     if (!listing) {
@@ -191,11 +192,18 @@ async function createReview(formData: FormData) {
           comment,
         },
       });
-    } catch(err) {
-      throw new Error("Database Error")
+    } catch {
+      redirect(
+        buildComposerHref({
+          type,
+          listingId,
+          from,
+          error: REVIEWS_DATABASE_ERROR_MESSAGE,
+        }),
+      );
     }
 
-    redirect("/app/reviews?success=1");
+    redirect(`/app/reviews/byUser/${authorId}?success=1`);
   }
 
   if (!userId || Number.isNaN(userId)) {
@@ -224,8 +232,8 @@ async function createReview(formData: FormData) {
       where: { id: userId, isDeleted: false },
       select: { id: true, role: true },
     });
-  } catch(err) {
-    return <ErrorMessage text="Database Error"/>
+  } catch {
+    throw new Error(REVIEWS_DATABASE_ERROR_MESSAGE);
   }
 
   if (!targetUser) {
@@ -265,11 +273,18 @@ async function createReview(formData: FormData) {
         comment,
       },
     });
-  } catch(err) {
-    throw new Error("Database Error")
+  } catch {
+    redirect(
+      buildComposerHref({
+        type,
+        userId,
+        from,
+        error: REVIEWS_DATABASE_ERROR_MESSAGE,
+      }),
+    );
   }
 
-  redirect("/app/reviews?success=1");
+  redirect(`/app/reviews/byUser/${authorId}?success=1`);
 }
 
 export default async function NewReviewPage({
@@ -322,8 +337,8 @@ export default async function NewReviewPage({
           },
       });
     }
-  } catch (err) {
-    throw new Error("Database error");
+  } catch {
+    return <ErrorMessage text={REVIEWS_DATABASE_ERROR_MESSAGE} />;
   }
   let listing = null;
 
@@ -352,9 +367,8 @@ export default async function NewReviewPage({
           },
         },
       });
-    } catch (err) {
-      console.error(err);
-      throw new Error("Database error");
+    } catch {
+      return <ErrorMessage text={REVIEWS_DATABASE_ERROR_MESSAGE} />;
     }
   }
   // const listing =

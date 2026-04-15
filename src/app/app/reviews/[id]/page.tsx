@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Home, Star, UserRound } from "lucide-react";
 import ReviewActions from "./ReviewActions";
 import { prisma } from "@/lib/prisma";
+import { REVIEWS_DATABASE_ERROR_MESSAGE } from "@/lib/reviews";
 import { Button } from "@/components/ui/button";
 import ErrorMessage from "@/components/shared/ErrorMessage";
 import { auth } from "@/lib/auth"
@@ -98,8 +99,8 @@ export default async function ReviewPage({
       },
     },
   });
-} catch(err) {
-  return <ErrorMessage text="Database Error"/>;
+} catch {
+  return <ErrorMessage text={REVIEWS_DATABASE_ERROR_MESSAGE} />;
 }
 
   if (!review) {
