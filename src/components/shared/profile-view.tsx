@@ -132,7 +132,7 @@ export default function ProfileView({
   const ownConfig = ownCopy[profile.role];
   const publicConfig = publicCopy[profile.role];
   const config = isOwnProfile ? ownConfig : publicConfig;
-  const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "FlatDM user";
+  const fullName =  isOwnProfile ? [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "FlatDM user" : profile.username;
   const joinedDate = formatDate(profile.createdAt);
 
   const editableValues = {
