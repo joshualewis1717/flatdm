@@ -4,6 +4,7 @@ import ErrorMessage from "@/components/shared/ErrorMessage";
 import { useState } from "react";
 import type { RequestStatus } from "@prisma/client";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 type Parameters = {
   receiverId: number;
@@ -11,30 +12,24 @@ type Parameters = {
   initialStatus?: RequestStatus | null;
 };
 
-function getButtonCopy(status: RequestStatus | null) {
-  if (status === "PENDING") return "Requested";
-  if (status === "REJECTED") return "Rejected";
-  return "Request message";
-}
-
 export default function RequestButton({
   receiverId,
   className,
   initialStatus = null,
 }: Parameters) {
   const [status, setStatus] = useState<RequestStatus | null>(initialStatus);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null)
 
+
   const handleCreateRequest = async () => {
-    console.log("hello world")
-    if (isSubmitting) {
-      return;
-    }
+    if (isSending) return;
+    setIsSending(true);
+
 
     try {
       setError(null)
-      setIsSubmitting(true);
+      setIsSending(true);
       const response = await fetch("/api/requests", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -57,7 +52,7 @@ export default function RequestButton({
 
       console.error(error);
     } finally {
-      setIsSubmitting(false);
+      setIsSending(false);
     }
   };
 
@@ -67,9 +62,9 @@ export default function RequestButton({
       <Button
         type="button"
         onClick={handleCreateRequest}
-        className={className}
-      >
-        Send Request
+        disabled={isSending}
+        className={className}> {/* Styling */}
+          {isSending ? "Sending..." : "Send Request"}
       </Button>
 
       {error && (

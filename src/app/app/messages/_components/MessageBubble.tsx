@@ -1,5 +1,5 @@
 import { Message } from "./type";
-import { formatTimestampChat } from "./helperFunctions";
+import { formatTimestampChat } from "./helper-functions";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
@@ -28,9 +28,7 @@ export default function MessageBubble({ message, handleDeleteMessage }: paramete
                     <div className="group flex items-start gap-2">
                         <div
                         className={`max-w-xs rounded-2xl px-4 py-2 text-sm shadow-sm ${
-                            message.isOwn
-                            ? "rounded-br-md bg-primary text-black"
-                            : "rounded-bl-md bg-white/10 text-white"
+                            message.isOwn ? "rounded-br-md bg-primary text-black" : "rounded-bl-md bg-white/10 text-white"
                         } ${message.isDeleted ? "opacity-70 italic" : ""}`}>
                             <div className="flex items-end gap-2">
                                 <p className="break-all">
@@ -43,18 +41,18 @@ export default function MessageBubble({ message, handleDeleteMessage }: paramete
                         </div>
 
                         {message.isOwn && !message.isDeleted && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <button className="mt-1 rounded-md p-1 text-white/60 transition hover:bg-white/10 hover:text-white md:opacity-0 md:group-hover:opacity-100">
-                                    <MoreVertical className="h-4 w-4" />
-                                </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleDeleteMessage(message.id)}>
-                                    Delete Message
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button className="mt-1 rounded-md p-1 text-white/60 transition hover:bg-white/10 hover:text-white md:opacity-0 md:group-hover:opacity-100">
+                                        <MoreVertical className="h-4 w-4" />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleDeleteMessage(message.id)}>
+                                        Delete Message
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         )
                         }
                     </div>

@@ -10,29 +10,35 @@ import Inbox from "./Inbox";
 import Chat from "./Chat";
 
 import { Menu } from "lucide-react";
+import { getLastMessagePreview } from "./helper-functions";
 
-
-type Parameters={
+type Parameters = {
   conversations: Conversation[];
   requests: Request[];
   error?: string | null;
-}
+};
 
-export default function MessagesClient({conversations, requests, error=null}: Parameters) {
-  const [selectedConversation, setSelectedConversation] = useState<number | null>(conversations[0]?.id ?? null);
+export default function MessagesClient({conversations, requests, error = null}: Parameters) {
+  const [selectedConversation, setSelectedConversation] = useState<number | null>(
+    conversations[0]?.id ?? null
+  );
   const [search, setSearch] = useState("");
   const [allConversations, setAllConversations] = useState(conversations);
   const [allRequests, setAllRequests] = useState(requests);
   const [isMobileInboxOpen, setIsMobileInboxOpen] = useState(false);
-  
+
   const [inboxError, setInboxError] = useState<string | null>(error);
   const [chatError, setChatError] = useState<string | null>(null);
 
-  const activeConversation = allConversations.find((conversation) => conversation.id === selectedConversation);
+  const activeConversation = allConversations.find(
+    (conversation) => conversation.id === selectedConversation
+  );
 
-  const updateConversation = ( 
+  const updateConversation = (
     conversationId: number,
-    updater: (conversation: (typeof allConversations)[number]) => (typeof allConversations)[number]
+    updater: (
+      conversation: (typeof allConversations)[number]
+    ) => (typeof allConversations)[number]
   ) => {
     setAllConversations((current) =>
       current.map((conversation) =>
@@ -49,7 +55,7 @@ export default function MessagesClient({conversations, requests, error=null}: Pa
       const updatedConversation = {
         ...conversation,
         messages: [...conversation.messages, message],
-        lastMessage: message.content,
+        lastMessage: getLastMessagePreview(message),
         timestamp: message.createdAt,
       };
 
@@ -60,7 +66,11 @@ export default function MessagesClient({conversations, requests, error=null}: Pa
     });
   };
 
-  const replacePendingMessage = (conversationId: number, tempId: number, message: Message) => {
+  const replacePendingMessage = (
+    conversationId: number,
+    tempId: number,
+    message: Message
+  ) => {
     updateConversation(conversationId, (conversation) => {
       const messages = conversation.messages.map((item) =>
         item.id === tempId ? message : item
@@ -70,7 +80,7 @@ export default function MessagesClient({conversations, requests, error=null}: Pa
       return {
         ...conversation,
         messages,
-        lastMessage: lastMessage?.content ?? conversation.lastMessage,
+        lastMessage: getLastMessagePreview(lastMessage),
         timestamp: lastMessage?.createdAt ?? conversation.timestamp,
       };
     });
@@ -84,7 +94,7 @@ export default function MessagesClient({conversations, requests, error=null}: Pa
       return {
         ...conversation,
         messages,
-        lastMessage: lastMessage?.content ?? "",
+        lastMessage: getLastMessagePreview(lastMessage),
         timestamp: lastMessage?.createdAt ?? null,
       };
     });
@@ -96,6 +106,7 @@ export default function MessagesClient({conversations, requests, error=null}: Pa
         message.id === messageId
           ? {
               ...message,
+              content: "This message was deleted",
               isDeleted: true,
               deletedAt: new Date().toISOString(),
             }
@@ -107,7 +118,7 @@ export default function MessagesClient({conversations, requests, error=null}: Pa
       return {
         ...conversation,
         messages,
-        lastMessage: lastMessage?.isDeleted ? "This message was deleted" : lastMessage?.content ?? "",
+        lastMessage: getLastMessagePreview(lastMessage),
         timestamp: lastMessage?.createdAt ?? conversation.timestamp,
       };
     });
@@ -119,7 +130,7 @@ export default function MessagesClient({conversations, requests, error=null}: Pa
 
       const response = await fetch("/api/conversations", {
         method: "DELETE",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ conversationId }),
       });
 
@@ -146,7 +157,7 @@ export default function MessagesClient({conversations, requests, error=null}: Pa
       const response = await fetch("/api/requests", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({requestId, action: "ACCEPT"}),
+        body: JSON.stringify({ requestId, action: "ACCEPT" }),
       });
 
       if (!response.ok) {
@@ -175,7 +186,7 @@ export default function MessagesClient({conversations, requests, error=null}: Pa
       const response = await fetch("/api/requests", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({requestId, action: "DECLINE"}),
+        body: JSON.stringify({ requestId, action: "DECLINE" }),
       });
 
       if (!response.ok) {
@@ -203,6 +214,7 @@ export default function MessagesClient({conversations, requests, error=null}: Pa
     const pollMessages = async () => {
       try {
         const response = await fetch(`/api/messages?conversationId=${selectedConversation}`);
+
         if (!response.ok) {
           throw new Error();
         }
@@ -211,29 +223,24 @@ export default function MessagesClient({conversations, requests, error=null}: Pa
         setChatError(null);
 
         updateConversation(selectedConversation, (conversation) => {
-          const currentLastId = conversation.messages[conversation.messages.length - 1]?.id;
-          const nextLastId = messages[messages.length - 1]?.id;
-
-          if ( currentLastId === nextLastId && conversation.messages.length === messages.length ) {
-            return conversation;
-          }
-
           const lastMessage = messages[messages.length - 1];
 
           return {
             ...conversation,
             messages,
-            lastMessage: lastMessage?.content ?? conversation.lastMessage,
+            lastMessage: getLastMessagePreview(lastMessage),
             timestamp: lastMessage?.createdAt ?? conversation.timestamp,
           };
         });
       } catch (error) {
-        setChatError(error instanceof Error ? error.message : "Unable to load messages. Please try again.");
+        setChatError(
+          error instanceof Error ? error.message : "Unable to load messages. Please try again."
+        );
       }
     };
 
     pollMessages();
-    const intervalId = setInterval(pollMessages, 3000);
+    const intervalId = setInterval(pollMessages, 1000);
 
     return () => clearInterval(intervalId);
   }, [selectedConversation]);
