@@ -4,7 +4,6 @@ import ErrorMessage from "@/components/shared/ErrorMessage";
 import { useState } from "react";
 import type { RequestStatus } from "@prisma/client";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 
 type Parameters = {
   receiverId: number;
