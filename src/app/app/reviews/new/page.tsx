@@ -5,6 +5,10 @@ import { Home, Star, UserRound } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { REVIEWS_DATABASE_ERROR_MESSAGE } from "@/lib/reviews";
+import {
+  hasUserLivedAtListing,
+  LISTING_REVIEW_INELIGIBLE_MESSAGE,
+} from "@/lib/review-eligibility";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import ErrorMessage from "@/components/shared/ErrorMessage";
@@ -183,6 +187,23 @@ async function createReview(formData: FormData) {
         }),
       );
     }
+    let canReviewListing;
+    try{    
+      canReviewListing = await hasUserLivedAtListing(authorId, listingId);
+    } catch(err) {
+      return <ErrorMessage text="Error : There was a problem accessing the database. Refresh to try again"/>
+    }
+    if (!canReviewListing) {
+      redirect(
+        buildComposerHref({
+          type,
+          listingId,
+          from,
+          error: LISTING_REVIEW_INELIGIBLE_MESSAGE,
+        }),
+      );
+    }
+
     try {
       await prisma.review.create({
         data: {
@@ -233,7 +254,14 @@ async function createReview(formData: FormData) {
       select: { id: true, role: true },
     });
   } catch {
-    throw new Error(REVIEWS_DATABASE_ERROR_MESSAGE);
+  redirect(
+    buildComposerHref({
+    type: requestedType,
+    listingId,
+    from,
+    error: REVIEWS_DATABASE_ERROR_MESSAGE,
+      }),
+    );
   }
 
   if (!targetUser) {
@@ -401,6 +429,10 @@ export default async function NewReviewPage({
     listingId: listing?.id,
     requestedType,
   });
+  const canReviewSelectedListing =
+    listing && session.user.id
+      ? await hasUserLivedAtListing(Number(session.user.id), listing.id)
+      : false;
   const hasTargetContext = Boolean(targetUser || listing);
   const resolvedType = type ?? requestedType ?? "user-user";
   const config = reviewModes[resolvedType];
@@ -488,6 +520,12 @@ export default async function NewReviewPage({
             </div>
           ) : null}
 
+          {resolvedType === "user-listing" && listing && !canReviewSelectedListing ? (
+            <div className="mt-6 rounded-[1.5rem] border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+              {LISTING_REVIEW_INELIGIBLE_MESSAGE}
+            </div>
+          ) : null}
+
           <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-black/15 p-4">
             <p className="text-xs uppercase tracking-[0.25em] text-white/45">
               {config.targetLabel}
@@ -545,7 +583,12 @@ export default async function NewReviewPage({
               type="submit"
               size="lg"
               className="rounded-2xl px-5"
-              disabled={!type || (resolvedType === "user-listing" ? !listing : !targetUser)}
+              disabled={
+                !type ||
+                (resolvedType === "user-listing"
+                  ? !listing || !canReviewSelectedListing
+                  : !targetUser)
+              }
             >
               <Star />
               Submit review

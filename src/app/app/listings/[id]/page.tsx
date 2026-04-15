@@ -1,6 +1,8 @@
 import InteractivePanel from "../components/viewListing/layout/InteractivePanel";
 import ListingInfoPanel from "../components/viewListing/layout/ListingInfoPanel";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { hasUserLivedAtListing } from "@/lib/review-eligibility";
 import ErrorMessage from "@/components/shared/ErrorMessage";
 import { ListingReview } from "../types";
 // listing page to show information about a specific listing 
@@ -10,6 +12,8 @@ import { ListingReview } from "../types";
 //  then use that to query an api route you make to display all the about a property and display it nicely here.
 export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const session = await auth();
+  const listingId = Number(id);
 
   if (!id) return null;
 
@@ -30,7 +34,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
         },
       },
     });
-    } catch(err) {
+    } catch {
       return <ErrorMessage text="Database Error"/>
     }
     const formattedReviews: ListingReview[] = reviews.map((r) => ({
@@ -42,6 +46,15 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
       reviewerId: r.author.id,
       username: r.author.username,
     }));
+    let canReviewListing = false;
+    try {
+      if (session?.user?.id && Number.isInteger(listingId)) {
+        canReviewListing = await hasUserLivedAtListing(Number(session.user.id), listingId);
+      }
+    } catch {
+      return <ErrorMessage text="Database Error" />;
+    }
+
   return (
     <div className="space-y-6">
        <div className="flex flex-col lg:flex-row gap-6">
@@ -52,7 +65,11 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
         {/* Interactive panel: 1/3 */}
         <div className="lg:w-1/3">
-          <InteractivePanel  listingId={id} reviews={formattedReviews}/>
+          <InteractivePanel
+            listingId={id}
+            reviews={formattedReviews}
+            canReviewListing={canReviewListing}
+          />
         </div>
       </div>
     </div>
