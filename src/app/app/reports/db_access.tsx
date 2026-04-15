@@ -238,7 +238,7 @@ export async function assignModToReport({reportId, userId}): Promise<DbReturnTyp
 }
 
 // delete a report given the id
-export async function deleteReport({ report }: { report: any }): Promise<DbReturnType<void>> {
+export async function deleteReport({ report }: { report: Report }): Promise<DbReturnType<void>> {
   try {
     const result = await prisma.report.delete({
       where: { id: report["id"] },
@@ -385,7 +385,7 @@ export async function deleteUser({ user }: { user: User }): Promise<DbReturnType
   }
 }
 
-// delete a review given the id
+// delete a review given the review
 export async function deleteReview({ review }: { review: Review }): Promise<DbReturnType<void>> {
   try {
     const result = await rawDeleteReview({ reviewId: review.id });
