@@ -40,6 +40,13 @@ function parsePrismaError(e: Prisma.PrismaClientKnownRequestError): string {
   }
 }
 
+function isPrismaError(e: unknown): boolean {
+  return e instanceof Prisma.PrismaClientKnownRequestError ||
+         e instanceof Prisma.PrismaClientUnknownRequestError ||
+         e instanceof Prisma.PrismaClientInitializationError ||
+         e instanceof Prisma.PrismaClientRustPanicError;
+}
+
 
 /**
  * Wraps any async service function in a consistent try/catch and maps the
@@ -50,17 +57,27 @@ function parsePrismaError(e: Prisma.PrismaClientKnownRequestError): string {
  */
 export async function runService<T>( fn: () => Promise<T>): Promise<ServiceResult<T>> {
   try {
+    //throw new Prisma.PrismaClientInitializationError("simulated", "0.0.0")
     const result = await fn();
     return { result: result as NonNullable<T>, error: null };
   } catch (e) {
     console.error("[service error]", e);
 
+    if (isPrismaError(e)) {
+      return {
+        result: null,
+        error: "Service temporarily unavailable. Please try again.",
+      };
+    }
+
+    /*
     // if it is a prisma error, parse it and show a more human readable error
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       return { result: null, error: parsePrismaError(e) };
     }
+      */
     // if it is an erro that we coded up, display it
-    const message = e instanceof Error ? e.message : "Something went wrong.";
+    const message = e instanceof Error ? e.message : "Something went wrong Please try again.";
     return { result: null, error: message };
   }
 }

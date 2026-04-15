@@ -14,9 +14,9 @@ export default async function AppLayout({
 
   if (!session?.user) redirect("/login");
   if (!session.user.emailVerified) redirect("/verify-email");
-
-  const user = session.user.id
-    ? await prisma.user.findUnique({
+  let user = null
+  try{
+  user = session.user.id ? await prisma.user.findUnique({
         where: { id: Number(session.user.id) },
         select: {
           firstName: true,
@@ -26,6 +26,10 @@ export default async function AppLayout({
         },
       })
     : null;
+    }
+    catch(e){
+    
+    }
 
   return (
     <AppFrame
