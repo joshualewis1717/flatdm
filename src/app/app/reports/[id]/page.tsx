@@ -20,7 +20,7 @@ export default async function ReportPage({ params } : { params: Promise<{id: num
     if (report.error == null){
       report = report.result;
 
-      target = await getUser({userId:report['targetUserID']});
+      target = await getUser({userId:report['targetUserId']});
       reporter = await getUser({userId:report['reporterId']});
       
       moderators = await getModerators();
