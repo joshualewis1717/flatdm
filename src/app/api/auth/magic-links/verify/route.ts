@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { consumeEmailVerificationLink } from "@/lib/magic-links";
+import { consumeEmailVerificationLink, getAppBaseUrl } from "@/lib/magic-links";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const token = url.searchParams.get("token")?.trim();
-  const redirectUrl = new URL("/login", request.url);
+  const redirectUrl = new URL("/login", getAppBaseUrl());
 
   if (!token) {
     redirectUrl.searchParams.set("verified", "0");

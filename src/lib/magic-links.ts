@@ -22,20 +22,17 @@ const MAGIC_LINK_TTL_MS: Record<MagicLinkTypeValue, number> = {
   PASSWORD_RESET: 1000 * 60 * 30,
 };
 
-const MAGIC_LINK_BASE_URLS = {
-  development: "http://localhost:3000/",
-  production: "https://flatdm.lewiscoding.com/",
-} as const;
-
 function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
-function getMagicLinkBaseUrl() {
+export function getAppBaseUrl() {
   return process.env.ENVIRONMENT?.trim().toLowerCase() === "production"
-    ? MAGIC_LINK_BASE_URLS.production
-    : MAGIC_LINK_BASE_URLS.development;
+    ? "https://flatdm.lewiscoding.com/"
+    : "http://localhost:3000/";
 }
+
+function getMagicLinkBaseUrl() { return getAppBaseUrl(); }
 
 function getMagicLinkUrl(baseUrl: string, type: MagicLinkTypeValue, token: string) {
   const path = type === "EMAIL_VERIFICATION"
