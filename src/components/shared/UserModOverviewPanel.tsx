@@ -7,12 +7,7 @@ import { ArrowRight, Ban, MailWarning, ShieldPlus, UserRound } from 'lucide-reac
 import { deleteUser } from '@/app/app/reports/db_access'
 import { Dispatch, SetStateAction, useState } from 'react';
 import { TextPromptPanel } from '@/app/app/reports/TextPromptPanel'
-import { addOffence } from '@/app/app/reports/db_access';
-
-
-function sendEmail({text="text"}){  // placeholder
-    console.log("email sent temp")
-}
+import { addOffence, warnUser } from '@/app/app/reports/db_access';
 
 function setPanelFeatures({
     confirmFunc,
@@ -53,7 +48,7 @@ export default function UserModOverviewPanel({user} : {user: User}){
 
     const [showUser, setShowUser] = useState(true);             // handles hiding user from list after they have been deleted
     const [showTextPanel, setShowTextPanel] = useState(false);  // handles whether text input panel should show
-    const [confirmFunction, setConfirmFunction] = useState<ConfirmFunction>(() => sendEmail); // handles what function the text panel does when confirmed
+    const [confirmFunction, setConfirmFunction] = useState<ConfirmFunction>(() => warnUser); // handles what function the text panel does when confirmed
     const [panelText, setPanelText] = useState("");             // what should the text panel say
 
     function hide(){
@@ -92,7 +87,7 @@ export default function UserModOverviewPanel({user} : {user: User}){
                         </Button>
 
                         {/* issue warning button */}
-                        <button onClick={() => setPanelFeatures({confirmFunc:sendEmail, setConfirmFunction, setShowTextPanel, panelText:`Reason for warning ${user.username}`, setPanelText})} className="group/button inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white transition-colors hover:border-white/20 hover:bg-white/[0.08] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
+                        <button onClick={() => setPanelFeatures({confirmFunc:warnUser, setConfirmFunction, setShowTextPanel, panelText:`Reason for warning ${user.username}`, setPanelText})} className="group/button inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white transition-colors hover:border-white/20 hover:bg-white/[0.08] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
                             <MailWarning className="size-4" />
                             Issue Warning
                         </button>

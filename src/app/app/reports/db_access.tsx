@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import {DbReturnType, User, Report, Review, PropertyApplication, Property, PropertyListing, Status, Severity, Category, FilterSearchProps} from '@/app/app/reports/types';
-import {SendEmailArgs, sendEmail} from '@/lib/email'
+import { sendEmail } from '@/lib/email'
 import {ConfirmFunction} from '@/app/app/reports/types';
 
 
@@ -165,6 +165,36 @@ export const addOffence: ConfirmFunction = async ({ user, text }): Promise<DbRet
     console.error("error occured: " + error.message);
     return err(error);
   }
+};
+
+export const warnUser: ConfirmFunction = async ({ user, text }) => {
+  const subject = "Warning about your FlatDM account";
+  const plainText = [
+    `Dear ${user.firstName} ${user.lastName},`,
+    "",
+    "A moderator has issued a warning about your FlatDM account.",
+    "",
+    "Reason:",
+    text,
+    "",
+    "Please review your account activity and follow FlatDM's rules. Further issues may result in additional action.",
+    "",
+    "- Moderating Team",
+  ].join("\n");
+
+  await sendEmail({
+    to: user.email,
+    subject,
+    text: plainText,
+    html: `
+      <p>Dear ${user.firstName} ${user.lastName},</p>
+      <p>A moderator has issued a warning about your FlatDM account.</p>
+      <p><strong>Reason:</strong></p>
+      <p>${text.replaceAll("\n", "<br />")}</p>
+      <p>Please review your account activity and follow FlatDM's rules. Further issues may result in additional action.</p>
+      <p>- Moderating Team</p>
+    `,
+  });
 };
 
 // change the severity of a report
