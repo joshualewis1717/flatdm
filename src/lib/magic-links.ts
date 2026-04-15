@@ -22,13 +22,19 @@ const MAGIC_LINK_TTL_MS: Record<MagicLinkTypeValue, number> = {
   PASSWORD_RESET: 1000 * 60 * 30,
 };
 
+const MAGIC_LINK_BASE_URLS = {
+  development: "http://localhost:3000/",
+  production: "https://flatdm.lewiscoding.com/",
+} as const;
+
 function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
-function getBaseUrl(requestUrl: string) {
-  const url = new URL(requestUrl);
-  return `${url.protocol}//${url.host}`;
+function getMagicLinkBaseUrl() {
+  return process.env.ENVIRONMENT?.trim().toLowerCase() === "production"
+    ? MAGIC_LINK_BASE_URLS.production
+    : MAGIC_LINK_BASE_URLS.development;
 }
 
 function getMagicLinkUrl(baseUrl: string, type: MagicLinkTypeValue, token: string) {
@@ -107,10 +113,9 @@ async function getActiveMagicLink(token: string) {
 export async function sendMagicLinkEmail(args: {
   user: MagicLinkUser;
   type: MagicLinkTypeValue;
-  requestUrl: string;
 }) {
-  const { user, type, requestUrl } = args;
-  const baseUrl = getBaseUrl(requestUrl);
+  const { user, type } = args;
+  const baseUrl = getMagicLinkBaseUrl();
   const rawToken = randomBytes(32).toString("hex");
   const tokenHash = hashToken(rawToken);
   const expiresAt = new Date(Date.now() + MAGIC_LINK_TTL_MS[type]);
