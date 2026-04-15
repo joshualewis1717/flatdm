@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
+import { PROFILE_DATABASE_ERROR_MESSAGE } from "@/lib/profile";
 import { prisma } from "@/lib/prisma";
 
 export async function PATCH(req: Request) {
@@ -71,7 +72,7 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ success: true, user });
   } catch {
     return NextResponse.json(
-      { success: false, error: "Failed to update profile." },
+      { success: false, error: PROFILE_DATABASE_ERROR_MESSAGE },
       { status: 500 }
     );
   }

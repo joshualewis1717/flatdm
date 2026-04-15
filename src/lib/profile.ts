@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 
 export type ProfileRole = "CONSULTANT" | "LANDLORD" | "MODERATOR";
+export const PROFILE_DATABASE_ERROR_MESSAGE =
+  "Error: There was a problem accessing the database. Refresh to try again.";
 
 export type ProfilePageData = {
   id: number;
@@ -129,7 +131,7 @@ export async function getProfilePageData(userId: number): Promise<ProfilePageDat
       rentalHistory: user._count.occupants,
     },
   };
-  } catch(err) {
-    throw new Error("Database Error")
+  } catch {
+    throw new Error(PROFILE_DATABASE_ERROR_MESSAGE);
   }
 }
