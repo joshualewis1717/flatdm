@@ -174,7 +174,7 @@ export default function ProfileView({
             </div>
 
             <div className="flex flex-wrap gap-3">
-              {!isOwnProfile && !hasExistingConversation ? (
+              {!isOwnProfile? (
                 <RequestButton receiverId={profile.id} initialStatus={requestStatus} />
               ) : (
                 <Button asChild size="lg" className="rounded-2xl px-5">
