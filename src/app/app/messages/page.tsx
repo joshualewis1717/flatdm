@@ -96,9 +96,7 @@ export default async function MessagesPage() {
         id: conversation.id,
         name: displayName,
         isDeletedUser,
-        lastMessage: lastMessage?.isDeleted
-          ? "This message was deleted"
-          : lastMessage?.content ?? "",
+        lastMessage: lastMessage?.isDeleted ? "This message was deleted" : lastMessage?.content ?? "",
         timestamp: lastMessage?.createdAt.toISOString() ?? null,
         messages: conversation.messages.map((message) => ({
           id: message.id,
