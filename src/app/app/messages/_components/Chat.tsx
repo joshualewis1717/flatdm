@@ -120,7 +120,7 @@ export default function Chat({activeConversation, addMessage, replaceMessage, re
                 <ReportButton
                 onClick={() => setIsReportOpen(true)}
                 disabled={activeConversation?.isDeletedUser}
-                className="border-white/10 bg-primary text-white hover:bg-white/10 hover:text-white"
+                className="border-white/10 bg-primary text-black hover:bg-white/10 hover:text-white"
                 />
             </div>
             ) : null}
