@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Star } from "lucide-react";
 
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { hasUserLivedAtListing } from "@/lib/review-eligibility";
 import { REVIEWS_DATABASE_ERROR_MESSAGE } from "@/lib/reviews";
 import { Button } from "@/components/ui/button";
 import { ReviewCard } from "../../review-ui";
@@ -15,6 +17,7 @@ export default async function ListingReviewsPage({
 }) {
   const { id } = await params;
   const listingId = Number(id);
+  const session = await auth();
 
   if (Number.isNaN(listingId)) {
     notFound();
@@ -93,6 +96,14 @@ export default async function ListingReviewsPage({
   const listingName = `${listing.property.title}${
     listing.flatNumber ? `, Flat ${listing.flatNumber}` : ""
   }`;
+  let canReviewListing = false;
+  try {
+    if (session?.user?.id && Number.isInteger(listing.id)) {
+      canReviewListing = await hasUserLivedAtListing(Number(session.user.id), listing.id);
+    }
+  } catch {
+    return <ErrorMessage text={REVIEWS_DATABASE_ERROR_MESSAGE} />;
+  }
 
   return (
     <div className="space-y-6">
@@ -119,12 +130,14 @@ export default async function ListingReviewsPage({
               Back to listing
             </Link>
           </Button>
-          <Button asChild size="lg" className="rounded-2xl px-5">
-            <Link href={`/app/reviews/new?listingId=${listing.id}&from=/app/reviews/listing/${listing.id}`}>
-              <Star />
-              Leave a review
-            </Link>
-          </Button>
+          {canReviewListing ? (
+            <Button asChild size="lg" className="rounded-2xl px-5">
+              <Link href={`/app/reviews/new?listingId=${listing.id}&from=/app/reviews/listing/${listing.id}`}>
+                <Star />
+                Leave a review
+              </Link>
+            </Button>
+          ) : null}
         </div>
       </section>
 

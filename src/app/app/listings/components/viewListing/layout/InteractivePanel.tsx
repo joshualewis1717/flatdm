@@ -15,9 +15,10 @@ import Link from "next/link";
 type InteractivePanelProps = {
   listingId: string;
   reviews:ListingReview[];
+  canReviewListing: boolean;
 };
 
-export default function InteractivePanel({ listingId, reviews}: InteractivePanelProps) {
+export default function InteractivePanel({ listingId, reviews, canReviewListing}: InteractivePanelProps) {
   // Mock data — replace with db fetch via listingId
   const {isConsultant, isLandlord} = useSessionContext();
   const [landlordId, setLandlordId] = useState<number | null>(null)
@@ -89,12 +90,14 @@ export default function InteractivePanel({ listingId, reviews}: InteractivePanel
               Apply Now {/* this button will need to use listingId to go to propery application page */}
               </Link>
 
-              <Link
-                className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-center text-sm font-medium text-white transition hover:border-white/20 hover:bg-white/[0.06]"
-                href={`/app/reviews/new?listingId=${listingId}&from=/app/listings/${listingId}`}
-              >
-                Review this listing
-              </Link>
+              {canReviewListing ? (
+                <Link
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-center text-sm font-medium text-white transition hover:border-white/20 hover:bg-white/[0.06]"
+                  href={`/app/reviews/new?listingId=${listingId}&from=/app/listings/${listingId}`}
+                >
+                  Review this listing
+                </Link>
+              ) : null}
 
               <div className="flex flex-col items-center gap-1">
                 <p className="text-sm text-white/50">Have questions?</p>
