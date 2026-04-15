@@ -80,7 +80,19 @@ export default async function AppHomePage() {
   const userId = Number(session?.user?.id);
   const role = isOverviewRole(session?.user?.role) ? session.user.role : "CONSULTANT";
   const content = roleContent[role as keyof typeof roleContent] ?? roleContent.CONSULTANT;
-  const metrics = Number.isInteger(userId) && userId > 0 ? (await getOverviewStats({ userId, role })).metrics : fallbackMetrics;
+  let error = null;
+  let metrics = fallbackMetrics;
+
+  if (Number.isInteger(userId) && userId > 0) {
+    try {
+      error = null;
+      const result = await getOverviewStats({ userId, role });
+      metrics = result.metrics;
+    } catch (err) {
+      //console.error("Failed to fetch overview stats:", err);
+      error = "failed to fetch overview stats, DB failure";
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -92,6 +104,7 @@ export default async function AppHomePage() {
               <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
                 Welcome back {session?.user?.firstName ? `, ${session.user.firstName}` : "to FlatDM"}!
               </h1>
+              {error && <ErrorMessage text={error}/>}
               <p className="max-w-2xl text-base leading-7 text-white/68">{content.intro}</p>
             </div>
 
