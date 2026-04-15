@@ -71,7 +71,6 @@ export async function getOverviewStats({
       }),
       prisma.report.count({
         where: {
-          assignedModeratorId: userId,
           status: "RESOLVED",
         },
       }),

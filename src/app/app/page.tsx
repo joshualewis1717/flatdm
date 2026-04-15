@@ -42,6 +42,9 @@ if (dataError == null){
       console.log("error: " + rep.status + " is not a valid report status");
     }
   }
+
+  console.log(resolvedCount)
+  console.log(activeCount)
 }
 else{
   resolvedCount = (<ErrorMessage text={dataError} />);
