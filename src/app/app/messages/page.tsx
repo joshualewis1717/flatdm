@@ -88,7 +88,7 @@ export default async function MessagesPage() {
 
       const isDeletedUser = otherUser.isDeleted;
 
-      const displayName = isDeletedUser ? "Deleted User" : [otherUser.firstName, otherUser.lastName].filter(Boolean).join(" ") || otherUser.username || "Unknown user";
+      const displayName = isDeletedUser ? "Deleted User" : otherUser.username || "Unknown user";
 
       const lastMessage = conversation.messages.at(-1);
 
@@ -96,9 +96,7 @@ export default async function MessagesPage() {
         id: conversation.id,
         name: displayName,
         isDeletedUser,
-        lastMessage: lastMessage?.isDeleted
-          ? "This message was deleted"
-          : lastMessage?.content ?? "",
+        lastMessage: lastMessage?.isDeleted ? "This message was deleted" : lastMessage?.content ?? "",
         timestamp: lastMessage?.createdAt.toISOString() ?? null,
         messages: conversation.messages.map((message) => ({
           id: message.id,
@@ -114,8 +112,7 @@ export default async function MessagesPage() {
       const sender = request.sender;
       const isDeletedUser = sender.isDeleted;
 
-      const displayName = isDeletedUser ? "Deleted User" : [sender.firstName, sender.lastName].filter(Boolean).join(" ") || sender.username || "Unknown user";
-
+      const displayName = isDeletedUser ? "Deleted User" : sender.username || "Unknown user";
       return {
         id: request.id,
         senderId: sender.id,
