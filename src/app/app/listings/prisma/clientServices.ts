@@ -11,13 +11,18 @@ import { landlordOwnsListing } from "../../applications/prisma/clientServices";
 
 export type ValidatedLocation = { lat: number; lng: number };
 
+function getAppBaseUrl() {
+  return process.env.ENVIRONMENT?.trim().toLowerCase() === "production"
+    ? "https://flatdm.lewiscoding.com" : "http://localhost:3000";
+}
+
 export async function validateLocation(params: {city?: string;streetName?: string;postcode: string;}): Promise<ValidatedLocation> {
   const query = new URLSearchParams();
   if (params.city)       query.set("city",       params.city);
   if (params.streetName) query.set("streetName", params.streetName);
   query.set("postcode", params.postcode);
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const baseUrl = getAppBaseUrl();
   const res = await fetch(`${baseUrl}/api/validate-location?${query.toString()}`);
   const data = await res.json();
 

@@ -58,7 +58,6 @@ export async function POST(request: Request) {
     const result = await sendMagicLinkEmail({
       user,
       type,
-      requestUrl: request.url,
     });
 
     return NextResponse.json({

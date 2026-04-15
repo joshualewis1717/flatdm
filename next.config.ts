@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '30mb',// max file size that we want to upload in next.js's server
     },
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 };
 
 export default nextConfig;

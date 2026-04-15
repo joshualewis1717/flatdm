@@ -71,7 +71,6 @@ export async function POST(req: Request) {
     const magicLinkResult = await sendMagicLinkEmail({
       user,
       type: "EMAIL_VERIFICATION",
-      requestUrl: req.url,
     }).catch((error: unknown) => ({
       error: error instanceof Error ? error.message : "Failed to send verification email",
     }));
