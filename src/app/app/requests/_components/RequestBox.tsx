@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
 
 import { Request } from "../../messages/_components/type";
-import { formatTimestampInbox } from "../../messages/_components/helperFunctions";
+import { formatTimestampInbox } from "../../messages/_components/helper-functions";
 
 type Parameters = {
   request: Request;

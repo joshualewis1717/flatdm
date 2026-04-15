@@ -6,6 +6,7 @@ import {
   Star,
   UserRound,
 } from "lucide-react";
+import type { RequestStatus } from "@prisma/client";
 
 import { Button } from "@/components/ui/button";
 import type { ProfilePageData } from "@/lib/profile";
@@ -24,7 +25,7 @@ const ownCopy = {
     primaryCta: { href: "/app/profile/edit", label: "Edit profile" },
     secondaryCta: { href: "/app/messages", label: "Open inbox" },
     stats: [
-      { label: "Applications sent", key: "applications", href: (id) => `/app/applications` },
+      { label: "Applications sent", key: "applications", href: () => `/app/applications` },
       { label: "Reviews made", key: "reviewsMade", href: (id) => `/app/reviews/byUser/${id}` },
       { label: "Reviews received", key: "reviews", href: (id) => `/app/reviews/user/${id}` },
     ],
@@ -34,7 +35,7 @@ const ownCopy = {
     primaryCta: { href: "/app/profile/edit", label: "Edit profile" },
     secondaryCta: { href: "/app/applications", label: "Review applicants" },
     stats: [
-      { label: "Live listings", key: "listings", href: (id) => `/app/listings` },
+      { label: "Live listings", key: "listings", href: () => `/app/listings` },
       { label: "Reviews made", key: "reviewsMade", href: (id) => `/app/reviews/byUser/${id}` },
       { label: "Reviews received", key: "reviews", href: (id) => `/app/reviews/user/${id}` },
     ],
@@ -44,9 +45,9 @@ const ownCopy = {
     primaryCta: { href: "/app/profile/edit", label: "Edit profile" },
     secondaryCta: { href: "/app/reports", label: "Open report queue" },
     stats: [
-      { label: "Reports in progress", key: "reportsInProcess", href: (id) => `/app/reports` },
+      { label: "Reports in progress", key: "reportsInProcess", href: () => `/app/reports` },
       { label: "Reports handled", key: "totalReportsHandled" },
-      { label: "Unopened reports", key: "unopenedReports", href: (id) => `/app/reports` },
+      { label: "Unopened reports", key: "unopenedReports", href: () => `/app/reports` },
     ],
   },
 } as const satisfies Record<string, {
@@ -121,17 +122,17 @@ export default function ProfileView({
   profile,
   isOwnProfile,
   hasExistingConversation,
-  viewerId,
+  requestStatus,
 }: {
   profile: ProfilePageData;
   isOwnProfile: boolean;
   hasExistingConversation: boolean;
-  viewerId: number;
+  requestStatus?: RequestStatus | null;
 }) {
   const ownConfig = ownCopy[profile.role];
   const publicConfig = publicCopy[profile.role];
   const config = isOwnProfile ? ownConfig : publicConfig;
-  const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "FlatDM user";
+  const fullName =  isOwnProfile ? [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "FlatDM user" : profile.username;
   const joinedDate = formatDate(profile.createdAt);
 
   const editableValues = {
@@ -173,15 +174,15 @@ export default function ProfileView({
             </div>
 
             <div className="flex flex-wrap gap-3">
-              {!isOwnProfile && !hasExistingConversation ? (
-                <RequestButton receiverId={profile.id} />
+              {!isOwnProfile? (
+                <RequestButton receiverId={profile.id} initialStatus={requestStatus} />
               ) : (
                 <Button asChild size="lg" className="rounded-2xl px-5">
                   <Link
                     href={
                       isOwnProfile
                         ? config.primaryCta.href
-                        : `${publicConfig.primaryCta.href}?userId=${profile.id}`
+                        : publicConfig.primaryCta.href
                     }
                   >
                     {config.primaryCta.label}
@@ -224,7 +225,7 @@ export default function ProfileView({
 
             const href = stat.href?.(profile.id);
 
-            if (!isOwnProfile || !href) {
+            if (!href) {
               return <div key={stat.label}>{card}</div>;
             }
 

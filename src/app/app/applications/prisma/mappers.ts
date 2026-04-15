@@ -16,7 +16,7 @@ export function mapApplicantApplication(a: Awaited<ReturnType<typeof getApplicat
       flatNumber: a.listing.flatNumber ?? undefined,
       listingAddress: `${a.listing.property.streetName}, ${a.listing.property.city}, ${a.listing.property.postcode}`,
       landlordName: `${a.listing.property.landlord.firstName} ${a.listing.property.landlord.lastName}`,
-      applicantName: `${a.user.firstName} ${a.user.lastName}`,
+      applicantName: `${a.user.username}`,
     };
   }
   
@@ -34,6 +34,6 @@ export function mapApplicantApplication(a: Awaited<ReturnType<typeof getApplicat
       buildingName: a.listing.property.title,
       flatNumber: a.listing.flatNumber ?? undefined,
       listingAddress: `${a.listing.property.streetName}, ${a.listing.property.city}, ${a.listing.property.postcode}`,
-      applicantName: `${a.user.firstName} ${a.user.lastName}`,
+      applicantName: `${a.user.username}`,
     };
   }

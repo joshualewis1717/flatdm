@@ -160,6 +160,23 @@ export function mapToMyPropertyListing(listing: Awaited<ReturnType<typeof queryL
 // function to map our cached listing data to our normal listing data
 export function mapCachedListingToListingData(listing: CachedListing): ListingInfoData {
   const thumbnail = listing.images.find((img) => img.isThumbnail) ?? null;
+  const now = new Date();
+
+  const currentOccupants = listing.occupants
+    .filter((occupant) => {
+      const moveInDate = new Date(occupant.moveIn);
+      const moveOutDate = occupant.moveOut ? new Date(occupant.moveOut) : null;
+
+      return (
+        moveInDate <= now &&
+        (!moveOutDate || moveOutDate > now)
+      );
+    })
+    .map((occupant) => ({
+      id: occupant.id,
+      userId: occupant.userId,
+      name: occupant.user.username,
+    }));
 
   return {
     propertyId: listing.propertyId,
@@ -192,5 +209,6 @@ export function mapCachedListingToListingData(listing: CachedListing): ListingIn
       type: amenity.type,
       distance: amenity.distance ?? -1,
     })),
+    currentOccupants,
   };
 }

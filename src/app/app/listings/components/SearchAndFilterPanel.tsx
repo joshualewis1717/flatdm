@@ -67,7 +67,7 @@ export default function SearchAndFilterPanel() {
     }
 
     const updateOffset = () => {
-      setStickyTopOffset(Math.ceil(header.getBoundingClientRect().height));
+      setStickyTopOffset(Math.ceil(header.getBoundingClientRect().height)-2);
     };
 
     updateOffset();
