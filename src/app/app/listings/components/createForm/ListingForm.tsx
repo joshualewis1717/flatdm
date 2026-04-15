@@ -167,7 +167,19 @@ export default function ListingForm({ listingId }: Props) {
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, type, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: type === "number" ? Number(value) : value }));
+    setForm((prev) => {
+      const updated = {
+        ...prev,
+        [name]: type === "number" ? Number(value) : value,
+      };
+  
+      // if landlord has changed the address after autofill, we want to keep data, but in backend link to a new property
+      if (name == form.city || form.buildingName || form.streetName || form.postcode) {
+        updated.selectedPropertyId = undefined;
+      }
+  
+      return updated;
+  });
   }
 
   function handlePropertySelect(property: ExistingProperty | null) {

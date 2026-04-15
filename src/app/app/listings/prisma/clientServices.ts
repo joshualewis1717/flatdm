@@ -6,6 +6,28 @@ import { mapToExistingProperty, mapToListingDetail, mapToMyPropertyListing } fro
 import { runService, withRole } from "../../clientService/prisma/prismaUtils";
 import { landlordOwnsListing } from "../../applications/prisma/clientServices";
 
+
+/************* client serveice to validate a location */
+
+export type ValidatedLocation = { lat: number; lng: number };
+
+export async function validateLocation(params: {city?: string;streetName?: string;postcode: string;}): Promise<ValidatedLocation> {
+  const query = new URLSearchParams();
+  if (params.city)       query.set("city",       params.city);
+  if (params.streetName) query.set("streetName", params.streetName);
+  query.set("postcode", params.postcode);
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const res = await fetch(`${baseUrl}/api/validate-location?${query.toString()}`);
+  const data = await res.json();
+
+  if (!res.ok || data.error) {
+    throw new Error(data.error ?? "location not found");
+  }
+
+  return { lat: data.lat, lng: data.lng };
+}
+
 /************ validation **********/
 
 function validateListingInput(data: PropertyListingForm) {
@@ -113,21 +135,18 @@ type PrismaTx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
  *
  * Also syncs amenities onto that property inside the same transaction.
  */
-async function resolvePropertyId(tx: PrismaTx, data: PropertyListingForm, landlordId: number): Promise<number> {
-  const { selectedPropertyId, buildingName, streetName, city, postcode, amenities = [] } = data;
-
+async function resolvePropertyId(tx: PrismaTx,data: PropertyListingForm,landlordId: number,lat: number, lng: number): Promise<number> {
+  const { selectedPropertyId, amenities = [] } = data;
   if (selectedPropertyId) {
-     // Landlord explicitly chose an existing property, sync amenities.
+      // Landlord explicitly chose an existing property, sync amenities.
     for (const amenity of amenities) {
-      await querySyncAmenity(tx, amenity, selectedPropertyId)
+      await querySyncAmenity(tx, amenity, selectedPropertyId);
     }
     return selectedPropertyId;
   }
+  const property = await propertyUpsert(tx, data, landlordId, lat, lng);
 
-  const property = await propertyUpsert(tx, data,  landlordId)
-
-
-  // update or create amenities depending if it was in db or not
+   // update or create amenities depending if it was in db or not
   for (const amenity of amenities) {
     await querySyncAmenity(tx, amenity, property.id);
   }
@@ -143,17 +162,19 @@ export async function createListing(data: PropertyListingForm): Promise<{ result
     const user = await withRole("LANDLORD");
 
     const { flatNumber, description, rent, rooms, bedrooms, bathrooms, area, maxOccupants, minStay, furnishedLevel } = data;
-
     let newListingId!: number;
 
+    const { lat, lng } = await validateLocation({city: data.city,streetName: data.streetName,postcode: data.postcode!,});
+    
+
     await prisma.$transaction(async (tx) => {
-      const propertyId = await resolvePropertyId(tx, data, user.id);
+      const propertyId = await resolvePropertyId(tx, data, user.id, lat, lng);
       await assertNoListingConflict(propertyId, flatNumber);
 
       const listing = await queryCreateListing(tx, {
         flatNumber: flatNumber?.trim() || "WHOLE_PROPERTY",
         description, rent, rooms, bedrooms, bathrooms, area, maxOccupants, minStay, furnished_type: furnishedLevel,
-        propertyId, landlordId: user.id, lat: 1, lng: 1,
+        propertyId, landlordId: user.id, lat: lat, lng: lng,
       });
 
       newListingId = listing.id;
@@ -173,18 +194,20 @@ export async function updateListing(listingId: number, data: PropertyListingForm
      // Ownership check
     const existing = await landlordOwnsListing(listingId);
     if (!existing) throw new Error("Listing not found, or you do not own this listing");
-
     const { flatNumber, description, rent, rooms, bedrooms, bathrooms, area, maxOccupants, minStay, furnishedLevel } = data;
 
+    const { lat, lng } = await validateLocation({city: data.city,streetName: data.streetName,postcode: data.postcode!,});
+
+    
     await prisma.$transaction(async (tx) => {
        // Resolve the (possibly new/swapped) property, same logic as create
-      const propertyId = await resolvePropertyId(tx, data, user.id);
+      const propertyId = await resolvePropertyId(tx, data, user.id, lat, lng);
        // Conflict check against the resolved property (exclude self)
       await assertNoListingConflict(propertyId, flatNumber, listingId);
 
       await queryUpdateListing(tx, listingId, {
         flatNumber: flatNumber?.trim() || "WHOLE_PROPERTY",description, rent, rooms, bedrooms, bathrooms, area,
-         maxOccupants, minStay, propertyId, furnished_type: furnishedLevel
+         maxOccupants, minStay, propertyId, furnished_type: furnishedLevel, lat: lat, lng: lng,
       });
     });
     return null;
