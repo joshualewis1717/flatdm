@@ -6,10 +6,13 @@ import Link from 'next/link';
 import { ArrowRight, Ban, MailWarning, ShieldPlus, UserRound } from 'lucide-react';
 import { deleteUser } from '@/app/app/reports/db_access'
 import { Dispatch, SetStateAction, useState } from 'react';
-import { sendEmail } from '@/app/app/reports/sendEmail';
 import { TextPromptPanel } from '@/app/app/reports/TextPromptPanel'
 import { addOffence } from '@/app/app/reports/db_access';
 
+
+function sendEmail({text="text"}){  // placeholder
+    console.log("email sent temp")
+}
 
 function setPanelFeatures({
     confirmFunc,
