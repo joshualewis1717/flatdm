@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 type Parameters = {
   receiverId: number;
@@ -8,7 +9,10 @@ type Parameters = {
 };
 
 export default function RequestButton({receiverId, className}: Parameters) {
+  const [isSending, setIsSending] = useState(false);
   const handleCreateRequest = async () => {
+    if (isSending) return;
+    setIsSending(true);
     try {
       const response = await fetch("/api/requests", {
         method: "POST",
@@ -24,6 +28,8 @@ export default function RequestButton({receiverId, className}: Parameters) {
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -31,8 +37,9 @@ export default function RequestButton({receiverId, className}: Parameters) {
     <Button
       type="button"
       onClick={handleCreateRequest}
+      disabled={isSending}
       className={className}> {/* Styling */}
-        Send Request
+        {isSending ? "Sending..." : "Send Request"}
     </Button>
   );
 }

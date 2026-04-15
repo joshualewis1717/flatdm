@@ -1,7 +1,7 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-import { formatTimestampInbox } from "./helperFunctions";
+import { formatTimestampInbox } from "./helper-functions";
 import { Conversation } from "./type";
 
 import { MoreVertical } from "lucide-react";

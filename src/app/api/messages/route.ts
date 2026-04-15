@@ -106,6 +106,7 @@ export async function GET(req: NextRequest) {
         senderId: message.senderId,
         isOwn: message.senderId === userId,
         isDeleted: message.isDeleted,
+        deletedAt: message.deletedAt,
       }))
     );
   } catch (error) {
