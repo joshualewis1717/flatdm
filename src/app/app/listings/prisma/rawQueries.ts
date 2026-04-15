@@ -122,7 +122,7 @@ export async function queryAllListings() {
 }
 
 // function to update or delete a property
-export async function propertyUpsert(tx: PrismaTx, data: PropertyListingForm, landlordId: number){
+export async function propertyUpsert(tx: PrismaTx, data: PropertyListingForm, landlordId: number,  lat: number, lng: number){
   return tx.property.upsert({
     where: {
       streetName_city_postcode_landlordId: {
@@ -132,7 +132,9 @@ export async function propertyUpsert(tx: PrismaTx, data: PropertyListingForm, la
         landlordId,
       },
     },
-    update: { title: data.buildingName ?? "" },
+    update: { title: data.buildingName ?? "",  city: data.city, streetName: data.streetName, postcode: data.postcode,
+      lat, lng
+     },
      // Update the title in case they corrected the building name
     create: {
       title: data.buildingName ?? "",
@@ -140,8 +142,8 @@ export async function propertyUpsert(tx: PrismaTx, data: PropertyListingForm, la
       city: data.city ?? "",
       postcode: data.postcode ?? "",
       landlordId,
-      lat: 1.2,// TODO: derive from geocoding later
-      lng: 1.2,
+      lat,
+      lng,
       amenities: {
         create: (data.amenities ?? []).map(({ name, type, distance }) => ({ name, type, distance: distance ?? null })),
       },
@@ -191,6 +193,8 @@ export async function queryUpdateListing(
     maxOccupants: number;
     minStay: number;
     propertyId: number;
+    lat: number;
+    lng: number;
     furnished_type: FurnishedType
   }
 ) {
