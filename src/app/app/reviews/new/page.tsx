@@ -203,7 +203,7 @@ async function createReview(formData: FormData) {
       );
     }
 
-    redirect("/app/reviews?success=1");
+    redirect(`/app/reviews/byUser/${authorId}?success=1`);
   }
 
   if (!userId || Number.isNaN(userId)) {
@@ -284,7 +284,7 @@ async function createReview(formData: FormData) {
     );
   }
 
-  redirect("/app/reviews?success=1");
+  redirect(`/app/reviews/byUser/${authorId}?success=1`);
 }
 
 export default async function NewReviewPage({
