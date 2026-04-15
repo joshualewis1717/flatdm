@@ -15,6 +15,7 @@ Add these variables to `.env`:
 | Variable | Purpose |
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection string for Prisma |
+| `ORS_API_KEY` | Used for OpenRouteService |
 | `NEXTAUTH_SECRET` | Secret used by NextAuth |
 | `SMTP_HOST` | SMTP server host |
 | `SMTP_PORT` | SMTP server port |
