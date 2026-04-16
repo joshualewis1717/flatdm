@@ -67,9 +67,7 @@ export async function PATCH(request: Request) {
 
     const isDeletedUser = otherUser.isDeleted;
 
-    const displayName = isDeletedUser
-      ? "Deleted User"
-      : [otherUser.firstName, otherUser.lastName].filter(Boolean).join(" ") || otherUser.username || "Unknown user";
+    const displayName = isDeletedUser ? "Deleted User" : otherUser.username || "Unknown user";
 
     const lastMessage = conversation.messages.at(-1);
 
