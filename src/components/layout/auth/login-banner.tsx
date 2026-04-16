@@ -21,7 +21,7 @@ export default function LoginBanner() {
                 <h1 className="text-xl font-semibold tracking-tight">FlatDM</h1>
               </div>
             </div>
-            <nav className="flex items-center gap-3">
+            <nav className="hidden items-center gap-3 sm:flex">
               <Button asChild variant="outline" className="h-9 px-4">
                 <Link href="/login">Login</Link>
               </Button>
