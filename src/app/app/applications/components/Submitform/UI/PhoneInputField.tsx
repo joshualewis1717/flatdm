@@ -33,7 +33,7 @@ export default function PhoneInputField({ label, name, value, required, onValueC
   return (
     <div className="flex flex-col">
       <label className="text-sm text-white/70 mb-1">
-        {label} {required && <span className="text-red-500">*</span>}
+        {null}
       </label>
 
       <div className={phoneStyles["phone-input-wrapper"]}>
